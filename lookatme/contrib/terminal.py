@@ -41,4 +41,5 @@ def render_code(token, body, stack, loop):
 
 def shutdown():
     for term in CREATED_TERMS:
-        term.terminate()
+        if term.pid is not None:
+            term.terminate()
