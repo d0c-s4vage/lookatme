@@ -1,9 +1,3 @@
----
-title: Presentation Title
-author: James Johnson
-date: 2019-11-28
----
-
 # Markdown Support: Inline
 
 * Styling
@@ -92,6 +86,6 @@ asciinema play https://asciinema.org/a/232377
 ```
 ~~~
 
-```terminal8
+```terminal40
 asciinema play https://asciinema.org/a/232377
 ```

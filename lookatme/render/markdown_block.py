@@ -14,10 +14,11 @@ import shlex
 import urwid
 
 
-from lookatme.utils import *
+import lookatme.config as config
+from lookatme.contrib import contrib_first
 import lookatme.render.pygments as pygments_render
 import lookatme.render.markdown_inline as markdown_inline_renderer
-import lookatme.config as config
+from lookatme.utils import *
 
 
 def _meta(item):
@@ -44,6 +45,7 @@ def _list_level(item):
     return _meta(item).get("list_level", 1)
 
 
+@contrib_first
 def render_heading(token, body, stack, loop):
     if token["level"] == 1:
         return urwid.Text(("bold", token["text"]), align="center")
@@ -57,6 +59,7 @@ def render_heading(token, body, stack, loop):
         return urwid.Text(("bold", token["text"]), align="center")
 
 
+@contrib_first
 def render_table(token, body, stack, loop):
     """Render a table token
     """
@@ -70,6 +73,7 @@ def render_table(token, body, stack, loop):
     return urwid.Padding(table, width=table.total_width + 2, align="center")
 
 
+@contrib_first
 def render_list_start(token, body, stack, loop):
     res = urwid.Pile(urwid.SimpleFocusListWalker([]))
 
@@ -89,11 +93,12 @@ def render_list_start(token, body, stack, loop):
     return widgets
 
 
+@contrib_first
 def render_list_end(token, body, stack, loop):
     stack.pop()
 
 
-def render_list_item_start(token, body, stack, loop):
+def _list_item_start(token, body, stack, loop):
     list_level = _list_level(stack[-1])
     pile = urwid.Pile(urwid.SimpleFocusListWalker([]))
 
@@ -106,13 +111,24 @@ def render_list_item_start(token, body, stack, loop):
     ])
     stack.append(pile)
     return res
-render_loose_item_start = render_list_item_start
 
 
+@contrib_first
+def render_list_item_start(token, body, stack, loop):
+    return _list_item_start(token, body, stack, loop)
+
+
+@contrib_first
+def render_loose_item_start(token, body, stack, loop):
+    return _list_item_start(token, body, stack, loop)
+
+
+@contrib_first
 def render_list_item_end(token, body, stack, loop):
     stack.pop()
 
 
+@contrib_first
 def render_text(token=None, body=None, stack=None, loop=None, text=None):
     if text is None:
         text = token["text"]
@@ -123,6 +139,7 @@ def render_text(token=None, body=None, stack=None, loop=None, text=None):
 render_paragraph = render_text
 
 
+@contrib_first
 def render_block_quote_start(token, body, stack, loop):
     pile = urwid.Pile([])
     stack.append(pile)
@@ -141,24 +158,15 @@ def render_block_quote_start(token, body, stack, loop):
     ]
 
 
+@contrib_first
 def render_block_quote_end(token, body, stack, loop):
     stack.pop()
 
 
+@contrib_first
 def render_code(token, body, stack, loop):
     lang = token.get("lang", "text") or "text"
-    if lang.startswith("terminal"):
-        rows = lang.replace("terminal", "").strip()
-        if len(rows) != 0:
-            rows = int(rows)
-
-        res = urwid.LineBox(urwid.BoxAdapter(
-            #urwid.Terminal([token["text"].strip()], main_loop=loop),
-            urwid.Terminal(shlex.split(token["text"].strip()), main_loop=loop),
-            height=rows,
-        ))
-    else:
-        res = pygments_render.render_text(token["text"], lang=lang)
+    res = pygments_render.render_text(token["text"], lang=lang)
 
     return [
         urwid.Divider(),

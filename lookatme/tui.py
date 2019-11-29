@@ -7,8 +7,9 @@ import copy
 import urwid
 
 
-import lookatme.render.markdown_block as lam_md
 import lookatme.config
+import lookatme.contrib
+import lookatme.render.markdown_block as lam_md
 from lookatme.utils import *
 
 
@@ -127,6 +128,7 @@ class CurrentSlide(urwid.Frame):
         elif key in ["right", "down", " ", "j", "l"]:
             slide_direction = 1
         elif key in ["q", "Q"]:
+            lookatme.contrib.shutdown_contribs()
             raise urwid.ExitMainLoop()
 
         if slide_direction != 0:

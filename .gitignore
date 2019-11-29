@@ -2,6 +2,7 @@
 .*.sw[mnop]
 
 # python
+*.pyc
 __pycache__
 .mypy_cache
 .tox
