@@ -97,8 +97,8 @@ def render_list_item_start(token, body, stack, loop):
     list_level = _list_level(stack[-1])
     pile = urwid.Pile(urwid.SimpleFocusListWalker([]))
 
-    bullets = config.STYLE.bullets
-    list_bullet = bullets.get(list_level, bullets["default"])
+    bullets = config.STYLE["bullets"]
+    list_bullet = bullets.get(str(list_level), bullets["default"])
 
     res = urwid.Columns([
         (2, urwid.Text(("bold", list_bullet + " "))),
@@ -131,7 +131,7 @@ def render_block_quote_start(token, body, stack, loop):
         urwid.LineBox(
             urwid.AttrMap(
                 urwid.Padding(pile, left=2),
-                spec_from_style(config.STYLE.quote_style),
+                spec_from_style(config.STYLE["quote_style"]),
             ),
             lline="╎", rline="",
             tline=" ", trcorner="", #tlcorner="",

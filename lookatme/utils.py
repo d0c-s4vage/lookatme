@@ -5,6 +5,17 @@
 import urwid
 
 
+def dict_deep_update(to_update, new_vals):
+    """Deeply update the to_update dict with the new_vals
+    """
+    for key, value in new_vals.items():
+        if isinstance(value, dict):
+            node = to_update.setdefault(key, {})
+            dict_deep_update(node, value)
+        else:
+            to_update[key] = value
+
+
 def spec_from_style(style_dict):
     """Create an urwid.AttrSpec from a {fg:"", bg:""} style dict
     """

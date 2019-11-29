@@ -15,7 +15,7 @@ def render_text(text, lang="text", style_name=None, plain=False):
     """Render the provided text with the pygments renderer
     """
     if style_name is None:
-        style_name = config.STYLE.code_style
+        style_name = config.STYLE["style"]
     style = pygments.styles.get_style_by_name(style_name)
     style_bg = UrwidFormatter.findclosest(style.background_color.replace("#", ""))
 
