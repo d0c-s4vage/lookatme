@@ -5,10 +5,46 @@
 import urwid
 import pygments
 from pygments.formatter import Formatter
+import time
 import urwid
 
 
 import lookatme.config as config
+
+
+LEXER_CACHE = {}
+STYLE_CACHE = {}
+FORMATTER_CACHE = {}
+
+
+def get_formatter(style_name):
+    style = get_style(style_name)
+
+    formatter, style_bg = FORMATTER_CACHE.get(style_name, (None, None))
+    if formatter is None:
+        style_bg = UrwidFormatter.findclosest(style.background_color.replace("#", ""))
+        formatter = UrwidFormatter(
+            style=style,
+            usebg=(style_bg is not None),
+        )
+        FORMATTER_CACHE[style_name] = (formatter, style_bg)
+    return formatter, style_bg
+
+
+def get_lexer(lang):
+    lexer = LEXER_CACHE.get(lang, None)
+    if lexer is None:
+        lexer = pygments.lexers.get_lexer_by_name(lang)
+        LEXER_CACHE[lang] = lexer
+    return lexer
+
+
+def get_style(style_name):
+    style = STYLE_CACHE.get(style_name, None)
+    if style is None:
+        style = pygments.styles.get_style_by_name(style_name)
+        STYLE_CACHE[style_name] = style
+    return style
 
 
 def render_text(text, lang="text", style_name=None, plain=False):
@@ -16,15 +52,13 @@ def render_text(text, lang="text", style_name=None, plain=False):
     """
     if style_name is None:
         style_name = config.STYLE["style"]
-    style = pygments.styles.get_style_by_name(style_name)
-    style_bg = UrwidFormatter.findclosest(style.background_color.replace("#", ""))
 
-    lexer = pygments.lexers.get_lexer_by_name(lang)
-    formatter = UrwidFormatter(
-        style=style_name,
-        usebg=(style_bg is not None),
-    )
+    lexer = get_lexer(lang)
+    formatter, style_bg = get_formatter(style_name)
+
+    start = time.time()
     code_tokens = lexer.get_tokens(text)
+    config.LOG.debug(f"Took {time.time()-start}s to render {len(text)} bytes")
 
     markup = []
     for x in formatter.formatgenerator(code_tokens):
