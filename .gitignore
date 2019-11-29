@@ -1,0 +1,10 @@
+# editors
+.*.sw[mnop]
+
+# python
+__pycache__
+.mypy_cache
+.tox
+venv*
+.coverage
+*.egg-info
