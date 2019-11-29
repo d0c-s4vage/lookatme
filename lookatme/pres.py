@@ -19,13 +19,14 @@ class Presentation(object):
 class PresentationMeta(object):
     """Metadata for the presentation. This holds the parsed YAML header.
     """
-    def __init__(self, title=None, author=None, date=None, styles=None):
+    def __init__(self, title=None, author=None, date=None, styles=None, extensions=None):
         """Create a new PresentationMeta instance
         """
         self.title = title
         self.author = author
         self.date = date
         self.styles = styles
+        self.extensions = extensions
 
 
 class Slide(object):

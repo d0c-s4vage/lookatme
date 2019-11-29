@@ -90,3 +90,4 @@ class MetaSchema(Schema):
     date = fields.Date()
     author = fields.Str()
     styles = fields.Nested(StyleSchema, default={})
+    extensions = fields.List(fields.Str(), default=[])

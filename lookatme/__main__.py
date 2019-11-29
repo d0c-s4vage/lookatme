@@ -66,6 +66,8 @@ def main(debug, log_path, theme, code_style, dump_styles, input_file):
     parser = Parser()
     pres = parser.parse(data)
 
+    lookatme.contrib.load_contribs(pres.meta.extensions)
+
     if pres.meta.styles is not None:
         dict_deep_update(styles, pres.meta.styles)
 
