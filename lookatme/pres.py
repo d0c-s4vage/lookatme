@@ -79,7 +79,7 @@ class Presentation(object):
 
         # now apply any command-line style overrides
         if self.style_override is not None:
-            self.styles["style"] = style_override
+            self.styles["style"] = self.style_override
 
         lookatme.config.STYLE = self.styles
 
