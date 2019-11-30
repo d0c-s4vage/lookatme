@@ -89,11 +89,11 @@ class Parser(object):
                 break
 
         if not found_first:
-            return input_data, {}
+            return input_data, MetaSchema().load({})
         
         new_input = input_data[skipped_chars:]
         if len(yaml_data) == 0:
-            return new_input, {}
+            return new_input, MetaSchema().load({})
 
         yaml_data = "\n".join(yaml_data)
         data = MetaSchema().loads(yaml_data)

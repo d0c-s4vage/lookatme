@@ -2,6 +2,8 @@
 Defines all schemas used in lookatme
 """
 
+
+import datetime
 from marshmallow import Schema, fields, validate
 import pygments.styles
 import yaml
@@ -86,8 +88,11 @@ class MetaSchema(Schema):
     class Meta:
         render_module = YamlRender
 
-    title = fields.Str()
-    date = fields.Date()
-    author = fields.Str()
-    styles = fields.Nested(StyleSchema, default={})
-    extensions = fields.List(fields.Str(), default=[])
+    title = fields.Str(default="", missing="")
+    date = fields.Date(
+        default=datetime.datetime.now(),
+        missing=datetime.datetime.now(),
+    )
+    author = fields.Str(default="", missing="")
+    styles = fields.Nested(StyleSchema, default={}, missing={})
+    extensions = fields.List(fields.Str(), default=[], missing={})
