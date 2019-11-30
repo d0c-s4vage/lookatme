@@ -52,6 +52,8 @@ def styled_text(text, new_styles, old_styles=None):
         caller.
     """
     if isinstance(text, urwid.Text):
+        if len(text.attrib) > 0:
+            old_styles = text.attrib[0][0]
         text = text.text
     elif (isinstance(text, tuple)
             and isinstance(text[0], urwid.AttrSpec)
