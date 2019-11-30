@@ -12,13 +12,11 @@ import pygments.styles
 import sys
 
 
-from lookatme.parser import Parser
 import lookatme.tui
 import lookatme.log
 import lookatme.config
-import lookatme.themes
+from lookatme.pres import Presentation
 from lookatme.schemas import StyleSchema
-from lookatme.utils import dict_deep_update
 
 
 @click.command("lookatme")
@@ -50,8 +48,16 @@ from lookatme.utils import dict_deep_update
     is_flag=True,
     default=False,
 )
+@click.option(
+    "--live",
+    "--live-reload",
+    "live_reload",
+    help="Watch the input filename for modifications and automatically reload",
+    is_flag=True,
+    default=False,
+)
 @click.argument("input_file", type=click.File(), default=sys.stdin)
-def main(debug, log_path, theme, code_style, dump_styles, input_file):
+def main(debug, log_path, theme, code_style, dump_styles, input_file, live_reload):
     """lookatme - An interactive, terminal-based markdown presentation tool.
     """
     if debug:
@@ -59,29 +65,13 @@ def main(debug, log_path, theme, code_style, dump_styles, input_file):
     else:
         lookatme.config.LOG = lookatme.log.create_null_log()
 
-    theme_mod = __import__("lookatme.themes." + theme, fromlist=[theme])
-    styles = lookatme.themes.ensure_defaults(theme_mod)
-
-    data = input_file.read()
-    parser = Parser()
-    pres = parser.parse(data)
-
-    lookatme.contrib.load_contribs(pres.meta.extensions)
-
-    if pres.meta.styles is not None:
-        dict_deep_update(styles, pres.meta.styles)
-
-    # now apply any command-line style overrides
-    if code_style is not None:
-        styles["style"] = code_style
+    pres = Presentation(input_file, theme, code_style, live_reload=live_reload)
 
     if dump_styles:
-        print(StyleSchema().dumps(styles))
+        print(StyleSchema().dumps(pres.styles))
         return 0
 
-    lookatme.config.STYLE = styles
-
-    lookatme.tui.run_presentation(pres)
+    pres.run()
 
 
 if __name__ == "__main__":

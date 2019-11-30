@@ -96,7 +96,7 @@ class Table(urwid.Pile):
                 if idx >= self.num_columns:
                     break
                 rend_cell = render_text(text=cell)
-                rend_cell.align = self.table_aligns[idx]
+                rend_cell.align = self.table_aligns[idx] or "left"
                 if modifier is not None:
                     rend_cell = modifier(rend_cell)
                 rend_row.append(rend_cell)
