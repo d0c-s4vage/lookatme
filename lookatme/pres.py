@@ -74,14 +74,14 @@ class Presentation(object):
         self.meta, self.slides = parser.parse(data)
         lookatme.contrib.load_contribs(self.meta.get("extensions", []))
 
-        styles = lookatme.themes.ensure_defaults(self.theme_mod)
-        dict_deep_update(styles, self.meta.get("styles", {}))
+        self.styles = lookatme.themes.ensure_defaults(self.theme_mod)
+        dict_deep_update(self.styles, self.meta.get("styles", {}))
 
         # now apply any command-line style overrides
         if self.style_override is not None:
-            styles["style"] = style_override
+            self.styles["style"] = style_override
 
-        lookatme.config.STYLE = styles
+        lookatme.config.STYLE = self.styles
 
     def run(self, start_slide=0):
         """Run the presentation!

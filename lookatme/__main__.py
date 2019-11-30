@@ -68,7 +68,7 @@ def main(debug, log_path, theme, code_style, dump_styles, input_file, live_reloa
     pres = Presentation(input_file, theme, code_style, live_reload=live_reload)
 
     if dump_styles:
-        print(StyleSchema().dumps(styles))
+        print(StyleSchema().dumps(pres.styles))
         return 0
 
     pres.run()

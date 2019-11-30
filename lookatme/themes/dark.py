@@ -14,7 +14,7 @@ theme = {
         "3": "◦",
     },
     "table": {
-        "header_divider": "━",
+        "header_divider": "─",
         "column_spacing": 3,
     },
     "quote_style": {"fg": "italics,#aaa", "bg":"default"},

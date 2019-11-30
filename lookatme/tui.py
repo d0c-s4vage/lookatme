@@ -120,9 +120,9 @@ class MarkdownTui(urwid.Frame):
         """
         """
         self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
-        self.slide_title = text("banner", f"  {pres.meta['title']}  ", "center")
+        self.slide_title = text("banner", "", "center")
 
-        self.creation = text("banner", f"  {pres.meta['author']} - {pres.meta['date']}  ")
+        self.creation = text("banner", "")
         self.slide_num = text("banner", " test ", "right")
         self.slide_footer = urwid.Columns([self.creation, self.slide_num])
 
@@ -173,6 +173,15 @@ class MarkdownTui(urwid.Frame):
     def update_title(self):
         """Update the title
         """
+        title = self.pres.meta.get("title", "")
+        self.slide_title.set_text(f" {title} ")
+
+    def update_creation(self):
+        """Update the author and date
+        """
+        author = self.pres.meta.get('author', '')
+        date = self.pres.meta.get('date', '')
+        self.creation.set_text(f"  {author} - {date}  ")
 
     def update_body(self):
         """Render the provided slide body
@@ -185,6 +194,7 @@ class MarkdownTui(urwid.Frame):
         """
         self.update_slide_num()
         self.update_title()
+        self.update_creation()
         self.update_body()
 
     def reload(self):

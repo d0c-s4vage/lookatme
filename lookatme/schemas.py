@@ -53,7 +53,7 @@ class BulletsSchema(Schema):
 
 
 class TableSchema(Schema):
-    header_divider = fields.Str(default="━")
+    header_divider = fields.Str(default="─")
     column_spacing = fields.Int(default=3)
 
 
