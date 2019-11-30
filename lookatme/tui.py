@@ -218,7 +218,7 @@ class MarkdownTui(urwid.Frame):
             pass
 
         slide_direction = 0
-        if key in ["left", "up", "delete", "h", "k"]:
+        if key in ["left", "up", "backspace", "delete", "h", "k"]:
             slide_direction = -1
         elif key in ["right", "down", " ", "j", "l"]:
             slide_direction = 1
