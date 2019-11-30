@@ -9,8 +9,8 @@ import re
 import yaml
 
 
-from lookatme.pres import PresentationMeta, Presentation, Slide
 from lookatme.schemas import MetaSchema
+from lookatme.slide import Slide
 
 
 class Parser(object):
@@ -29,7 +29,7 @@ class Parser(object):
         """
         input_data, meta = self.parse_meta(input_data)
         input_data, slides = self.parse_slides(input_data)
-        return Presentation(meta, slides)
+        return meta, slides
     
     def parse_slides(self, input_data):
         """Parse the Slide out of the input data
@@ -89,14 +89,12 @@ class Parser(object):
                 break
 
         if not found_first:
-            return input_data, PresentationMeta()
+            return input_data, {}
         
         new_input = input_data[skipped_chars:]
         if len(yaml_data) == 0:
-            return new_input, PresentationMeta()
+            return new_input, {}
 
         yaml_data = "\n".join(yaml_data)
         data = MetaSchema().loads(yaml_data)
-        meta = PresentationMeta(**data)
-
-        return new_input, meta
+        return new_input, data

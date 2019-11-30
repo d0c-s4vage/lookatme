@@ -39,6 +39,14 @@ class SlideRenderer(threading.Thread):
         self.cache = {}
         self._log = lookatme.config.LOG.getChild("RENDER")
 
+    def flush_cache(self):
+        """Clea everything out of the queue and the cache.
+        """
+        # clear all pending items
+        with self.queue.mutex:
+            self.queue.queue.clear()
+        self.cache.clear()
+
     def queue_render(self, slide):
         """Queue up a slide to be rendered.
         """
@@ -107,12 +115,14 @@ class SlideRenderer(threading.Thread):
             self.events[slide_num].set()
 
 
-class CurrentSlide(urwid.Frame):
-    def __init__(self, pres, palette, idx=0):
+class MarkdownTui(urwid.Frame):
+    def __init__(self, pres, palette, start_idx=0):
+        """
+        """
         self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
-        self.slide_title = text("banner", f"  {pres.meta.title}  ", "center")
+        self.slide_title = text("banner", f"  {pres.meta['title']}  ", "center")
 
-        self.creation = text("banner", f"  {pres.meta.author} - {pres.meta.date}  ")
+        self.creation = text("banner", f"  {pres.meta['author']} - {pres.meta['date']}  ")
         self.slide_num = text("banner", " test ", "right")
         self.slide_footer = urwid.Columns([self.creation, self.slide_num])
 
@@ -124,7 +134,6 @@ class CurrentSlide(urwid.Frame):
             urwid.Padding(self, left=2, right=2),
             palette,
             screen=screen,
-            #unhandled_input=self.handle_input,
         )
 
         # used to track slides that are being rendered
@@ -132,14 +141,7 @@ class CurrentSlide(urwid.Frame):
         self.slide_renderer.start()
 
         self.pres = pres
-        self.curr_slide = self.pres.slides[idx]
-        self.slide_cache = {}
-        self.update()
-
-        # now queue up the rest of the slides while we're at it so they'll be
-        # ready when we need them
-        for slide in self.pres.slides[1:]:
-            self.slide_renderer.queue_render(slide)
+        self.prep_pres(self.pres, start_idx)
 
         urwid.Frame.__init__(
             self,
@@ -147,6 +149,17 @@ class CurrentSlide(urwid.Frame):
             self.slide_title,
             self.slide_footer,
         )
+
+    def prep_pres(self, pres, start_idx=0):
+        """Prepare the presentation for displaying/use
+        """
+        self.curr_slide = self.pres.slides[start_idx]
+        self.update()
+
+        # now queue up the rest of the slides while we're at it so they'll be
+        # ready when we need them
+        for slide in filter(lambda x: x.number != start_idx, self.pres.slides):
+            self.slide_renderer.queue_render(slide)
 
     def update_slide_num(self):
         """Update the slide number
@@ -174,6 +187,15 @@ class CurrentSlide(urwid.Frame):
         self.update_title()
         self.update_body()
 
+    def reload(self):
+        """Reload the input, keeping the current slide in focus
+        """
+        curr_slide_idx = self.curr_slide.number
+        self.slide_renderer.flush_cache()
+        self.pres.reload()
+        self.prep_pres(self.pres, curr_slide_idx)
+        self.update()
+
     def keypress(self, size, key):
         """Handle keypress events
         """
@@ -193,6 +215,8 @@ class CurrentSlide(urwid.Frame):
         elif key in ["q", "Q"]:
             lookatme.contrib.shutdown_contribs()
             raise urwid.ExitMainLoop()
+        elif key == "r":
+            self.reload()
 
         if slide_direction != 0:
             new_slide_num = self.curr_slide.number + slide_direction
@@ -206,7 +230,6 @@ class CurrentSlide(urwid.Frame):
 
             self.curr_slide = self.pres.slides[new_slide_num]
             self.update()
-            self.loop.draw_screen()
             return
 
     def run(self):
@@ -214,12 +237,10 @@ class CurrentSlide(urwid.Frame):
 
 
 
-def run_presentation(pres, start_slide=0, width=None, height=None):
+def create_tui(pres, start_slide=0):
     """Run the provided presentation
 
     :param int start_slide: 0-based slide index
-    :param int width: Width of the presentation - defaults to terminal width
-    :param int height: Width of the presentation - defaults to terminal height
     """
-    slide = CurrentSlide(pres, palette)
-    slide.run()
+    tui = MarkdownTui(pres, palette, start_slide)
+    return tui

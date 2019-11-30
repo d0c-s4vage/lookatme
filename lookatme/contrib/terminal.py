@@ -4,7 +4,9 @@ within a slide.
 """
 
 
+import os
 import shlex
+import signal
 import urwid
 
 
