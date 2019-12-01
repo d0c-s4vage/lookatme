@@ -14,7 +14,7 @@ import urwid
 import lookatme.config
 import lookatme.contrib
 import lookatme.render.markdown_block as lam_md
-from lookatme.utils import *
+from lookatme.utils import pile_add
 
 
 palette = [
@@ -34,6 +34,7 @@ class SlideRenderer(threading.Thread):
     def __init__(self, loop):
         threading.Thread.__init__(self)
         self.events = defaultdict(threading.Event)
+        self.keep_running = threading.Event()
         self.queue = Queue()
         self.loop = loop
         self.cache = {}
@@ -80,11 +81,15 @@ class SlideRenderer(threading.Thread):
         new_meta = copy.deepcopy(meta)
         new_meta.update(existing_meta)
         setattr(item2, "meta", new_meta)
+
+    def stop(self):
+        self.keep_running.clear()
     
     def run(self):
         """Run the main render thread
         """
-        while True:
+        self.keep_running.set()
+        while self.keep_running.is_set():
             to_render = self.queue.get()
             slide_num = to_render.number
 

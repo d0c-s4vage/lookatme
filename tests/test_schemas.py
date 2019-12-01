@@ -22,5 +22,5 @@ date: {date}
     assert schema["title"] == title
     assert schema["author"] == author
     assert schema["date"].year == 2019
-    assert schema["date"].month == 01
-    assert schema["date"].day == 01
+    assert schema["date"].month == 1
+    assert schema["date"].day == 1

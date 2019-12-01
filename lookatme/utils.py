@@ -16,10 +16,14 @@ def dict_deep_update(to_update, new_vals):
             to_update[key] = value
 
 
-def spec_from_style(style_dict):
-    """Create an urwid.AttrSpec from a {fg:"", bg:""} style dict
+def spec_from_style(styles):
+    """Create an urwid.AttrSpec from a {fg:"", bg:""} style dict. If styles
+    is a string, it will be used as the foreground
     """
-    return urwid.AttrSpec(style_dict.get("fg", ""), style_dict.get("bg", ""))
+    if isinstance(styles, str):
+        return urwid.AttrSpec(styles, "")
+    else:
+        return urwid.AttrSpec(styles.get("fg", ""), styles.get("bg", ""))
 
 
 def get_fg_bg_styles(style):
@@ -42,7 +46,70 @@ def get_fg_bg_styles(style):
         raise ValueError("Unsupported style value {!r}".format(style))
 
 
-def styled_text(text, new_styles, old_styles=None):
+def overwrite_spec(orig_spec, new_spec):
+    if orig_spec is None:
+        orig_spec = urwid.AttrSpec("", "")
+    if new_spec is None:
+        new_spec = urwid.AttrSpec("", "")
+
+    fg_orig = orig_spec.foreground.split(",")
+    fg_orig_color = orig_spec._foreground_color()
+    fg_orig.remove(fg_orig_color)
+
+    bg_orig = orig_spec.background.split(",")
+    bg_orig_color = orig_spec._background()
+    bg_orig.remove(bg_orig_color)
+
+    fg_new = new_spec.foreground.split(",")
+    fg_new_color = new_spec._foreground_color()
+    fg_new.remove(fg_new_color)
+
+    bg_new = new_spec.background.split(",")
+    bg_new_color = new_spec._background()
+    bg_new.remove(bg_new_color)
+
+    if fg_new_color == "default":
+        fg_orig.append(fg_orig_color)
+    else:
+        fg_new.append(fg_new_color)
+
+    if bg_new_color == "default":
+        bg_orig.append(bg_orig_color)
+    else:
+        bg_new.append(bg_new_color)
+
+    return urwid.AttrSpec(
+        ",".join(set(fg_orig + fg_new)),
+        ",".join(set(bg_orig + bg_new)),
+    )
+
+
+def flatten_text(text, new_spec=None):
+    """Return a flattend list of tuples that can be used as the first argument
+    to a new urwid.Text().
+
+    :param urwid.Text text: The text to flatten
+    :param urwid.AttrSpec new_spec: A new spec to merge with existing styles
+    :returns: list of tuples
+    """
+    text, chunk_stylings = text.get_text()
+
+    res = []
+    total_len = 0
+    for spec, chunk_len in chunk_stylings:
+        split_text = text[total_len:total_len + chunk_len]
+        total_len += chunk_len
+
+        split_text_spec = overwrite_spec(new_spec, spec)
+        res.append((split_text_spec, split_text))
+
+    if len(text[total_len:]) > 0:
+        res.append((new_spec, text[total_len:]))
+
+    return res
+
+
+def styled_text(text, new_styles, old_styles=None, supplement_style=False):
     """Return a styled text tuple that can be used within urwid.Text.
 
     .. note::
@@ -52,9 +119,8 @@ def styled_text(text, new_styles, old_styles=None):
         caller.
     """
     if isinstance(text, urwid.Text):
-        if len(text.attrib) > 0:
-            old_styles = text.attrib[0][0]
-        text = text.text
+        new_spec = spec_from_style(new_styles)
+        return flatten_text(text, new_spec)
     elif (isinstance(text, tuple)
             and isinstance(text[0], urwid.AttrSpec)
             and isinstance(text[1], urwid.Text)):

@@ -37,7 +37,7 @@ class YamlRender:
 
 
 class BulletsSchema(Schema):
-    default = fields.Str(required=True, default="•")
+    default = fields.Str(default="•")
 
     class Meta:
         include = {
@@ -54,14 +54,70 @@ class BulletsSchema(Schema):
         }
 
 
-class TableSchema(Schema):
-    header_divider = fields.Str(default="─")
-    column_spacing = fields.Int(default=3)
-
-
 class StyleFieldSchema(Schema):
     fg = fields.Str(default="")
     bg = fields.Str(default="")
+
+
+class HeadingStyleSchema(Schema):
+    prefix = fields.Str()
+    suffix = fields.Str()
+    fg = fields.Str(default="")
+    bg = fields.Str(default="")
+
+
+class BlockQuoteSchema(Schema):
+    side = fields.Str(default="╎")
+    top_corner = fields.Str(default="┌")
+    bottom_corner = fields.Str(default="└")
+    style = fields.Nested(StyleFieldSchema, default=StyleFieldSchema().dump({
+        "fg": "italics,#aaa",
+        "bg": "default",
+    }))
+
+
+class HeadingsSchema(Schema):
+    default = fields.Nested(HeadingStyleSchema, default={
+        "fg": "#579,bold",
+        "bg": "default",
+        "prefix": "░ ",
+        "suffix": " ░",
+    })
+
+    class Meta:
+        include = {
+            "1": fields.Nested(HeadingStyleSchema, default={
+                "fg": "#9fc,bold",
+                "bg": "default",
+                "prefix": "░ ",
+                "suffix": " ░",
+            }),
+            "2": fields.Nested(HeadingStyleSchema, default={
+                "fg": "#1cc,bold",
+                "bg": "default",
+                "prefix": "░░ ",
+                "suffix": " ░░",
+            }),
+            "3": fields.Nested(HeadingStyleSchema, default={
+                "fg": "#29c,bold",
+                "bg": "default",
+                "prefix": "░░░ ",
+                "suffix": " ░░░",
+            }),
+            "4": fields.Nested(HeadingStyleSchema, default={
+                "fg": "#66a,bold",
+                "bg": "default",
+                "prefix": "░░░░ ",
+                "suffix": " ░░░░",
+            }),
+            "5": fields.Nested(HeadingStyleSchema),
+            "6": fields.Nested(HeadingStyleSchema),
+        }
+
+
+class TableSchema(Schema):
+    header_divider = fields.Str(default="─")
+    column_spacing = fields.Int(default=3)
 
 
 class StyleSchema(Schema):
@@ -74,12 +130,10 @@ class StyleSchema(Schema):
         default="monokai",
         validate=validate.OneOf(list(pygments.styles.get_all_styles())),
     )
+    headings = fields.Nested(HeadingsSchema, default=HeadingsSchema().dump(HeadingsSchema()))
     bullets = fields.Nested(BulletsSchema, default=BulletsSchema().dump(BulletsSchema()))
     table = fields.Nested(TableSchema, default=TableSchema().dump(TableSchema()))
-    quote_style = fields.Nested(StyleFieldSchema, default=StyleFieldSchema().dump({
-        "fg": "italics,#aaa",
-        "bg": "default",
-    }))
+    quote = fields.Nested(BlockQuoteSchema, default=BlockQuoteSchema().dump(BlockQuoteSchema()))
 
 
 class MetaSchema(Schema):
