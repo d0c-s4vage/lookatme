@@ -225,6 +225,44 @@ def some_fn(*args, **kargs):
         assert stripped_row_text == stripped_rows[idx]
 
 
+def test_code_yaml(mocker):
+    """Test code block rendering with yaml language
+    """
+    mocker.patch.object(lookatme.config, "LOG")
+    fake_config = mocker.patch.object(lookatme.render.pygments, "config")
+    fake_config.STYLE = {
+        "style": "monokai",
+    }
+
+    rendered = render_markdown("""
+```yaml
+test: a value
+test2: "another value"
+array:
+  - item1
+  - item2
+  - item3
+```""")
+
+    assert len(rendered) == 8
+
+    stripped_rows = [
+        b'',
+        b'test: a value',
+        b'test2: "another value"',
+        b'array:',
+        b'  - item1',
+        b'  - item2',
+        b'  - item3',
+        b'',
+    ]
+    for idx, row in enumerate(rendered):
+        stripped_row_text = row_text(row).rstrip()
+        assert stripped_row_text == stripped_rows[idx]
+
+
+
+
 def test_inline(mocker):
     """Test inline markdown
     """
