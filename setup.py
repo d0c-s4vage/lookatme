@@ -12,12 +12,19 @@ with open(req_path, "r") as f:
     required = f.read().splitlines()
 
 
+readme_path = os.path.join(os.path.dirname(__file__), "README.md")
+with open(readme_path, "r") as f:
+    readme = f.read()
+
+
 setup(
     name='lookatme',
     version='{{VERSION}}',
     description='An interactive, command-line presentation tool',
     author='James Johnson',
     author_email='d0c.s4vage@gmail.com',
+    long_description=readme,
+    long_description_content_type="text/markdown",
     packages=find_packages(exclude=["docs", ".gitignore", "README.md"]),
     install_requires=required,
     entry_points={
