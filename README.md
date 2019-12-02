@@ -1,3 +1,8 @@
+[![Master Build Status](https://travis-ci.org/d0c-s4vage/lookatme.svg?branch=master)](https://travis-ci.org/d0c-s4vage/lookatme)
+[![PyPI Statistics](https://img.shields.io/pypi/dm/lookatme)](https://pypistats.org/packages/lookatme)
+[![Latest Release](https://img.shields.io/pypi/v/lookatme)](https://pypi.python.org/pypi/lookatme/)
+[![Documentation Status](https://readthedocs.org/projects/lookatme/badge/?version=latest)](https://lookatme.readthedocs.io/en/latest/)
+
 # `lookatme`
 
 `lookatme` is an interactive, extensible, terminal-based markdown presentation
