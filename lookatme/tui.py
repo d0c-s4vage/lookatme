@@ -14,7 +14,7 @@ import urwid
 import lookatme.config
 import lookatme.contrib
 import lookatme.render.markdown_block as lam_md
-from lookatme.utils import *
+from lookatme.utils import pile_add
 
 
 palette = [
@@ -34,6 +34,7 @@ class SlideRenderer(threading.Thread):
     def __init__(self, loop):
         threading.Thread.__init__(self)
         self.events = defaultdict(threading.Event)
+        self.keep_running = threading.Event()
         self.queue = Queue()
         self.loop = loop
         self.cache = {}
@@ -64,7 +65,10 @@ class SlideRenderer(threading.Thread):
         self.queue.put(slide)
         self.events[slide.number].wait()
 
-        return self.cache[slide.number]
+        res = self.cache[slide.number]
+        if isinstance(res, Exception):
+            raise res
+        return res
 
     def get_slide(self, slide_number):
         """Fetch the slide from the cache
@@ -80,39 +84,53 @@ class SlideRenderer(threading.Thread):
         new_meta = copy.deepcopy(meta)
         new_meta.update(existing_meta)
         setattr(item2, "meta", new_meta)
+
+    def stop(self):
+        self.keep_running.clear()
     
     def run(self):
         """Run the main render thread
         """
-        while True:
+        self.keep_running.set()
+        while self.keep_running.is_set():
             to_render = self.queue.get()
             slide_num = to_render.number
 
-            self._log.debug(f"Rendering slide {slide_num}")
-            start = time.time()
+            try:
+                res = self._do_render(to_render, slide_num)
+                self.cache[slide_num] = res
+            except Exception as e:
+                self.cache[slide_num] = e
+            finally:
+                self.events[slide_num].set()
 
-            tmp_pile = urwid.Pile([])
-            stack = [tmp_pile]
-            for token in to_render.tokens:
-                self._log.debug(f"{'  '*len(stack)}Rendering token {token}")
+    def _do_render(self, to_render, slide_num):
+        """Perform the actual rendering of a slide
+        """
+        self._log.debug(f"Rendering slide {slide_num}")
+        start = time.time()
 
-                last_stack = stack[-1]
-                last_stack_len = len(stack)
+        tmp_pile = urwid.Pile([])
+        stack = [tmp_pile]
+        for token in to_render.tokens:
+            self._log.debug(f"{'  '*len(stack)}Rendering token {token}")
 
-                #render_token = getattr(lam_md, f"render_{token['type']}", lambda *args: None)
-                render_token = getattr(lam_md, f"render_{token['type']}")
-                res = render_token(token, stack[-1], stack, self.loop)
-                if len(stack) > last_stack_len:
-                    self._propagate_meta(last_stack, stack[-1])
-                if res is None:
-                    continue
-                pile_add(last_stack, res)
+            last_stack = stack[-1]
+            last_stack_len = len(stack)
 
-            total = time.time() - start
-            self._log.debug(f"Rendered slide {slide_num} in {total}")
+            #render_token = getattr(lam_md, f"render_{token['type']}", lambda *args: None)
+            render_token = getattr(lam_md, f"render_{token['type']}")
+            res = render_token(token, stack[-1], stack, self.loop)
+            if len(stack) > last_stack_len:
+                self._propagate_meta(last_stack, stack[-1])
+            if res is None:
+                continue
+            pile_add(last_stack, res)
 
-            self.cache[slide_num] = tmp_pile.contents
-            self.events[slide_num].set()
+        total = time.time() - start
+        self._log.debug(f"Rendered slide {slide_num} in {total}")
+
+        return tmp_pile.contents
 
 
 class MarkdownTui(urwid.Frame):

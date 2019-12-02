@@ -29,7 +29,7 @@ class Table(urwid.Pile):
 
         if headers is not None:
             self.num_columns = len(headers)
-        elif len(rows) == 0:
+        elif headers is None:
             self.num_columns = len(rows[0])
         else:
             raise ValueError(
@@ -39,15 +39,18 @@ class Table(urwid.Pile):
         def header_modifier(cell):
             return urwid.Text(styled_text(cell, "bold"), align=cell.align)
 
-        self.rend_headers = self.create_cells(
-            [self.table_headers], modifier=header_modifier
-        )
+        if self.table_headers is not None:
+            self.rend_headers = self.create_cells(
+                [self.table_headers], modifier=header_modifier
+            )
+        else:
+            self.rend_headers = []
         self.rend_rows = self.create_cells(self.table_rows)
 
-        column_maxes = self.calc_column_maxes()
+        self.column_maxes = self.calc_column_maxes()
 
         cell_spacing = config.STYLE["table"]["column_spacing"]
-        self.total_width = sum(column_maxes.values()) + (
+        self.total_width = sum(self.column_maxes.values()) + (
             cell_spacing * (self.num_columns - 1)
         )
 
@@ -55,19 +58,20 @@ class Table(urwid.Pile):
         final_rows = []
 
         # put headers in Columns
-        header_columns = []
-        for idx, header in enumerate(self.rend_headers[0]):
-            header_with_div = urwid.Pile([
-                header,
-                urwid.Divider(config.STYLE["table"]["header_divider"]),
-            ])
-            header_columns.append((column_maxes[idx], header_with_div))
-        final_rows.append(urwid.Columns(header_columns, cell_spacing))
+        if self.table_headers is not None:
+            header_columns = []
+            for idx, header in enumerate(self.rend_headers[0]):
+                header_with_div = urwid.Pile([
+                    header,
+                    urwid.Divider(config.STYLE["table"]["header_divider"]),
+                ])
+                header_columns.append((self.column_maxes[idx], header_with_div))
+            final_rows.append(urwid.Columns(header_columns, cell_spacing))
 
         for row_idx, rend_row in enumerate(self.rend_rows):
             row_columns = []
             for idx, rend_cell in enumerate(rend_row):
-                row_columns.append((column_maxes[idx], rend_cell))
+                row_columns.append((self.column_maxes[idx], rend_cell))
 
             column_row = urwid.Columns(row_columns, cell_spacing)
             final_rows.append(column_row)
@@ -102,5 +106,4 @@ class Table(urwid.Pile):
                 rend_row.append(rend_cell)
             res.append(rend_row)
 
-        return res
         return res

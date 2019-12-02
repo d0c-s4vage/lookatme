@@ -47,16 +47,21 @@ def _list_level(item):
 
 @contrib_first
 def render_heading(token, body, stack, loop):
-    if token["level"] == 1:
-        return urwid.Text(("bold", token["text"]), align="center")
-        return urwid.Padding(
-            #urwid.BigText(("bold", token["text"]), font=urwid.HalfBlock5x4Font()),
-            urwid.Text(token["text"]),
-            width="clip",
-            align="center",
-        )
-    else:
-        return urwid.Text(("bold", token["text"]), align="center")
+    headings = config.STYLE["headings"]
+    level = token["level"]
+    style = config.STYLE["headings"].get(str(level), headings["default"])
+
+    prefix = styled_text(style["prefix"], style)
+    suffix = styled_text(style["suffix"], style)
+
+    rendered = render_text(text=token["text"])
+    styled_rendered = styled_text(rendered, style, supplement_style=True)
+
+    return [
+        urwid.Divider(),
+        urwid.Text([prefix] + styled_text(rendered, style) + [suffix]),
+        urwid.Divider(),
+    ]
 
 
 @contrib_first
@@ -143,16 +148,24 @@ render_paragraph = render_text
 def render_block_quote_start(token, body, stack, loop):
     pile = urwid.Pile([])
     stack.append(pile)
+
+    styles = config.STYLE["quote"]
+
+    quote_side = styles["side"]
+    quote_top_corner = styles["top_corner"]
+    quote_bottom_corner = styles["bottom_corner"]
+    quote_style = styles["style"]
+
     return [
         urwid.Divider(),
         urwid.LineBox(
             urwid.AttrMap(
                 urwid.Padding(pile, left=2),
-                spec_from_style(config.STYLE["quote_style"]),
+                spec_from_style(quote_style),
             ),
-            lline="╎", rline="",
-            tline=" ", trcorner="", #tlcorner="",
-            bline=" ", brcorner="", #blcorner="",
+            lline=quote_side, rline="",
+            tline=" ", trcorner="", tlcorner=quote_top_corner,
+            bline=" ", brcorner="", blcorner=quote_bottom_corner,
         ),
         urwid.Divider(),
     ]

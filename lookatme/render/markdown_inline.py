@@ -55,8 +55,8 @@ text = render_no_change
 escape = render_no_change
 
 
-def autolink(link, is_email=False):
-    return render_no_change(link)
+def autolink(link_uri, is_email=False):
+    return link(link_uri, None, link_uri)
 
 
 def inline_html(html):
@@ -64,15 +64,16 @@ def inline_html(html):
 
 
 def footnote_ref(key, index):
+    __import__('pdb').set_trace()
     return render_no_change(key)
 
 
-def image(link, title, text):
-    return render_no_change(text or "")
+def image(link_uri, title, text):
+    return link(link_uri, title, text)
 
 
-def link(link, title, text):
-    return render_no_change(title)
+def link(link_uri, title, text):
+    return [styled_text(text, config.STYLE["link"])]
 
 
 @expanded_styles

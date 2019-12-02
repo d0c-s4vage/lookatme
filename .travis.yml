@@ -1,0 +1,20 @@
+language: python
+python:
+  - "3.6"
+  - "3.7"
+install:
+    - export VERSION=$(sed 's/^v//' <<<"${TRAVIS_TAG:-0.0.0+$(sed 's^[/_-]^.^g' <<<$TRAVIS_BRANCH)}")
+    - find . -type f -exec sed -i "s/{{VERSION}}/${VERSION}/g" {} \;
+    - pip install tox
+
+script: tox
+
+deploy:
+  provider: pypi
+  password:
+    secure: "MlhilHXHs+bSXZcOHEuVE+jaioTq5vQAKi7FJmEzVq93WCfl78O0RkDVF4xwLxBmyGeRXvhkP36rCWwDj/PcKAfSfURk+kpgvA1SuEU+7wuigpUXeLIH2wrVntQ7z7TeVChF5Uvm3RZI/OyuzQHMO52wNnSv1ypNf7C5zE2OxvE="
+  skip_cleanup: true
+  skip_existing: true
+  user: d0c.s4vage
+  on:
+    tags: true
