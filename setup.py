@@ -14,7 +14,7 @@ with open(req_path, "r") as f:
 
 readme_path = os.path.join(os.path.dirname(__file__), "README.md")
 with open(readme_path, "r") as f:
-    readme = f.read().splitlines()
+    readme = f.read()
 
 
 setup(
