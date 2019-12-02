@@ -89,26 +89,26 @@ class HeadingsSchema(Schema):
             "1": fields.Nested(HeadingStyleSchema, default={
                 "fg": "#9fc,bold",
                 "bg": "default",
-                "prefix": "░ ",
-                "suffix": " ░",
+                "prefix": "██ ",
+                "suffix": "",
             }),
             "2": fields.Nested(HeadingStyleSchema, default={
                 "fg": "#1cc,bold",
                 "bg": "default",
-                "prefix": "░░ ",
-                "suffix": " ░░",
+                "prefix": '▓▓▓▓ ',
+                "suffix": '',
             }),
             "3": fields.Nested(HeadingStyleSchema, default={
                 "fg": "#29c,bold",
                 "bg": "default",
-                "prefix": "░░░ ",
-                "suffix": " ░░░",
+                "prefix": '▒▒▒▒▒▒ ',
+                "suffix": '',
             }),
             "4": fields.Nested(HeadingStyleSchema, default={
                 "fg": "#66a,bold",
                 "bg": "default",
-                "prefix": "░░░░ ",
-                "suffix": " ░░░░",
+                "prefix": '░░░░░░░░ ',
+                "suffix": '',
             }),
             "5": fields.Nested(HeadingStyleSchema),
             "6": fields.Nested(HeadingStyleSchema),
@@ -135,7 +135,7 @@ class StyleSchema(Schema):
     table = fields.Nested(TableSchema, default=TableSchema().dump(TableSchema()))
     quote = fields.Nested(BlockQuoteSchema, default=BlockQuoteSchema().dump(BlockQuoteSchema()))
     link = fields.Nested(StyleFieldSchema, default={
-        "fg": "#228,underline",
+        "fg": "#77f,underline",
         "bg": "default",
     })
 
