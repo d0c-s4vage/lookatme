@@ -9,3 +9,6 @@ __pycache__
 venv*
 .coverage
 *.egg-info
+
+# docs
+docs/build
