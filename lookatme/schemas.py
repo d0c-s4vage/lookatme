@@ -134,6 +134,10 @@ class StyleSchema(Schema):
     bullets = fields.Nested(BulletsSchema, default=BulletsSchema().dump(BulletsSchema()))
     table = fields.Nested(TableSchema, default=TableSchema().dump(TableSchema()))
     quote = fields.Nested(BlockQuoteSchema, default=BlockQuoteSchema().dump(BlockQuoteSchema()))
+    link = fields.Nested(StyleFieldSchema, default={
+        "fg": "#228,underline",
+        "bg": "default",
+    })
 
 
 class MetaSchema(Schema):

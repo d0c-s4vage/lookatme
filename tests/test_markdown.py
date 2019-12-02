@@ -8,6 +8,7 @@ import urwid
 
 import lookatme.config
 import lookatme.render.markdown_block
+import lookatme.render.pygments
 from lookatme.parser import Parser
 import lookatme.tui
 
@@ -113,7 +114,7 @@ def test_table(mocker):
 
 
 def test_lists(mocker):
-    """Test basic table rendering
+    """Test list rendering
     """
     import lookatme.widgets.table
 
@@ -198,3 +199,95 @@ def test_block_quote(mocker):
 def test_code(mocker):
     """Test code block rendering
     """
+    mocker.patch.object(lookatme.config, "LOG")
+    fake_config = mocker.patch.object(lookatme.render.pygments, "config")
+    fake_config.STYLE = {
+        "style": "monokai",
+    }
+
+    rendered = render_markdown("""
+```python
+def some_fn(*args, **kargs):
+    pass```
+    """)
+
+    assert len(rendered) == 5
+
+    stripped_rows = [
+        b'',
+        b'def some_fn(*args, **kargs):',
+        b'    pass',
+        b'',
+        b'',
+    ]
+    for idx, row in enumerate(rendered):
+        stripped_row_text = row_text(row).rstrip()
+        assert stripped_row_text == stripped_rows[idx]
+
+
+def test_inline(mocker):
+    """Test inline markdown
+    """
+    mocker.patch.object(lookatme.config, "LOG")
+    fake_config = mocker.patch.object(lookatme.render.pygments, "config")
+    mocker.patch.object(lookatme.render.markdown_inline, "config", fake_config)
+    fake_config.STYLE = {
+        "style": "monokai",
+        "link": {
+            "fg": "underline",
+            "bg": "default",
+        },
+    }
+
+    rendered = render_markdown("*emphasis*")
+    assert len(rendered) == 1
+    assert rendered[0][0][0].foreground == "default,italics"
+    assert row_text(rendered[0]).strip() == b"emphasis"
+
+    rendered = render_markdown("**emphasis**")
+    assert len(rendered) == 1
+    assert rendered[0][0][0].foreground == "default,underline"
+    assert row_text(rendered[0]).strip() == b"emphasis"
+
+    rendered = render_markdown("_emphasis_")
+    assert len(rendered) == 1
+    assert rendered[0][0][0].foreground == "default,italics"
+    assert row_text(rendered[0]).strip() == b"emphasis"
+
+    rendered = render_markdown("__emphasis__")
+    assert len(rendered) == 1
+    assert rendered[0][0][0].foreground == "default,underline"
+    assert row_text(rendered[0]).strip() == b"emphasis"
+
+    rendered = render_markdown("`inline code`")
+    assert len(rendered) == 1
+    assert row_text(rendered[0]).rstrip() == b" inline code"
+
+    rendered = render_markdown("~~strikethrough~~")
+    assert len(rendered) == 1
+    assert rendered[0][0][0].foreground == "default,strikethrough"
+    assert row_text(rendered[0]).rstrip() == b"strikethrough"
+
+    rendered = render_markdown("[link](http://domain.tld)")
+    assert len(rendered) == 1
+    assert rendered[0][0][0].foreground == "default,underline"
+    assert row_text(rendered[0]).rstrip() == b"link"
+
+    rendered = render_markdown("http://domain.tld")
+    assert len(rendered) == 1
+    assert rendered[0][0][0].foreground == "default,underline"
+    assert row_text(rendered[0]).rstrip() == b"http://domain.tld"
+
+    rendered = render_markdown("![link](http://domain.tld)")
+    assert len(rendered) == 1
+    assert rendered[0][0][0].foreground == "default,underline"
+    assert row_text(rendered[0]).rstrip() == b"link"
+
+#      rendered = render_markdown("""
+#  test[^1]
+#  [^1]: This is a foot note
+#  """)
+#      assert len(rendered) == 1
+#      assert rendered[0][0][0].foreground == "default,underline"
+#      assert row_text(rendered[0]).rstrip() == b"link"
+#  
