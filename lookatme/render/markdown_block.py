@@ -140,6 +140,8 @@ def render_text(token=None, body=None, stack=None, loop=None, text=None):
 
     inline_lexer = mistune.InlineLexer(markdown_inline_renderer)
     res = inline_lexer.output(text)
+    if len(res) == 0:
+        res = ""
     return urwid.Text(res)
 render_paragraph = render_text
 

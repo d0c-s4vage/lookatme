@@ -171,8 +171,10 @@ class UrwidFormatter(Formatter):
         """Takes a token source, and generates 
         (tokenstring, urwid.AttrSpec) pairs"""
         for (ttype, tstring) in tokensource:
+            parts = str(ttype).split(".")
             while str(ttype) not in self.style_attrs:
-                ttype = ttype[:-1]
+                parts = parts[:-1]
+                ttype = ".".join(parts)
 
             attr = self.style_attrs[str(ttype)]
             yield attr, tstring
