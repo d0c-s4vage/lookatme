@@ -16,6 +16,13 @@ supports:
   * Live and manual source reloading
   * User-contrib behavior overrides and extensions
 
+Tour
+----
+
+.. image:: _static/lookatme_tour.gif
+  :width: 800
+  :alt: Tour Gif
+
 
 Indices and tables
 ==================
