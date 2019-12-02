@@ -13,8 +13,9 @@ with open(req_path, "r") as f:
 
 
 setup(
-    name='lookatme', version='{{VERSION}}',
-    description='A command-line presentation tool',
+    name='lookatme',
+    version='{{VERSION}}',
+    description='An interactive, command-line presentation tool',
     author='James Johnson',
     author_email='d0c.s4vage@gmail.com',
     packages=find_packages(exclude=["docs", ".gitignore", "README.md"]),
