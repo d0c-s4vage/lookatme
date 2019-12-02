@@ -1,18 +1,16 @@
 language: python
 python:
-  - "3.6"
-  - "3.7"
+- '3.6'
+- '3.7'
 install:
-    - export VERSION=$(sed 's/^v//' <<<"${TRAVIS_TAG:-0.0.0+$(sed 's^[/_-]^.^g' <<<$TRAVIS_BRANCH)}")
-    - find . -type f -exec sed -i "s/{{VERSION}}/${VERSION}/g" {} \;
-    - pip install tox
-
+- export VERSION=$(sed 's/^v//' <<<"${TRAVIS_TAG:-0.0.0+$(sed 's^[/_-]^.^g' <<<$TRAVIS_BRANCH)}")
+- find . -type f -exec sed -i "s/{{VERSION}}/${VERSION}/g" {} \;
+- pip install tox
 script: tox
-
 deploy:
   provider: pypi
   password:
-    secure: "MlhilHXHs+bSXZcOHEuVE+jaioTq5vQAKi7FJmEzVq93WCfl78O0RkDVF4xwLxBmyGeRXvhkP36rCWwDj/PcKAfSfURk+kpgvA1SuEU+7wuigpUXeLIH2wrVntQ7z7TeVChF5Uvm3RZI/OyuzQHMO52wNnSv1ypNf7C5zE2OxvE="
+    secure: mgrOBwQN1ybp8GH4SHIpK8M/xh2L4ZlEyFuy+WR3f2bSsifTVDKoR764pLzU16yqvYE+3zZGi1r8kx4W0s+Q49rO0E+XruLLojJTnt565VrbROFbneEcrnSK0jVVhBlKCO54DXySkzITRWMv2HecDOlFaaJzyzULpKNpd2B1w+nzHMcHlc4CCEtSQ44BPWBEL9zEyyDxEapbtCLM/w13GHnL1GfaPY3vYji2MOTZPQ2AiQlAzkwSc/fNtV7uLL0ccX9z3l1Ks0cYverCbFqD3/OAxHWju6h4m3wNdPpECHkOhYC0Gcpd46L+HPWFimTa+3cPMLFmkUilMxiGMOeJOzlPWm0Tk3aRRIEqeU+dyhYH1qdS+x4q+uCRaOHd5kb523iqhNc7/fsssDr1vMCZG3CEUeC7VUZueMgbxzQBmeotExEMzRTY10GhGx5Do6R8v3Fc+XpsmHmk7M9qMNM4ky6B/2PIjPpf9sV98uFhSWEMV3nI20yyOUK8yVACh6tncWPw194QnTjqUKvhJvrdYD4OIpY585+sQxP/yBYxXG0sEUFcKLbGXAVaYoC8F5cmLg9TuMV/vb+HggZe64kzb2IPraIwnAc/uTO08xy2X6sSjPncCkrpS6j2HNzCdyMqHn+2OX/5gbzPLHUBYmDMzxC3hNnuWwptc01z3dmPRsQ=
   skip_cleanup: true
   skip_existing: true
   user: d0c.s4vage
