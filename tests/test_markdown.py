@@ -60,9 +60,11 @@ def test_headings(mocker):
 ### H3""")
 
     # three lines for the headings plus an extra line of padding after each
-    assert len(rendered) == 6
+    # and one line of padding before the first one
+    assert len(rendered) == 7
 
     stripped_rows = [
+        b"",
         b"|H1|",
         b"",
         b"|H2|",
@@ -192,3 +194,7 @@ def test_block_quote(mocker):
     for idx, row in enumerate(rendered):
         stripped_row_text = row_text(row).rstrip()
         assert stripped_row_text == stripped_rows[idx]
+
+def test_code(mocker):
+    """Test code block rendering
+    """

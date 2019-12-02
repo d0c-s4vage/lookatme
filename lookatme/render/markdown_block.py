@@ -58,6 +58,7 @@ def render_heading(token, body, stack, loop):
     styled_rendered = styled_text(rendered, style, supplement_style=True)
 
     return [
+        urwid.Divider(),
         urwid.Text([prefix] + styled_text(rendered, style) + [suffix]),
         urwid.Divider(),
     ]
