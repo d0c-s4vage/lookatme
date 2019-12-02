@@ -143,7 +143,17 @@ def render_text(token=None, body=None, stack=None, loop=None, text=None):
     if len(res) == 0:
         res = ""
     return urwid.Text(res)
-render_paragraph = render_text
+
+
+@contrib_first
+def render_paragraph(token, body, stack, loop):
+    token["text"] = token["text"].replace("\r\n", " ").replace("\n", " ")
+    res = render_text(token, body, stack, loop)
+    return [
+        urwid.Divider(),
+        res,
+        urwid.Divider(),
+    ]
 
 
 @contrib_first
