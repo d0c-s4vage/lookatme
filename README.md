@@ -28,9 +28,9 @@ version `1.0.0` is released!
 * Live terminals embedded directly in slides
 * Syntax highlighting using [Pygments](https://pygments.org/)
 
-### Live Reloading
+### Tour
 
-![lookatme_live_editing](https://user-images.githubusercontent.com/5090146/69895932-b74c4700-12ed-11ea-9fca-bba68d323502.gif)
+![lookatme_tour](docs/source/_static/lookatme_tour.gif)
 
 ## Navigating the Presentation
 
@@ -44,20 +44,23 @@ version `1.0.0` is released!
 
 ## CLI Options
 
-## Slide Format
+```
+Usage: lookatme [OPTIONS] [INPUT_FILE]
 
-### Metadata Header
+  lookatme - An interactive, terminal-based markdown presentation tool.
 
-The metadata header has the following fields:
-
-```yaml
-title: TITLE
-author: AUTHOR
-date: DATE
-extensions: []
-styles: {}
+Options:
+  --debug
+  -l, --log PATH
+  -t, --theme [dark|light]
+  -s, --style [default|emacs|friendly|colorful|autumn|murphy|manni|monokai|perldoc|pastie|borland|trac|native|fruity|bw|vim|vs|tango|rrt|xcode|igor|paraiso-light|paraiso-dark|lovelace|algol|algol_nu|arduino|rainbow_dash|abap|solarized-dark|solarized-light|sas|stata|stata-light|stata-dark]
+  --dump-styles                   Dump the resolved styles that will be used
+                                  with the presentation to stdout
+  --live, --live-reload           Watch the input filename for modifications
+                                  and automatically reload
+  --help                          Show this message and exit.
 ```
 
-For all supported styles overrides, please see the `--dump-styles` CLI argument
+## Documentation
 
-### Slides
+See the [documentation](https://lookatme.readthedocs.io/en/latest/) for details.

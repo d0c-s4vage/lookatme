@@ -1,14 +1,42 @@
+---
+title: lookatme Tour
+date: 2019-12-02
+author: James Johnson
+styles:
+  quote:
+    style:
+        fg: "italics,#444"
+---
+
 # Markdown Support: Inline
 
-* Styling
-    * *italic*
-    * **bold**
-    * ***bold underline***
-* Inline `code`
+| Markdown                     | Result                     |
+|------------------------------|----------------------------|
+| `*italic*`                   | *italic*                   |
+| `_italic_`                   | _italic_                   |
+| `**bold**`                   | **bold**                   |
+| `__bold__`                   | __bold__                   |
+| `***bold underline***`       | ***bold underline***       |
+| `___bold underline___`       | ___bold underline___       |
+| `~~strikethrough~~`          | ~~strikethrough~~          |
+| `[link](https://google.com)` | [link](https://google.com) |
+| `` `code` ``                 | `code`                     |
 
 ---
 
-# Markdown Support: Code Blocks
+# Markdown Support: Headers
+
+## Heading 2
+
+### Heading 3
+
+#### Heading 4
+
+More text
+
+---
+
+# Markdown Support: Code Blocks & Quotes
 
 Code blocks with language syntax highlighting
 
@@ -18,6 +46,10 @@ def a_function(arg1, arg2):
     """
     print(arg1)
 ~~~
+
+A quote is below:
+
+> This is a quote
 
 ---
 
@@ -80,12 +112,6 @@ Asciinema is an awesome tool for recording and sharing terminal commands.
 If you have asciinema installed (`pip install asciinema`), play back a
 pre-recorded shell session inside of a slide!
 
-~~~md
-```terminal8
-asciinema play https://asciinema.org/a/232377
-```
-~~~
-
-```terminal40
-asciinema play https://asciinema.org/a/232377
+```terminal13
+asciinema play https://asciinema.org/a/ivEsIJrcC8bT73Yx9qdPRfYsc
 ```
