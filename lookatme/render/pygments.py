@@ -4,6 +4,7 @@
 
 import urwid
 import pygments
+import pygments.util
 from pygments.formatter import Formatter
 import time
 import urwid
@@ -31,10 +32,13 @@ def get_formatter(style_name):
     return formatter, style_bg
 
 
-def get_lexer(lang):
+def get_lexer(lang, default="text"):
     lexer = LEXER_CACHE.get(lang, None)
     if lexer is None:
-        lexer = pygments.lexers.get_lexer_by_name(lang)
+        try:
+            lexer = pygments.lexers.get_lexer_by_name(lang)
+        except pygments.util.ClassNotFound:
+            lexer = pygments.lexers.get_lexer_by_name(default)
         LEXER_CACHE[lang] = lexer
     return lexer
 
