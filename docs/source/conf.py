@@ -72,6 +72,8 @@ html_theme = 'alabaster'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+master_doc = "index"
+
 
 def run_apidoc(_):
 	from sphinx.ext.apidoc import main
