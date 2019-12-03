@@ -1,3 +1,11 @@
+---
+title: lookatme Tour
+date: 2019-12-02
+author: James Johnson
+styles:
+  style: monokai
+---
+
 # Markdown Support: Inline
 
 * Styling
@@ -80,12 +88,6 @@ Asciinema is an awesome tool for recording and sharing terminal commands.
 If you have asciinema installed (`pip install asciinema`), play back a
 pre-recorded shell session inside of a slide!
 
-~~~md
-```terminal8
-asciinema play https://asciinema.org/a/232377
-```
-~~~
-
-```terminal40
-asciinema play https://asciinema.org/a/232377
+```terminal13
+asciinema play https://asciinema.org/a/ivEsIJrcC8bT73Yx9qdPRfYsc
 ```

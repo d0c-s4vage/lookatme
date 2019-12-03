@@ -23,6 +23,49 @@ Tour
   :width: 800
   :alt: Tour Gif
 
+TL;DR Getting Started
+---------------------
+
+Install ``lookatme`` with:
+
+.. code-block:: bash
+
+    pip install lookatme
+
+Run lookatme on slides written in Markdown:
+
+.. code-block:: bash
+
+    lookatme slides.md
+
+Slides are separated with ``---`` hrules:
+
+.. code-block:: markdown
+
+    # Slide 1
+
+    Some text
+
+    ---
+
+    # Slide 2
+
+    More text
+
+A basic, optional YAML header may be included at the top of the slides:
+
+.. code-block:: markdown
+
+    ---
+    title: Slides Presentation
+    author: Me Not You
+    date: 2019-12-02
+    ---
+
+    # Slide 1
+
+    Some text
+
 
 Indices and tables
 ==================
