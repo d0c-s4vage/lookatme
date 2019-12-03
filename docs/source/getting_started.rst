@@ -79,14 +79,14 @@ themes: ``dark`` and ``light``. These themes are intended to look good on
 dark terminals and light terminals.
 
 See the :ref:`dark_theme` and :ref:`light_theme` pages for more details.
-See the :ref:`style_precendence` page for details on the order style overrides
+See the :ref:`style_precedence` page for details on the order style overrides
 and settings are applied.
 
 ``--style``
 ^^^^^^^^^^^
 
 This option overrides the `Pygments <https://pygments.org/>`_  syntax highlighting
-style to use. See the :ref:`style_precendence` for details about style overriding
+style to use. See the :ref:`style_precedence` for details about style overriding
 order.
 
 At the time of this writing, available Pygments style options include:
@@ -131,7 +131,7 @@ At the time of this writing, available Pygments style options include:
 ^^^^^^^^^^^^^^^^^
 
 Print the final, resolved style definition that will be used to render the
-markdown as currently specified on the command-line. See the :ref:`style_precendence`
+markdown as currently specified on the command-line. See the :ref:`style_precedence`
 section for details on how this works.
 
 E.g.:

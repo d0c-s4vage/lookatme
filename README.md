@@ -1,4 +1,5 @@
 [![Master Build Status](https://travis-ci.org/d0c-s4vage/lookatme.svg?branch=master)](https://travis-ci.org/d0c-s4vage/lookatme)
+[![Coverage Status](https://coveralls.io/repos/github/d0c-s4vage/lookatme/badge.svg?branch=master)](https://coveralls.io/github/d0c-s4vage/lookatme?branch=master)
 [![PyPI Statistics](https://img.shields.io/pypi/dm/lookatme)](https://pypistats.org/packages/lookatme)
 [![Latest Release](https://img.shields.io/pypi/v/lookatme)](https://pypi.python.org/pypi/lookatme/)
 [![Documentation Status](https://readthedocs.org/projects/lookatme/badge/?version=latest)](https://lookatme.readthedocs.io/en/latest/)
