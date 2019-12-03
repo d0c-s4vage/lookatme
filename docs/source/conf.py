@@ -10,8 +10,24 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+
+import locale
 import os
 import sys
+
+
+def fake_locale_set(*args, **kwargs):
+    try:
+        locale.setlocale(*args, **kwargs)
+    except Exception:
+        pass
+orig_set_locale = locale.setlocale
+locale.setlocale = fake_locale_set
+
+import urwid
+
+locale.setlocale = orig_set_locale
+
 # sys.path.insert(0, os.path.abspath('.'))
 
 
