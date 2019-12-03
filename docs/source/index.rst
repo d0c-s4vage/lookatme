@@ -40,7 +40,7 @@ Run lookatme on slides written in Markdown:
 
 Slides are separated with ``---`` hrules:
 
-.. code-block:: markdown
+.. code-block:: md
 
     # Slide 1
 
@@ -54,7 +54,7 @@ Slides are separated with ``---`` hrules:
 
 A basic, optional YAML header may be included at the top of the slides:
 
-.. code-block:: markdown
+.. code-block:: md
 
     ---
     title: Slides Presentation
@@ -65,6 +65,20 @@ A basic, optional YAML header may be included at the top of the slides:
     # Slide 1
 
     Some text
+
+.. toctree::
+  :maxdepth: 2
+
+  getting_started
+  slides
+  dark_theme
+  light_theme
+  style_precendence
+
+
+.. toctree::
+
+  autodoc/modules.rst
 
 
 Indices and tables

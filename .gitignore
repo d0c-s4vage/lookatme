@@ -12,3 +12,4 @@ venv*
 
 # docs
 docs/build
+docs/source/autodoc
