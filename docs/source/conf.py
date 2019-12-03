@@ -10,8 +10,24 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+
+import locale
 import os
 import sys
+
+
+def fake_locale_set(*args, **kwargs):
+    try:
+        locale.setlocale(*args, **kwargs)
+    except Exception:
+        pass
+orig_set_locale = locale.setlocale
+locale.setlocale = fake_locale_set
+
+import urwid
+
+locale.setlocale = orig_set_locale
+
 # sys.path.insert(0, os.path.abspath('.'))
 
 
@@ -55,6 +71,8 @@ html_theme = 'alabaster'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+master_doc = "index"
 
 
 def run_apidoc(_):
