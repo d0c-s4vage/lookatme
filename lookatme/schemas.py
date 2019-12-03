@@ -78,10 +78,10 @@ class BlockQuoteSchema(Schema):
 
 class HeadingsSchema(Schema):
     default = fields.Nested(HeadingStyleSchema, default={
-        "fg": "#579,bold",
+        "fg": "#346,bold",
         "bg": "default",
-        "prefix": "░ ",
-        "suffix": " ░",
+        "prefix": "░░░░░ ",
+        "suffix": "",
     })
 
     class Meta:
@@ -95,20 +95,20 @@ class HeadingsSchema(Schema):
             "2": fields.Nested(HeadingStyleSchema, default={
                 "fg": "#1cc,bold",
                 "bg": "default",
-                "prefix": '▓▓▓▓ ',
-                "suffix": '',
+                "prefix": "▓▓▓ ",
+                "suffix": "",
             }),
             "3": fields.Nested(HeadingStyleSchema, default={
                 "fg": "#29c,bold",
                 "bg": "default",
-                "prefix": '▒▒▒▒▒▒ ',
-                "suffix": '',
+                "prefix": "▒▒▒▒ ",
+                "suffix": "",
             }),
             "4": fields.Nested(HeadingStyleSchema, default={
-                "fg": "#66a,bold",
+                "fg": "#559,bold",
                 "bg": "default",
-                "prefix": '░░░░░░░░ ',
-                "suffix": '',
+                "prefix": "░░░░░ ",
+                "suffix": "",
             }),
             "5": fields.Nested(HeadingStyleSchema),
             "6": fields.Nested(HeadingStyleSchema),
@@ -135,7 +135,7 @@ class StyleSchema(Schema):
     table = fields.Nested(TableSchema, default=TableSchema().dump(TableSchema()))
     quote = fields.Nested(BlockQuoteSchema, default=BlockQuoteSchema().dump(BlockQuoteSchema()))
     link = fields.Nested(StyleFieldSchema, default={
-        "fg": "#77f,underline",
+        "fg": "#33c,underline",
         "bg": "default",
     })
 

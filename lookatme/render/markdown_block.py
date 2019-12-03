@@ -185,7 +185,13 @@ def render_block_quote_start(token, body, stack, loop):
 
 @contrib_first
 def render_block_quote_end(token, body, stack, loop):
-    stack.pop()
+    pile = stack.pop()
+
+    # remove leading/trailing divider if they were added to the pile
+    if isinstance(pile.contents[0][0], urwid.Divider):
+        pile.contents = pile.contents[1:]
+    if isinstance(pile.contents[-1][0], urwid.Divider):
+        pile.contents = pile.contents[:-1]
 
 
 @contrib_first
