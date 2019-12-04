@@ -5,6 +5,34 @@
 import urwid
 
 
+def row_text(rendered_row):
+    """Return all text joined together from the rendered row
+    """
+    return b"".join(x[-1] for x in rendered_row)
+
+
+def resolve_bag_of_text_markup_or_widgets(items):
+    """Resolve the list of items into either contiguous urwid.Text() instances,
+    or pre-existing urwid.Widget objects
+    """
+    res = []
+    curr_text_markup = []
+    __import__('pdb').set_trace()
+    for item in items:
+        if isinstance(item, tuple) or isinstance(item, str):
+            curr_text_markup.append(item)
+        else:
+            if len(curr_text_markup) > 0:
+                res.append(urwid.Text(curr_text_markup))
+                curr_text_markup = []
+            res.append(item)
+
+    if len(curr_text_markup) > 0:
+        res.append(urwid.Text(curr_text_markup))
+
+    return res
+
+
 def dict_deep_update(to_update, new_vals):
     """Deeply update the to_update dict with the new_vals
     """

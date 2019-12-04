@@ -3,24 +3,46 @@ title: lookatme Tour
 date: 2019-12-02
 author: James Johnson
 styles:
-  quote:
-    style:
-        fg: "italics,#444"
+  table:
+    column_spacing: 5
+---
+
+# Live Editing
+
+lookatme supports live editing with the `--live` command-line argument.
+
+---
+
+# Live Editing: Including Styles!
+
+```python
+def a_function(test):
+    pass
+```
+
+| h1     | h2     | h3    |
+|--------|--------|-------|
+| value1 | value2 | value3 |
+| value1 | value2 | value3 |
+| value1 | value2 | value3 |
+| value1 | value2 | value3 |
+| value1 | value2 | value3 |
+
 ---
 
 # Markdown Support: Inline
 
-| Markdown                     | Result                     |
-|------------------------------|----------------------------|
-| `*italic*`                   | *italic*                   |
-| `_italic_`                   | _italic_                   |
-| `**bold**`                   | **bold**                   |
-| `__bold__`                   | __bold__                   |
-| `***bold underline***`       | ***bold underline***       |
-| `___bold underline___`       | ___bold underline___       |
-| `~~strikethrough~~`          | ~~strikethrough~~          |
-| `[link](https://google.com)` | [link](https://google.com) |
-| `` `code` ``                 | `code`                     |
+|                         Markdown | Result                         |
+|---------------------------------:|--------------------------------|
+|                       `*italic*` | *italic*                       |
+|                       `_italic_` | _italic_                       |
+|                       `**bold**` | **bold**                       |
+|                       `__bold__` | __bold__                       |
+|           `***bold underline***` | ***bold underline***           |
+|           `___bold underline___` | ___bold underline___           |
+|              `~~strikethrough~~` | ~~strikethrough~~              |
+| `[CLICK ME](https://google.com)` | [CLICK ME](https://google.com) |
+|                     `` `code` `` | `code`                         |
 
 ---
 
