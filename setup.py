@@ -18,13 +18,14 @@ with open(readme_path, "r") as f:
 
 
 setup(
-    name='lookatme',
-    version='{{VERSION}}',
-    description='An interactive, command-line presentation tool',
-    author='James Johnson',
-    author_email='d0c.s4vage@gmail.com',
+    name="lookatme",
+    version="{{VERSION}}",
+    description="An interactive, command-line presentation tool",
+    author="James Johnson",
+    author_email="d0c.s4vage@gmail.com",
     long_description=readme,
     long_description_content_type="text/markdown",
+    python_requires=">=3.5",
     packages=find_packages(exclude=["docs", ".gitignore", "README.md"]),
     install_requires=required,
     entry_points={
