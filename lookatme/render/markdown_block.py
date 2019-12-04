@@ -19,6 +19,7 @@ from lookatme.contrib import contrib_first
 import lookatme.render.pygments as pygments_render
 import lookatme.render.markdown_inline as markdown_inline_renderer
 from lookatme.utils import *
+from lookatme.widgets.clickable_text import ClickableText
 
 
 def _meta(item):
@@ -59,7 +60,7 @@ def render_heading(token, body, stack, loop):
 
     return [
         urwid.Divider(),
-        urwid.Text([prefix] + styled_text(rendered, style) + [suffix]),
+        ClickableText([prefix] + styled_text(rendered, style) + [suffix]),
         urwid.Divider(),
     ]
 
@@ -75,7 +76,14 @@ def render_table(token, body, stack, loop):
     cells = token["cells"]
 
     table = Table(cells, headers=headers, aligns=aligns)
-    return urwid.Padding(table, width=table.total_width + 2, align="center")
+    padding = urwid.Padding(table, width=table.total_width + 2, align="center")
+
+    def table_changed(*args, **kwargs):
+        padding.width = table.total_width + 2
+
+    urwid.connect_signal(table, "change", table_changed)
+
+    return padding
 
 
 @contrib_first
@@ -141,8 +149,9 @@ def render_text(token=None, body=None, stack=None, loop=None, text=None):
     inline_lexer = mistune.InlineLexer(markdown_inline_renderer)
     res = inline_lexer.output(text)
     if len(res) == 0:
-        res = ""
-    return urwid.Text(res)
+        res = [""]
+
+    return ClickableText(res)
 
 
 @contrib_first
