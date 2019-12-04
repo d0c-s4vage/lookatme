@@ -11,6 +11,7 @@ import urwid
 import lookatme.config as config
 from lookatme.utils import *
 import lookatme.render.pygments as pygments_render
+from lookatme.widgets.clickable_text import LinkIndicatorSpec
 
 
 options = {}
@@ -64,7 +65,6 @@ def inline_html(html):
 
 
 def footnote_ref(key, index):
-    __import__('pdb').set_trace()
     return render_no_change(key)
 
 
@@ -72,8 +72,18 @@ def image(link_uri, title, text):
     return link(link_uri, title, text)
 
 
-def link(link_uri, title, text):
-    return [styled_text(text, config.STYLE["link"])]
+def link(link_uri, title, link_text):
+    raw_link_text = []
+    for x in link_text:
+        if isinstance(x, tuple):
+            raw_link_text.append(x[1])
+        else:
+            raw_link_text.append(x)
+    raw_link_text = "".join(raw_link_text)
+
+    spec, text = styled_text(link_text, spec_from_style(config.STYLE["link"]))
+    spec = LinkIndicatorSpec(raw_link_text, link_uri, spec)
+    return [(spec, text)]
 
 
 @expanded_styles
