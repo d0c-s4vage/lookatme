@@ -1,12 +1,18 @@
 # Sample Calendar Contrib
 
-This is a sample lookatmecontrib module that overrides code blocks when the
+This is a sample lookatme.contrib module that overrides code blocks when the
 language is `calendar` to display a text calendar of the current month.
 
 ## Example Usage
 
-With this directory on your `PYTHONPATH`, list `calendar` as an extension in
-your slide deck's YAML header:
+Install this python package into your virtual environment:
+
+```
+pip install ./examples/calendar_contrib
+```
+
+List the `calendar` extension in the `extensions` section of your slide deck's
+YAML header:
 
 ~~~markdown
 ---
@@ -15,10 +21,6 @@ author: James Johnson
 date: 2019-11-19
 extensions:
   - calendar
-styles:
-  style: monokai
-  table:
-    column_spacing: 10
 ---
 ~~~
 
@@ -30,12 +32,6 @@ blocks to display a calendar of the current month on a slide:
 
 ```
 ~~~
-
-Full command-line, assuming it is run from the root of the lookatme project:
-
-```
-PYTHONPATH="./examples/calendar_contrib:$PYTHONPATH" python -m lookatme examples/calendar_contrib/example.md
-```
 
 ## Future Options
 

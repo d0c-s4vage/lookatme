@@ -97,15 +97,50 @@ class SlideRenderer(threading.Thread):
             slide_num = to_render.number
 
             try:
-                res = self._do_render(to_render, slide_num)
+                res = self.do_render(to_render, slide_num)
                 self.cache[slide_num] = res
             except Exception as e:
                 self.cache[slide_num] = e
             finally:
                 self.events[slide_num].set()
 
-    def _do_render(self, to_render, slide_num):
-        """Perform the actual rendering of a slide
+    def do_render(self, to_render, slide_num):
+        """Perform the actual rendering of a slide. This is done by:
+
+          * parsing the slide into tokens (should have occurred already)
+          * iterating through each parsed markdown token
+          * calling the appropriately-named render function for the ``token["type"]``
+            in :py:mod:`lookatme.render.markdown_block`
+
+        Each render function must have the signature:
+
+        .. code-block:: python
+
+            def render_XXX(token, body, stack, loop):
+                pass
+
+        The arguments to the render function are described below:
+
+          * ``token`` - the lexed markdown token - a dictionary
+          * ``body`` - the current ``urwid.Pile()`` that return values will be
+            added to (same as ``stack[-1]``)
+          * ``stack`` - The stack of ``urwid.Pile()`` used during rendering.
+            E.g., when rendering nested lists, each nested list will push a new
+            ``urwid.Pile()`` to the stack, each wrapped with its own additional
+            indentation.
+          * ``loop`` - the ``urwid.MainLoop`` instance being used by lookatme.
+            This won't usually be used, but is available if needed.
+        
+        Main render functions (those defined in markdown_block.py) may have
+        three types of return values:
+
+          * ``None`` - nothing is added to ``stack[-1]``. Perhaps the render
+            function only needed to add additional indentation by pushing a new
+            ``urwid.Pile()`` to the stack.
+          * ``list(urwid.Widget)`` - A list of widgets to render. These will
+            automatically be added to the Pile at ``stack[-1]``
+          * ``urwid.Widget`` - A single widget to render. Will be added to
+            ``stack[-1]`` automatically.
         """
         self._log.debug(f"Rendering slide {slide_num}")
         start = time.time()
