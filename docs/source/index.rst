@@ -14,7 +14,7 @@ supports:
   * Styling and settings embedded within the Markdown YAML header
   * Embedded terminals as part of a presentation
   * Live and manual source reloading
-  * User-contrib behavior overrides and extensions
+  * Contrib extensions
 
 Tour
 ----
@@ -74,6 +74,7 @@ A basic, optional YAML header may be included at the top of the slides:
   dark_theme
   light_theme
   style_precendence
+  contrib_extensions_auto
 
 
 .. toctree::

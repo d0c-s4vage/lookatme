@@ -23,10 +23,18 @@ def fake_locale_set(*args, **kwargs):
         pass
 orig_set_locale = locale.setlocale
 locale.setlocale = fake_locale_set
-
 import urwid
-
 locale.setlocale = orig_set_locale
+
+
+PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DOCS_SOURCE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+
+def read_file(*parts):
+    with open(os.path.join(PROJECT_DIR, *parts), "r") as f:
+        return f.read()
+
 
 # sys.path.insert(0, os.path.abspath('.'))
 
@@ -49,6 +57,7 @@ release = os.environ.get("READTHEDOCS_VERSION", '{{VERSION}}')
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -64,8 +73,6 @@ exclude_patterns = []
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
-html_theme = 'alabaster'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -73,6 +80,50 @@ html_theme = 'alabaster'
 html_static_path = ['_static']
 
 master_doc = "index"
+
+#-----------------------------------------------------------------------------
+# Generate list of overrideable funcitons within lookatme
+#-----------------------------------------------------------------------------
+
+
+def get_contrib_functions(*file_parts):
+    lines = read_file(*file_parts).split("\n")
+
+    res = []
+    in_contrib = False
+    for idx, line in enumerate(lines):
+        line = line.strip()
+
+        if "@contrib_first" == line:
+            in_contrib = True
+            continue
+        if line.startswith("@"):
+            continue
+        elif line.startswith("def "):
+            if in_contrib:
+                res.append(line.split()[1].split("(")[0])
+            in_contrib = False
+    return res
+
+
+contrib_fns = []
+contrib_fns += get_contrib_functions("lookatme", "render", "markdown_block.py")
+contrib_fns += get_contrib_functions("lookatme", "render", "markdown_inline.py")
+
+
+list_text = []
+for fn in contrib_fns:
+    list_text.append(f"  * :any:`{fn}`")
+list_text = "\n".join(list_text)
+
+
+with open(os.path.join(DOCS_SOURCE_DIR, "contrib_extensions.rst"), "r") as f:
+    orig_data = f.read()
+
+new_data = orig_data.replace("LOOKATME_OVERRIDES", list_text)
+
+with open(os.path.join(DOCS_SOURCE_DIR, "contrib_extensions_auto.rst"), "w") as f:
+    f.write(new_data)
 
 
 def run_apidoc(_):
