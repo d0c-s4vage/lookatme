@@ -48,6 +48,45 @@ def _list_level(item):
 
 @contrib_first
 def render_heading(token, body, stack, loop):
+    """Render markdown headings, using the defined styles for the styling and
+    prefix/suffix.
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
+    value descriptions.
+
+    Below are the default stylings for headings:
+
+    .. code-block:: yaml
+
+        headings:
+          '1':
+            bg: default
+            fg: '#9fc,bold'
+            prefix: "██ "
+            suffix: ""
+          '2':
+            bg: default
+            fg: '#1cc,bold'
+            prefix: "▓▓▓ "
+            suffix: ""
+          '3':
+            bg: default
+            fg: '#29c,bold'
+            prefix: "▒▒▒▒ "
+            suffix: ""
+          '4':
+            bg: default
+            fg: '#66a,bold'
+            prefix: "░░░░░ "
+            suffix: ""
+          default:
+            bg: default
+            fg: '#579,bold'
+            prefix: "░░░░░ "
+            suffix: ""
+
+    :returns: A list of urwid Widgets or a single urwid Widget
+    """
     headings = config.STYLE["headings"]
     level = token["level"]
     style = config.STYLE["headings"].get(str(level), headings["default"])
@@ -67,7 +106,20 @@ def render_heading(token, body, stack, loop):
 
 @contrib_first
 def render_table(token, body, stack, loop):
-    """Render a table token
+    """Renders a table using the :any:`Table` widget.
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
+    value descriptions.
+
+    The table widget makes use of the styles below:
+
+    .. code-block:: yaml
+
+        table:
+          column_spacing: 3
+          header_divider: "─"
+
+    :returns: A list of urwid Widgets or a single urwid Widget
     """
     from lookatme.widgets.table import Table
 
@@ -88,6 +140,13 @@ def render_table(token, body, stack, loop):
 
 @contrib_first
 def render_list_start(token, body, stack, loop):
+    """Handles the indentation when starting rendering a new list. List items
+    themselves (with the bullets) are rendered by the
+    :any:`render_list_item_start` function.
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
+    value descriptions.
+    """
     res = urwid.Pile(urwid.SimpleFocusListWalker([]))
 
     in_list = _is_list(stack[-1])
@@ -108,10 +167,28 @@ def render_list_start(token, body, stack, loop):
 
 @contrib_first
 def render_list_end(token, body, stack, loop):
+    """Pops the pushed ``urwid.Pile()`` from the stack (decreases indentation)
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
+    value descriptions.
+    """
     stack.pop()
 
 
 def _list_item_start(token, body, stack, loop):
+    """Render the start of a list item. This function makes use of the styles:
+
+    .. code-block:: yaml
+
+        bullets:
+          '1': "•"
+          '2': "⁃"
+          '3': "◦"
+          default: "•"
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
+    value descriptions.
+    """
     list_level = _list_level(stack[-1])
     pile = urwid.Pile(urwid.SimpleFocusListWalker([]))
 
@@ -128,21 +205,65 @@ def _list_item_start(token, body, stack, loop):
 
 @contrib_first
 def render_list_item_start(token, body, stack, loop):
+    """Render the start of a list item. This function makes use of the styles:
+
+    .. code-block:: yaml
+
+        bullets:
+          '1': "•"
+          '2': "⁃"
+          '3': "◦"
+          default: "•"
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
+    value descriptions.
+    """
     return _list_item_start(token, body, stack, loop)
 
 
 @contrib_first
 def render_loose_item_start(token, body, stack, loop):
+    """Render the start of a list item. This function makes use of the styles:
+
+    .. code-block:: yaml
+
+        bullets:
+          '1': "•"
+          '2': "⁃"
+          '3': "◦"
+          default: "•"
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
+    value descriptions.
+    """
     return _list_item_start(token, body, stack, loop)
 
 
 @contrib_first
 def render_list_item_end(token, body, stack, loop):
+    """Pops the pushed ``urwid.Pile()`` from the stack (decreases indentation)
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
+    value descriptions.
+    """
     stack.pop()
 
 
 @contrib_first
 def render_text(token=None, body=None, stack=None, loop=None, text=None):
+    """Renders raw text. This function uses the inline markdown lexer
+    from mistune with the :py:mod:`lookatme.render.markdown_inline` render module
+    to render the lexed inline markup to
+    `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_.
+    The created Text markup is then used to create and return a :any:`ClickableText`
+    instance.
+
+    Many other functions call this function directly, passing in the extra
+    ``text`` argument and leaving all other arguments blank. 
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
+    return value descriptions.
+    """
     if text is None:
         text = token["text"]
 
@@ -156,6 +277,11 @@ def render_text(token=None, body=None, stack=None, loop=None, text=None):
 
 @contrib_first
 def render_paragraph(token, body, stack, loop):
+    """Renders the provided text with additional pre and post paddings.
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
+    return value descriptions.
+    """
     token["text"] = token["text"].replace("\r\n", " ").replace("\n", " ")
     res = render_text(token, body, stack, loop)
     return [
@@ -167,6 +293,25 @@ def render_paragraph(token, body, stack, loop):
 
 @contrib_first
 def render_block_quote_start(token, body, stack, loop):
+    """Begins rendering of a block quote. Pushes a new ``urwid.Pile()`` to the
+    stack that is indented, has styling applied, and has the quote markers
+    on the left.
+
+    This function makes use of the styles:
+
+    .. code-block:: yaml
+
+        quote:
+          top_corner: "┌"
+          bottom_corner: "└"
+          side: "╎"
+          style:
+            bg: default
+            fg: italics,#aaa
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
+    return value descriptions.
+    """
     pile = urwid.Pile([])
     stack.append(pile)
 
@@ -194,6 +339,12 @@ def render_block_quote_start(token, body, stack, loop):
 
 @contrib_first
 def render_block_quote_end(token, body, stack, loop):
+    """Pops the block quote start ``urwid.Pile()`` from the stack, taking
+    future renderings out of the block quote styling.
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
+    return value descriptions.
+    """
     pile = stack.pop()
 
     # remove leading/trailing divider if they were added to the pile
@@ -205,6 +356,11 @@ def render_block_quote_end(token, body, stack, loop):
 
 @contrib_first
 def render_code(token, body, stack, loop):
+    """Renders a code block using the Pygments library.
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
+    return value descriptions.
+    """
     lang = token.get("lang", "text") or "text"
     res = pygments_render.render_text(token["text"], lang=lang)
 

@@ -87,6 +87,7 @@ master_doc = "index"
 
 
 def get_contrib_functions(*file_parts):
+    render_module = file_parts[-1].replace(".py", "")
     lines = read_file(*file_parts).split("\n")
 
     res = []
@@ -101,7 +102,8 @@ def get_contrib_functions(*file_parts):
             continue
         elif line.startswith("def "):
             if in_contrib:
-                res.append(line.split()[1].split("(")[0])
+                fn_name = line.split()[1].split("(")[0]
+                res.append(f":any:`{fn_name} <lookatme.render.{render_module}.{fn_name}>`")
             in_contrib = False
     return res
 
@@ -112,8 +114,8 @@ contrib_fns += get_contrib_functions("lookatme", "render", "markdown_inline.py")
 
 
 list_text = []
-for fn in contrib_fns:
-    list_text.append(f"  * :any:`{fn}`")
+for fn_ref in contrib_fns:
+    list_text.append(f"  * {fn_ref}")
 list_text = "\n".join(list_text)
 
 

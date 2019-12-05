@@ -9,7 +9,7 @@ Extensions also have the ability to ignore specific rendering function calls
 and allow original lookatme behavior (or other extensions) to handle the
 call to that rendering function.
 
-For example, an extension could provide its own implementation of the render
+For example, an extension may provide its own implementation of the render
 function ``render_table`` to provide custom table rendering, such as sortable
 rows, alternating row background colors, etc.
 
@@ -63,6 +63,8 @@ Overrideable Functions
 ----------------------
 
 Below is an automatically generated list of all overrideable functions that
-are present in this release of lookatme:
+are present in this release of lookatme. See the
+:any:`lookatme.tui.SlideRenderer.do_render` function for details on markdown_block
+render function arguments and return values.
 
 LOOKATME_OVERRIDES
