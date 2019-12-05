@@ -14,13 +14,12 @@ version `1.0.0` is released!
 
 ## TOC
 
+- [TOC](#toc)
 - [Features](#features)
-  * [Live Reloading](#live-reloading)
+  * [Tour](#tour)
 - [Navigating the Presentation](#navigating-the-presentation)
 - [CLI Options](#cli-options)
-- [Slide Format](#slide-format)
-  * [Metadata Header](#metadata-header)
-  * [Slides](#slides)
+- [Documentation](#documentation)
 
 ## Features
 
@@ -28,6 +27,7 @@ version `1.0.0` is released!
 * Live (input file modification time watching) and manual reloading
 * Live terminals embedded directly in slides
 * Syntax highlighting using [Pygments](https://pygments.org/)
+* Support for contrib extensions
 
 ### Tour
 
