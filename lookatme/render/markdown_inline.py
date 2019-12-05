@@ -9,8 +9,9 @@ import urwid
 
 
 import lookatme.config as config
-from lookatme.utils import *
+from lookatme.contrib import contrib_first
 import lookatme.render.pygments as pygments_render
+from lookatme.utils import *
 from lookatme.widgets.clickable_text import LinkIndicatorSpec
 
 
@@ -51,27 +52,42 @@ def render_no_change(text):
     return [text]
 
 
-inline_html = render_no_change
-text = render_no_change
-escape = render_no_change
+@contrib_first
+def inline_html(text):
+    return render_no_change(text)
 
 
+@contrib_first
+def text(text):
+    return render_no_change(text)
+
+
+@contrib_first
+def escape(text):
+    return render_no_change(text)
+
+
+@contrib_first
 def autolink(link_uri, is_email=False):
     return link(link_uri, None, link_uri)
 
 
+@contrib_first
 def inline_html(html):
     return render_no_change(html)
 
 
+@contrib_first
 def footnote_ref(key, index):
     return render_no_change(key)
 
 
+@contrib_first
 def image(link_uri, title, text):
     return link(link_uri, title, text)
 
 
+@contrib_first
 def link(link_uri, title, link_text):
     raw_link_text = []
     for x in link_text:
@@ -87,30 +103,36 @@ def link(link_uri, title, link_text):
 
 
 @expanded_styles
+@contrib_first
 def double_emphasis(text, old_styles):
     return [styled_text(text, "underline", old_styles)]
 
 
 @expanded_styles
+@contrib_first
 def emphasis(text, old_styles):
     return [styled_text(text, "italics", old_styles)]
 
 
 @expanded_styles
+@contrib_first
 def underline(text, old_styles):
     return [styled_text(text, "underline", old_styles)]
 
 
 @expanded_styles
+@contrib_first
 def codespan(text, old_styles):
     res = pygments_render.render_text(" " + text + " ", plain=True)
     return res
 
 
+@contrib_first
 def linebreak():
     return ["\n"]
 
 
 @expanded_styles
+@contrib_first
 def strikethrough(text, old_styles):
     return [styled_text(text, "strikethrough", old_styles)]
