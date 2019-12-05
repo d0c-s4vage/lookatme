@@ -29,7 +29,7 @@ def load_contribs(contrib_names):
 
     errors = []
     for contrib_name in contrib_names:
-        module_name = f"lookatmecontrib.{contrib_name}"
+        module_name = f"lookatme.contrib.{contrib_name}"
         try:
             mod = __import__(module_name, fromlist=[contrib_name])
             CONTRIB_MODULES.append(mod)
