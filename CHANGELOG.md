@@ -1,7 +1,22 @@
 # Changelog
 
+- [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+---
+
+## v0.3.0
+
+Large efforts around contrib extensions and their documentation. Created the
+[lookatme.contrib-template](https://github.com/d0c-s4vage/lookatme.contrib-template)
+as well.
+
+|    type | ticket                                                  | description                                                  |
+|--------:|---------------------------------------------------------|--------------------------------------------------------------|
+| feature | [#23](https://github.com/d0c-s4vage/lookatme/issues/23) | Adds contrib extension documentation                         |
+| feature | [#46](https://github.com/d0c-s4vage/lookatme/issues/46) | Lets inline markdown rendering be extensible                 |
+| feature | [#54](https://github.com/d0c-s4vage/lookatme/issues/54) | Changes the expected contrib namespace to `lookatme.contrib` |
 
 ---
 
