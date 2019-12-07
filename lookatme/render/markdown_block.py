@@ -47,6 +47,16 @@ def _list_level(item):
 
 
 @contrib_first
+def render_newline(token, body, stack, loop):
+    """Render a newline
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
+    value descriptions.
+    """
+    return urwid.Divider()
+
+
+@contrib_first
 def render_heading(token, body, stack, loop):
     """Render markdown headings, using the defined styles for the styling and
     prefix/suffix.
