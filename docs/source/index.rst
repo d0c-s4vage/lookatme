@@ -15,6 +15,7 @@ supports:
   * Embedded terminals as part of a presentation
   * Live and manual source reloading
   * Contrib extensions
+  * Smart Slide Splitting
 
 Tour
 ----
@@ -75,6 +76,7 @@ A basic, optional YAML header may be included at the top of the slides:
   light_theme
   style_precendence
   contrib_extensions_auto
+  smart_splitting
 
 
 .. toctree::
