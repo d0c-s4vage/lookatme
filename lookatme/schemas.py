@@ -33,7 +33,7 @@ NoDatesSafeLoader.remove_implicit_resolver('tag:yaml.org,2002:timestamp')
 
 class YamlRender:
     loads = lambda data: yaml.load(data, Loader=NoDatesSafeLoader)
-    dumps = lambda data: yaml.safe_dump(data)
+    dumps = lambda data: yaml.safe_dump(data, allow_unicode=True)
 
 
 class BulletsSchema(Schema):
