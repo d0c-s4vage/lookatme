@@ -227,6 +227,21 @@ def some_fn(*args, **kargs):
         assert stripped_row_text == stripped_rows[idx]
 
 
+def test_empty_codeblock(mocker):
+    """Test that empty code blocks render correctly
+    """
+    mocker.patch.object(lookatme.config, "LOG")
+    fake_config = mocker.patch.object(lookatme.render.pygments, "config")
+    fake_config.STYLE = {
+        "style": "monokai",
+    }
+
+    rendered = render_markdown("""
+```python
+
+```""")
+
+
 def test_code_yaml(mocker):
     """Test code block rendering with yaml language
     """
