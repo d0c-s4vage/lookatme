@@ -24,7 +24,7 @@ def render_markdown(markdown, height=50):
     renderer.start()
 
     parser = Parser()
-    _, slides = parser.parse_slides(markdown)
+    _, slides = parser.parse_slides({"title": ""}, markdown)
 
     renderer.stop()
     pile_contents = renderer.render_slide(slides[0], force=True)
@@ -58,7 +58,9 @@ def test_headings(mocker):
     rendered = render_markdown("""
 # H1
 ## H2
-### H3""")
+### H3
+---
+""")
 
     # three lines for the headings plus an extra line of padding after each
     # and one line of padding before the first one

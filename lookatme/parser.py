@@ -116,12 +116,12 @@ class Parser(object):
                     first_heading = token
 
         # started off with the lowest heading, make this title
-        if hinfo["counts"][first_heading["level"]] == 1:
+        if hinfo["counts"] and hinfo["counts"][first_heading["level"]] == 1:
             hinfo["title"] = first_heading["text"]
             del hinfo["counts"][first_heading["level"]]
             hinfo["title_level"] = first_heading["level"]
 
-        low_level = min(hinfo["counts"].keys())
+        low_level = min(list(hinfo["counts"].keys()) + [10])
         hinfo["title_level"] = low_level - 1
         hinfo["lowest_non_title"] = low_level
 
