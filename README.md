@@ -4,6 +4,8 @@
 [![Latest Release](https://img.shields.io/pypi/v/lookatme)](https://pypi.python.org/pypi/lookatme/)
 [![Documentation Status](https://readthedocs.org/projects/lookatme/badge/?version=latest)](https://lookatme.readthedocs.io/en/latest/)
 
+[![Twitter Follow](https://img.shields.io/twitter/follow/d0c_s4vage?style=plastic)](https://twitter.com/d0c_s4vage)
+
 # `lookatme`
 
 `lookatme` is an interactive, extensible, terminal-based markdown presentation
@@ -28,6 +30,7 @@ version `1.0.0` is released!
 * Live terminals embedded directly in slides
 * Syntax highlighting using [Pygments](https://pygments.org/)
 * Support for contrib extensions
+* Smart slide splitting
 
 ### Tour
 

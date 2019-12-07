@@ -1,9 +1,27 @@
 
 theme = {
     "style": "pastie",
-    "quote_style": {
-        "fg": "italics,#444",
-        "bg":"default",
+    "title": {
+        "fg": "#f20,bold,italics",
+        "bg": "",
+    },
+    "author": {
+        "fg": "#f20,bold",
+        "bg": "",
+    },
+    "date": {
+        "fg": "#222",
+        "bg": "",
+    },
+    "slides": {
+        "fg": "#f20,bold",
+        "bg": "",
+    },
+    "quote": {
+        "style": {
+            "fg": "italics,#444",
+            "bg":"default",
+        },
     },
     "link": {
         "fg": "#22f,underline,bold",

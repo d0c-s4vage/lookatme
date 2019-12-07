@@ -68,48 +68,61 @@ The default styles and formats are defined in the marshmallow schemas in
 
 .. code-block:: yaml
 
+
+    title:
+      bg: default
+      fg: '#f30,bold,italics'
+    author:
+      bg: default
+      fg: '#f30'
+    date:
+      bg: default
+      fg: '#777'
+    slides:
+      bg: default
+      fg: '#f30'
     bullets:
-      '1': "•"
-      '2': "⁃"
-      '3': "◦"
-      default: "•"
+      '1': •
+      '2': ⁃
+      '3': ◦
+      default: •
     headings:
       '1':
         bg: default
         fg: '#9fc,bold'
-        prefix: "██ "
-        suffix: ""
+        prefix: '██ '
+        suffix: ''
       '2':
         bg: default
         fg: '#1cc,bold'
-        prefix: "▓▓▓ "
-        suffix: ""
+        prefix: '▓▓▓ '
+        suffix: ''
       '3':
         bg: default
         fg: '#29c,bold'
-        prefix: "▒▒▒▒ "
-        suffix: ""
+        prefix: '▒▒▒▒ '
+        suffix: ''
       '4':
         bg: default
-        fg: '#66a,bold'
-        prefix: "░░░░░ "
-        suffix: ""
+        fg: '#559,bold'
+        prefix: '░░░░░ '
+        suffix: ''
       default:
         bg: default
-        fg: '#579,bold'
-        prefix: "░░░░░ "
-        suffix: ""
+        fg: '#346,bold'
+        prefix: '░░░░░ '
+        suffix: ''
     link:
       bg: default
-      fg: '#228,underline'
+      fg: '#33c,underline'
     quote:
-      top_corner: "┌"
-      bottom_corner: "└"
-      side: "╎"
+      bottom_corner: └
+      side: ╎
       style:
         bg: default
         fg: italics,#aaa
-    style: solarized-dark
+      top_corner: ┌
+    style: monokai
     table:
       column_spacing: 3
-      header_divider: "─"
+      header_divider: ─

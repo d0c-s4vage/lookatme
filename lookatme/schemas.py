@@ -130,6 +130,24 @@ class StyleSchema(Schema):
         default="monokai",
         validate=validate.OneOf(list(pygments.styles.get_all_styles())),
     )
+
+    title = fields.Nested(StyleFieldSchema, default={
+        "fg": "#f30,bold,italics",
+        "bg": "default",
+    })
+    author = fields.Nested(StyleFieldSchema, default={
+        "fg": "#f30",
+        "bg": "default",
+    })
+    date = fields.Nested(StyleFieldSchema, default={
+        "fg": "#777",
+        "bg": "default",
+    })
+    slides = fields.Nested(StyleFieldSchema, default={
+        "fg": "#f30",
+        "bg": "default",
+    })
+
     headings = fields.Nested(HeadingsSchema, default=HeadingsSchema().dump(HeadingsSchema()))
     bullets = fields.Nested(BulletsSchema, default=BulletsSchema().dump(BulletsSchema()))
     table = fields.Nested(TableSchema, default=TableSchema().dump(TableSchema()))
