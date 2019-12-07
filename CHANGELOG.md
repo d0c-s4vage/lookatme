@@ -11,11 +11,11 @@ Adds stylable meta field values (title, author, date) and smart slide splitting.
 
 |    type | ticket                                                  | description                |
 |--------:|---------------------------------------------------------|----------------------------|
-| feature | [#64](https://github.com/d0c-s4vage/lookatme/issues/64) | Adds stylable meta values  |
-| feature | [#63](https://github.com/d0c-s4vage/lookatme/issues/63) | Adds smart slide splitting |
-|     bug | [#62](https://github.com/d0c-s4vage/lookatme/issues/62) | Dump unicode styles YAML   |
-|     bug | [#61](https://github.com/d0c-s4vage/lookatme/issues/61) | Fix newline bug            |
-|     bug | [#60](https://github.com/d0c-s4vage/lookatme/issues/60) | Fix empty code block bug   |
+| feature | [#14](https://github.com/d0c-s4vage/lookatme/issues/14) | Adds stylable meta values  |
+| feature | [#30](https://github.com/d0c-s4vage/lookatme/issues/30) | Adds smart slide splitting |
+|     bug | [#53](https://github.com/d0c-s4vage/lookatme/issues/53) | Dump unicode styles YAML   |
+|     bug | [#32](https://github.com/d0c-s4vage/lookatme/issues/32) | Fix newline bug            |
+|     bug | [#57](https://github.com/d0c-s4vage/lookatme/issues/57) | Fix empty code block bug   |
 
 ## v0.3.0
 
