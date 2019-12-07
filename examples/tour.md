@@ -9,7 +9,8 @@ styles:
 
 # Live Editing
 
-lookatme supports live editing with the `--live` command-line argument.
+Live editing is supported in `lookatme` with the `--live` command-line
+argument.
 
 ---
 
@@ -71,7 +72,7 @@ def a_function(arg1, arg2):
 
 A quote is below:
 
-> This is a quote
+> This is a quote more quote contents
 
 ---
 
