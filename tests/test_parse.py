@@ -81,5 +81,57 @@ code block
 More text
     """
     parser = Parser()
-    slides = parser.parse_slides(input_data)
+    slides = parser.parse_slides({}, input_data)
     assert len(slides) == 2
+
+
+def test_parse_smart_slides_one_h1():
+    """Test that slide smart splitting works correctly
+    """
+    input_data = r"""
+# Heading Title
+
+## Heading 2
+
+some text
+
+## Heading 3
+
+more text
+
+## Heading 4
+
+### Sub heading
+
+#### Sub Heading
+    """
+    parser = Parser()
+    meta = {"title": ""}
+    _, slides = parser.parse_slides(meta, input_data)
+    assert len(slides) == 4
+    assert meta["title"] == "Heading Title"
+
+
+def test_parse_smart_slides_multiple_h2():
+    """Test that slide smart splitting works correctly
+    """
+    input_data = r"""
+## Heading 2
+
+some text
+
+## Heading 3
+
+more text
+
+## Heading 4
+
+### Sub heading
+
+#### Sub Heading
+    """
+    parser = Parser()
+    meta = {"title": ""}
+    _, slides = parser.parse_slides(meta, input_data)
+    assert len(slides) == 3
+    assert meta["title"] == ""
