@@ -73,7 +73,9 @@ def render_text(text, lang="text", style_name=None, plain=False):
     if markup[-1][1] == "\n":
         markup = markup[:-1]
 
-    if markup[-1][1].endswith("\n"):
+    if len(markup) == 0:
+        markup = [(None, "")]
+    elif markup[-1][1].endswith("\n"):
         markup[-1] = (markup[-1][0], markup[-1][1][:-1])
 
     if plain:
