@@ -7,6 +7,7 @@ This is the main CLI for lookatme
 
 import click
 import logging
+import io
 import os
 import pygments.styles
 import sys
@@ -56,8 +57,12 @@ from lookatme.schemas import StyleSchema
     is_flag=True,
     default=False,
 )
-@click.argument("input_file", type=click.File(), default=sys.stdin)
-def main(debug, log_path, theme, code_style, dump_styles, input_file, live_reload):
+@click.argument(
+    "input_files",
+    type=click.File("r"),
+    nargs=-1,
+)
+def main(debug, log_path, theme, code_style, dump_styles, input_files, live_reload):
     """lookatme - An interactive, terminal-based markdown presentation tool.
     """
     if debug:
@@ -65,7 +70,9 @@ def main(debug, log_path, theme, code_style, dump_styles, input_file, live_reloa
     else:
         lookatme.config.LOG = lookatme.log.create_null_log()
 
-    pres = Presentation(input_file, theme, code_style, live_reload=live_reload)
+    if len(input_files) == 0:
+        input_files = [io.StringIO("")]
+    pres = Presentation(input_files[0], theme, code_style, live_reload=live_reload)
 
     if dump_styles:
         print(StyleSchema().dumps(pres.styles))
