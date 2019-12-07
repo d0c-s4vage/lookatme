@@ -162,6 +162,42 @@ def test_lists(mocker):
         assert stripped_row_text == stripped_rows[idx]
 
 
+def test_lists_with_newline(mocker):
+    """Test list rendering with a newline between a new nested list and the
+    previous list item
+    """
+    import lookatme.widgets.table
+
+    mocker.patch.object(lookatme.config, "LOG")
+    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
+    mocker.patch.object(lookatme.widgets.table, "config", fake_config)
+    fake_config.STYLE = {
+        "bullets": {
+            "default": "*",
+            "1": "-",
+            "2": "=",
+            "3": "^",
+        },
+    }
+
+    rendered = render_markdown("""
+* list 1
+
+  * list 2
+""")
+
+    stripped_rows = [
+        b'',
+        b'  - list 1',
+        b'',
+        b'      = list 2',
+        b'',
+    ]
+    for idx, row in enumerate(rendered):
+        stripped_row_text = row_text(row).rstrip()
+        assert stripped_row_text == stripped_rows[idx]
+
+
 def test_block_quote(mocker):
     """Test block quote rendering
     """
