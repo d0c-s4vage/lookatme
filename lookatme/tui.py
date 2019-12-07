@@ -12,19 +12,15 @@ import urwid
 
 
 import lookatme.config
+import lookatme.config as config
 import lookatme.contrib
 import lookatme.render.markdown_block as lam_md
-from lookatme.utils import pile_add
-
-
-palette = [
-    ('banner', 'black', 'light gray'),
-    ('streak', 'black', 'dark red'),
-    ('bg', 'black', 'black'),
-]
+from lookatme.utils import pile_add, spec_from_style
 
 
 def text(style, data, align="left"):
+    if isinstance(style, dict):
+        style = spec_from_style(style)
     return urwid.Text((style, data), align=align)
 
 
@@ -169,14 +165,14 @@ class SlideRenderer(threading.Thread):
 
 
 class MarkdownTui(urwid.Frame):
-    def __init__(self, pres, palette, start_idx=0):
+    def __init__(self, pres, start_idx=0):
         """
         """
         self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
-        self.slide_title = text("banner", "", "center")
+        self.slide_title = text("", "", "center")
 
-        self.creation = text("banner", "")
-        self.slide_num = text("banner", " test ", "right")
+        self.creation = text("", "")
+        self.slide_num = text("", " test ", "right")
         self.slide_footer = urwid.Columns([self.creation, self.slide_num])
 
         self._log = lookatme.config.LOG
@@ -185,7 +181,6 @@ class MarkdownTui(urwid.Frame):
         screen.set_terminal_properties(colors=256)
         self.loop = urwid.MainLoop(
             urwid.Padding(self, left=2, right=2),
-            palette,
             screen=screen,
         )
 
@@ -221,20 +216,30 @@ class MarkdownTui(urwid.Frame):
             self.curr_slide.number + 1,
             len(self.pres.slides),
         )
-        self.slide_num.set_text(slide_text)
+        date = self.pres.meta.get('date', '')
+        spec = spec_from_style(config.STYLE["slides"])
+        self.slide_num.set_text([(spec, slide_text)])
 
     def update_title(self):
         """Update the title
         """
         title = self.pres.meta.get("title", "")
-        self.slide_title.set_text(f" {title} ")
+        spec = spec_from_style(config.STYLE["title"])
+        self.slide_title.set_text([(spec, f" {title} ")])
 
     def update_creation(self):
         """Update the author and date
         """
         author = self.pres.meta.get('author', '')
+        author_spec = spec_from_style(config.STYLE["author"])
+
         date = self.pres.meta.get('date', '')
-        self.creation.set_text(f"  {author} - {date}  ")
+        date_spec = spec_from_style(config.STYLE["date"])
+
+        self.creation.set_text([
+            (author_spec, f"  {author} "),
+            (date_spec, f" {date} "),
+        ])
 
     def update_body(self):
         """Render the provided slide body
@@ -305,5 +310,5 @@ def create_tui(pres, start_slide=0):
 
     :param int start_slide: 0-based slide index
     """
-    tui = MarkdownTui(pres, palette, start_slide)
+    tui = MarkdownTui(pres, start_slide)
     return tui
