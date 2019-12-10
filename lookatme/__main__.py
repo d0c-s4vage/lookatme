@@ -57,6 +57,7 @@ from lookatme.schemas import StyleSchema
     is_flag=True,
     default=False,
 )
+@click.version_option(lookatme.__version__)
 @click.argument(
     "input_files",
     type=click.File("r"),
