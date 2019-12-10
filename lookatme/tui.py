@@ -15,7 +15,7 @@ import lookatme.config
 import lookatme.config as config
 import lookatme.contrib
 import lookatme.render.markdown_block as lam_md
-from lookatme.utils import pile_add, spec_from_style
+from lookatme.utils import pile_or_listbox_add, spec_from_style
 
 
 def text(style, data, align="left"):
@@ -54,12 +54,10 @@ class SlideRenderer(threading.Thread):
         """Render a slide, blocking until the slide completes. If ``force`` is
         True, rerender the slide even if it is in the cache.
         """
-        if not force and slide.number in self.cache:
-            return self.cache[slide.number]
-
-        self.events[slide.number].clear()
-        self.queue.put(slide)
-        self.events[slide.number].wait()
+        if force or slide.number not in self.cache:
+            self.events[slide.number].clear()
+            self.queue.put(slide)
+            self.events[slide.number].wait()
 
         res = self.cache[slide.number]
         if isinstance(res, Exception):
@@ -141,8 +139,8 @@ class SlideRenderer(threading.Thread):
         self._log.debug(f"Rendering slide {slide_num}")
         start = time.time()
 
-        tmp_pile = urwid.Pile([])
-        stack = [tmp_pile]
+        tmp_listbox = urwid.ListBox([])
+        stack = [tmp_listbox]
         for token in to_render.tokens:
             self._log.debug(f"{'  '*len(stack)}Rendering token {token}")
 
@@ -156,19 +154,20 @@ class SlideRenderer(threading.Thread):
                 self._propagate_meta(last_stack, stack[-1])
             if res is None:
                 continue
-            pile_add(last_stack, res)
+            pile_or_listbox_add(last_stack, res)
 
         total = time.time() - start
         self._log.debug(f"Rendered slide {slide_num} in {total}")
 
-        return tmp_pile.contents
+        return tmp_listbox.body
 
 
 class MarkdownTui(urwid.Frame):
     def __init__(self, pres, start_idx=0):
         """
         """
-        self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
+        #self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
+        self.slide_body = urwid.ListBox(urwid.SimpleFocusListWalker([urwid.Text("test")]))
         self.slide_title = text("", "", "center")
 
         self.creation = text("", "")
@@ -193,7 +192,7 @@ class MarkdownTui(urwid.Frame):
 
         urwid.Frame.__init__(
             self,
-            urwid.Padding(urwid.Filler(self.slide_body, valign="top", top=2), left=10, right=10),
+            urwid.Padding(self.slide_body, left=10, right=10),
             self.slide_title,
             self.slide_footer,
         )
@@ -245,7 +244,7 @@ class MarkdownTui(urwid.Frame):
         """Render the provided slide body
         """
         rendered = self.slide_renderer.render_slide(self.curr_slide)
-        self.slide_body.contents = rendered
+        self.slide_body.body = rendered
 
     def update(self):
         """
@@ -267,11 +266,11 @@ class MarkdownTui(urwid.Frame):
     def keypress(self, size, key):
         """Handle keypress events
         """
+        self._log.debug(f"KEY: {key}")
         try:
-            res = urwid.Frame.keypress(self, size, key)
-            if res is None:
+            key = urwid.Frame.keypress(self, size, key)
+            if key is None:
                 return
-            size, key = res
         except:
             pass
 

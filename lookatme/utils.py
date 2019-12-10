@@ -168,6 +168,28 @@ def styled_text(text, new_styles, old_styles=None, supplement_style=False):
     return (spec, text)
 
 
+def pile_or_listbox_add(container, widgets):
+    """Add the widget/widgets to the container
+    """
+    if isinstance(container, urwid.ListBox):
+        return listbox_add(container, widgets)
+    elif isinstance(container, urwid.Pile):
+        return pile_add(container, widgets)
+    else:
+        raise ValueError("Container was not listbox, nor pile")
+
+
+def listbox_add(listbox, widgets):
+    if not isinstance(widgets, list):
+        widgets = [widgets]
+
+    for w in widgets:
+        if len(listbox.body) > 0 \
+                and isinstance(w, urwid.Divider) \
+                and isinstance(listbox.body[-1], urwid.Divider):
+            continue
+        listbox.body.append(w)
+
 def pile_add(pile, widgets):
     """
     """

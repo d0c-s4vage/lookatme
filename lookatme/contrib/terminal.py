@@ -11,6 +11,7 @@ import urwid
 
 
 from lookatme.exceptions import IgnoredByContrib
+import lookatme.config
 
 
 CREATED_TERMS = []
@@ -33,6 +34,7 @@ def render_code(token, body, stack, loop):
     CREATED_TERMS.append(term)
 
     res = urwid.LineBox(urwid.BoxAdapter(term, height=rows))
+    res.no_cache = ["render"]
 
     return [
         urwid.Divider(),
@@ -42,6 +44,7 @@ def render_code(token, body, stack, loop):
 
 
 def shutdown():
-    for term in CREATED_TERMS:
+    for idx, term in enumerate(CREATED_TERMS):
+        lookatme.config.LOG.debug(f"Terminating terminal {idx+1}/{len(CREATED_TERMS)}")
         if term.pid is not None:
             term.terminate()

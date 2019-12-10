@@ -157,7 +157,7 @@ def render_list_start(token, body, stack, loop):
     See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
     value descriptions.
     """
-    res = urwid.Pile(urwid.SimpleFocusListWalker([]))
+    res = urwid.Pile([])
 
     in_list = _is_list(stack[-1])
     list_level = 1
@@ -200,7 +200,7 @@ def _list_item_start(token, body, stack, loop):
     value descriptions.
     """
     list_level = _list_level(stack[-1])
-    pile = urwid.Pile(urwid.SimpleFocusListWalker([]))
+    pile = urwid.Pile([])
 
     bullets = config.STYLE["bullets"]
     list_bullet = bullets.get(str(list_level), bullets["default"])
