@@ -54,12 +54,10 @@ class SlideRenderer(threading.Thread):
         """Render a slide, blocking until the slide completes. If ``force`` is
         True, rerender the slide even if it is in the cache.
         """
-        if not force and slide.number in self.cache:
-            return self.cache[slide.number]
-
-        self.events[slide.number].clear()
-        self.queue.put(slide)
-        self.events[slide.number].wait()
+        if force or slide.number not in self.cache:
+            self.events[slide.number].clear()
+            self.queue.put(slide)
+            self.events[slide.number].wait()
 
         res = self.cache[slide.number]
         if isinstance(res, Exception):

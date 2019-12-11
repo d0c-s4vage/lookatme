@@ -11,6 +11,7 @@ import io
 import os
 import pygments.styles
 import sys
+import tempfile
 
 
 import lookatme.tui
@@ -27,7 +28,7 @@ from lookatme.schemas import StyleSchema
     "--log",
     "log_path",
     type=click.Path(writable=True),
-    default="/tmp/lookatme.log",
+    default=os.path.join(tempfile.gettempdir(), "lookatme.log"),
 )
 @click.option(
     "-t",
@@ -79,7 +80,17 @@ def main(debug, log_path, theme, code_style, dump_styles, input_files, live_relo
         print(StyleSchema().dumps(pres.styles))
         return 0
 
-    pres.run()
+    try:
+        pres.run()
+    except Exception as e:
+        number = pres.tui.curr_slide.number + 1
+        click.echo(f"Error rendering slide {number}: {e}")
+        if not debug:
+            click.echo("Rerun with --debug to view the full traceback in logs")
+        else:
+            lookatme.config.LOG.exception(f"Error rendering slide {number}: {e}")
+            click.echo(f"See {log_path} for traceback")
+        raise click.Abort()
 
 
 if __name__ == "__main__":
