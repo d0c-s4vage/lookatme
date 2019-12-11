@@ -65,6 +65,14 @@ Options:
   --help                          Show this message and exit.
 ```
 
+## Known Extensions
+
+Below is a list of known extensions for lookatme:
+
+| Extension Name | Install Name            | Url                                                   |
+|----------------|-------------------------|-------------------------------------------------------|
+| qrcode         | lookatme.contrib.qrcode | https://github.com/d0c-s4vage/lookatme.contrib.qrcode |
+
 ## Documentation
 
 See the [documentation](https://lookatme.readthedocs.io/en/latest/) for details.
