@@ -21,6 +21,7 @@ version `1.0.0` is released!
   * [Tour](#tour)
 - [Navigating the Presentation](#navigating-the-presentation)
 - [CLI Options](#cli-options)
+- [Known Extensions](#known-extensions)
 - [Documentation](#documentation)
 
 ## Features
