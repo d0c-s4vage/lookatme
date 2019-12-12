@@ -1,20 +1,30 @@
 # Changelog
 
+- [v1.0.0](#v100)
 - [v0.5.0](#v050)
 - [v0.4.0](#v040)
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
 
+## v1.0.0
+
+Fixed error handling. Code is pretty stable.
+
+| type | ticket                                                  | description           |
+|-----:|---------------------------------------------------------|-----------------------|
+|  bug | [#75](https://github.com/d0c-s4vage/lookatme/issues/75) | Better error handling |
+
+
 ## v0.5.0
 
 Adds version flag, license, code of conduct
 
-|    type | ticket                                                  | description              |
-|--------:|---------------------------------------------------------|--------------------------|
-| feature | [#67](https://github.com/d0c-s4vage/lookatme/issues/67) | Adds version flag        |
-| feature |                                                         | Adds code of conduct     |
-|     bug | [#66](https://github.com/d0c-s4vage/lookatme/issues/66) | Adds missing license     |
+|    type | ticket                                                  | description          |
+|--------:|---------------------------------------------------------|----------------------|
+| feature | [#67](https://github.com/d0c-s4vage/lookatme/issues/67) | Adds version flag    |
+| feature |                                                         | Adds code of conduct |
+|     bug | [#66](https://github.com/d0c-s4vage/lookatme/issues/66) | Adds missing license |
 
 
 ## v0.4.0

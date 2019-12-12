@@ -11,9 +11,6 @@
 `lookatme` is an interactive, extensible, terminal-based markdown presentation
 tool.
 
-**NOTE** `lookatme` is still under heavy development. Use at your own risk until
-version `1.0.0` is released!
-
 ## TOC
 
 - [TOC](#toc)
