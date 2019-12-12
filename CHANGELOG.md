@@ -1,9 +1,21 @@
 # Changelog
 
+- [v0.5.0](#v050)
 - [v0.4.0](#v040)
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+## v0.5.0
+
+Adds version flag, license, code of conduct
+
+|    type | ticket                                                  | description              |
+|--------:|---------------------------------------------------------|--------------------------|
+| feature | [#67](https://github.com/d0c-s4vage/lookatme/issues/67) | Adds version flag        |
+| feature |                                                         | Adds code of conduct     |
+|     bug | [#66](https://github.com/d0c-s4vage/lookatme/issues/66) | Adds missing license     |
+
 
 ## v0.4.0
 

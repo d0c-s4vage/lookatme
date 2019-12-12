@@ -21,6 +21,7 @@ version `1.0.0` is released!
   * [Tour](#tour)
 - [Navigating the Presentation](#navigating-the-presentation)
 - [CLI Options](#cli-options)
+- [Known Extensions](#known-extensions)
 - [Documentation](#documentation)
 
 ## Features
@@ -64,6 +65,14 @@ Options:
                                   and automatically reload
   --help                          Show this message and exit.
 ```
+
+## Known Extensions
+
+Below is a list of known extensions for lookatme:
+
+| Extension Name | Install Name            | Url                                                   |
+|----------------|-------------------------|-------------------------------------------------------|
+| qrcode         | lookatme.contrib.qrcode | https://github.com/d0c-s4vage/lookatme.contrib.qrcode |
 
 ## Documentation
 
