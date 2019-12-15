@@ -7,6 +7,14 @@
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
 
+## v1.0.1
+
+Fixed unicode rendering inside Terminals
+
+| type | ticket                                                  | description              |
+|-----:|---------------------------------------------------------|--------------------------|
+|  bug | [#78](https://github.com/d0c-s4vage/lookatme/issues/78) | Unicode rendering errors |
+
 ## v1.0.0
 
 Fixed error handling. Code is pretty stable.
