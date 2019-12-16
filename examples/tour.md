@@ -5,9 +5,9 @@ author: James Johnson
 extensions:
   - qrcode
 styles:
-  style: monokai
+  style: solarized-dark
   table:
-    column_spacing: 10
+    column_spacing: 3
 ---
 
 # Markdown Support: Inline
@@ -131,6 +131,8 @@ docker run --rm -it ubuntu:18.04
 
 Live editing is supported in `lookatme` with the `--live` command-line
 argument.
+
+More text from vim
 
 ---
 
