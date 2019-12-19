@@ -2,33 +2,12 @@
 title: lookatme Tour
 date: 2019-12-02
 author: James Johnson
+extensions:
+  - qrcode
 styles:
+  style: solarized-dark
   table:
-    column_spacing: 5
----
-
-# Live Editing
-
-Live editing is supported in `lookatme` with the `--live` command-line
-argument.
-
----
-
-# Live Editing: Including Styles!
-
-```python
-def a_function(test):
-    pass
-```
-
-| h1     | h2     | h3    |
-|--------|--------|-------|
-| value1 | value2 | value3 |
-| value1 | value2 | value3 |
-| value1 | value2 | value3 |
-| value1 | value2 | value3 |
-| value1 | value2 | value3 |
-
+    column_spacing: 3
 ---
 
 # Markdown Support: Inline
@@ -89,6 +68,25 @@ A quote is below:
         * Level 3
             * Level 4
 
+---
+
+# Extensions
+
+lookatme supports extensions that can add additional functionality to lookatme
+presentations. E.g., with the [qrcode](https://github.com/d0c-s4vage/lookatme.contrib.qrcode)
+extension enabled, this:
+
+~~~
+```qrcode
+hello
+```
+~~~
+
+becomes
+
+```qrcode
+hello
+```
 
 ---
 
@@ -129,12 +127,26 @@ docker run --rm -it ubuntu:18.04
 
 ---
 
-# Embeddable Terminals: Asciinema Replays
+# Live Editing
 
-Asciinema is an awesome tool for recording and sharing terminal commands.
-If you have asciinema installed (`pip install asciinema`), play back a
-pre-recorded shell session inside of a slide!
+Live editing is supported in `lookatme` with the `--live` command-line
+argument.
 
-```terminal13
-asciinema play https://asciinema.org/a/ivEsIJrcC8bT73Yx9qdPRfYsc
+More text from vim
+
+---
+
+# Live Editing: Including Styles!
+
+```python
+def a_function(test):
+    pass
 ```
+
+| h1     | h2     | h3    |
+|--------|--------|-------|
+| value1 | value2 | value3 |
+| value1 | value2 | value3 |
+| value1 | value2 | value3 |
+| value1 | value2 | value3 |
+| value1 | value2 | value3 |

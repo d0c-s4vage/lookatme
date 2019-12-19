@@ -175,6 +175,7 @@ class MarkdownTui(urwid.Frame):
 
         self._log = lookatme.config.LOG
 
+        urwid.set_encoding('utf8')
         screen = urwid.raw_display.Screen()
         screen.set_terminal_properties(colors=256)
         self.loop = urwid.MainLoop(
