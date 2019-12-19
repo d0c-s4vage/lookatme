@@ -13,26 +13,7 @@ from lookatme.parser import Parser
 import lookatme.tui
 
 
-from tests.utils import spec_and_text, row_text
-
-
-def render_markdown(markdown, height=50):
-    """Returns the rendered canvas contents of the markdown
-    """
-    loop = urwid.MainLoop(urwid.Pile([]))
-    renderer = lookatme.tui.SlideRenderer(loop)
-    renderer.start()
-
-    parser = Parser()
-    _, slides = parser.parse_slides({"title": ""}, markdown)
-
-    renderer.stop()
-    pile_contents = renderer.render_slide(slides[0], force=True)
-    renderer.join()
-
-    pile = urwid.Pile([urwid.Text("testing")])
-    pile.contents = pile_contents
-    return list(pile.render((height,)).content())
+from tests.utils import spec_and_text, row_text, render_markdown
 
 
 TEST_STYLE = {
