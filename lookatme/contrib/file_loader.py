@@ -52,8 +52,8 @@ def transform_data(transform_shell_cmd, input_data):
         stderr=subprocess.STDOUT,
         stdin=subprocess.PIPE,
     )
-    stdout, _ = proc.communicate(input=input_data.encode())
-    return stdout.decode()
+    stdout, _ = proc.communicate(input=input_data)
+    return stdout
 
 
 def render_code(token, body, stack, loop):
@@ -79,15 +79,15 @@ def render_code(token, body, stack, loop):
         token["lang"] = "text"
         raise IgnoredByContrib
     
-    with open(full_path, "r") as f:
+    with open(full_path, "rb") as f:
         file_data = f.read()
 
     if file_info["transform"] is not None:
         file_data = transform_data(file_info["transform"], file_data)
 
-    lines = file_data.split("\n")
+    lines = file_data.split(b"\n")
     lines = lines[file_info["lines"]["start"]:file_info["lines"]["end"]]
-    file_data = "\n".join(lines)
+    file_data = b"\n".join(lines)
     token["text"] = file_data
     token["lang"] = file_info["lang"]
     raise IgnoredByContrib
