@@ -9,6 +9,7 @@ import threading
 import time
 
 
+import lookatme.config
 import lookatme.contrib
 from lookatme.parser import Parser
 import lookatme.themes
@@ -27,6 +28,7 @@ class Presentation(object):
         """
         self.input_filename = None
         if hasattr(input_stream, "name"):
+            lookatme.config.SLIDE_SOURCE_DIR = os.path.dirname(input_stream.name)
             self.input_filename = input_stream.name
 
         self.style_override = style_override

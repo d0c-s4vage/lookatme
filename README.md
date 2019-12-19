@@ -27,12 +27,23 @@ tool.
 * Live (input file modification time watching) and manual reloading
 * Live terminals embedded directly in slides
 * Syntax highlighting using [Pygments](https://pygments.org/)
+* Loading external files into code blocks
 * Support for contrib extensions
 * Smart slide splitting
 
 ### Tour
 
+General tour
+
 ![lookatme_tour](docs/source/_static/lookatme_tour.gif)
+
+Embedded terminal example
+
+![terminal example](docs/source/_static/ext_terminal_example.gif)
+
+Sourcing external files example
+
+![file loader example](docs/source/_static/ext_file_loader_example.gif)
 
 ## Navigating the Presentation
 
