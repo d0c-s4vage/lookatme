@@ -1,7 +1,7 @@
 import flask
 app = flask.Flask(__name__)
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
-    return "Hello, World, blah"
+    return "Hello, World"
 
