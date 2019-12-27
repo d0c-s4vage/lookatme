@@ -267,10 +267,9 @@ class MarkdownTui(urwid.Frame):
         """Handle keypress events
         """
         try:
-            res = urwid.Frame.keypress(self, size, key)
-            if res is None:
+            key = urwid.Frame.keypress(self, size, key)
+            if key is None:
                 return
-            size, key = res
         except:
             pass
 
