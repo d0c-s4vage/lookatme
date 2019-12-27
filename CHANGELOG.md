@@ -1,5 +1,6 @@
 # Changelog
 
+- [v1.1.1](#v111)
 - [v1.1.0](#v110)
 - [v1.0.1](#v101)
 - [v1.0.0](#v100)
@@ -8,6 +9,14 @@
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+## v1.1.1
+
+Fixed keypress handling - pressing the "up" key works now
+
+| type | ticket                                                  | description          |
+|-----:|---------------------------------------------------------|----------------------|
+|  bug | [#84](https://github.com/d0c-s4vage/lookatme/issues/84) | Fixes keypress issue |
 
 ## v1.1.0
 
