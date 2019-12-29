@@ -77,6 +77,7 @@ A basic, optional YAML header may be included at the top of the slides:
   style_precendence
   contrib_extensions_auto
   smart_splitting
+  builtin_extensions/index
 
 
 .. toctree::

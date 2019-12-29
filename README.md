@@ -11,9 +11,6 @@
 `lookatme` is an interactive, extensible, terminal-based markdown presentation
 tool.
 
-**NOTE** `lookatme` is still under heavy development. Use at your own risk until
-version `1.0.0` is released!
-
 ## TOC
 
 - [TOC](#toc)
@@ -21,6 +18,7 @@ version `1.0.0` is released!
   * [Tour](#tour)
 - [Navigating the Presentation](#navigating-the-presentation)
 - [CLI Options](#cli-options)
+- [Known Extensions](#known-extensions)
 - [Documentation](#documentation)
 
 ## Features
@@ -29,12 +27,23 @@ version `1.0.0` is released!
 * Live (input file modification time watching) and manual reloading
 * Live terminals embedded directly in slides
 * Syntax highlighting using [Pygments](https://pygments.org/)
+* Loading external files into code blocks
 * Support for contrib extensions
 * Smart slide splitting
 
 ### Tour
 
+General tour
+
 ![lookatme_tour](docs/source/_static/lookatme_tour.gif)
+
+Embedded terminal example
+
+![terminal example](docs/source/_static/ext_terminal_example.gif)
+
+Sourcing external files example
+
+![file loader example](docs/source/_static/ext_file_loader_example.gif)
 
 ## Navigating the Presentation
 
@@ -64,6 +73,14 @@ Options:
                                   and automatically reload
   --help                          Show this message and exit.
 ```
+
+## Known Extensions
+
+Below is a list of known extensions for lookatme:
+
+| Extension Name | Install Name            | Url                                                   |
+|----------------|-------------------------|-------------------------------------------------------|
+| qrcode         | lookatme.contrib.qrcode | https://github.com/d0c-s4vage/lookatme.contrib.qrcode |
 
 ## Documentation
 

@@ -10,10 +10,12 @@ import contextlib
 
 from lookatme.exceptions import IgnoredByContrib
 from . import terminal
+from . import file_loader
 
 
 CONTRIB_MODULES = [
     terminal,
+    file_loader,
 ]
 
 

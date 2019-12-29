@@ -1,9 +1,58 @@
 # Changelog
 
+- [v1.1.1](#v111)
+- [v1.1.0](#v110)
+- [v1.0.1](#v101)
+- [v1.0.0](#v100)
+- [v0.5.0](#v050)
 - [v0.4.0](#v040)
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+## v1.1.1
+
+Fixed keypress handling - pressing the "up" key works now
+
+| type | ticket                                                  | description          |
+|-----:|---------------------------------------------------------|----------------------|
+|  bug | [#84](https://github.com/d0c-s4vage/lookatme/issues/84) | Fixes keypress issue |
+
+## v1.1.0
+
+Added file loader builtin extension
+
+|    type | ticket                                                  | description                |
+|--------:|---------------------------------------------------------|----------------------------|
+| feature | [#81](https://github.com/d0c-s4vage/lookatme/issues/81) | Adds file loader extension |
+
+## v1.0.1
+
+Fixed unicode rendering inside Terminals
+
+| type | ticket                                                  | description              |
+|-----:|---------------------------------------------------------|--------------------------|
+|  bug | [#78](https://github.com/d0c-s4vage/lookatme/issues/78) | Unicode rendering errors |
+
+## v1.0.0
+
+Fixed error handling. Code is pretty stable.
+
+| type | ticket                                                  | description           |
+|-----:|---------------------------------------------------------|-----------------------|
+|  bug | [#75](https://github.com/d0c-s4vage/lookatme/issues/75) | Better error handling |
+
+
+## v0.5.0
+
+Adds version flag, license, code of conduct
+
+|    type | ticket                                                  | description          |
+|--------:|---------------------------------------------------------|----------------------|
+| feature | [#67](https://github.com/d0c-s4vage/lookatme/issues/67) | Adds version flag    |
+| feature |                                                         | Adds code of conduct |
+|     bug | [#66](https://github.com/d0c-s4vage/lookatme/issues/66) | Adds missing license |
+
 
 ## v0.4.0
 

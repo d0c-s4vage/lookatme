@@ -1,4 +1,5 @@
 
+.. _contrib-extensions:
 
 Contrib Extensions
 ==================
