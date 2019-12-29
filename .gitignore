@@ -1,5 +1,5 @@
 # editors
-.*.sw[mnop]
+.*.sw[hijklmnop]
 
 # python
 *.pyc
