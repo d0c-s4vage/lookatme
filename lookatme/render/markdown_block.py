@@ -372,7 +372,8 @@ def render_code(token, body, stack, loop):
     return value descriptions.
     """
     lang = token.get("lang", "text") or "text"
-    res = pygments_render.render_text(token["text"], lang=lang)
+    text = token["text"]
+    res = pygments_render.render_text(text, lang=lang)
 
     return [
         urwid.Divider(),

@@ -17,7 +17,6 @@ def resolve_bag_of_text_markup_or_widgets(items):
     """
     res = []
     curr_text_markup = []
-    __import__('pdb').set_trace()
     for item in items:
         if isinstance(item, tuple) or isinstance(item, str):
             curr_text_markup.append(item)
