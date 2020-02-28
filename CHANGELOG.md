@@ -1,5 +1,6 @@
 # Changelog
 
+- [v1.2.0](#v120)
 - [v1.1.1](#v111)
 - [v1.1.0](#v110)
 - [v1.0.1](#v101)
@@ -9,6 +10,14 @@
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+## v1.2.0
+
+Adds `terminal-ex` mode to embedded terminal code blocks.
+
+| type | ticket                                                  | description             |
+|-----:|---------------------------------------------------------|-------------------------|
+|  bug | [#86](https://github.com/d0c-s4vage/lookatme/issues/86) | Adds `terminal-ex` mode |
 
 ## v1.1.1
 
