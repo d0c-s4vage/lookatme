@@ -33,6 +33,7 @@ class Presentation(object):
 
         self.style_override = style_override
         self.live_reload = live_reload
+        self.tui = None
 
         self.theme_mod = __import__("lookatme.themes." + theme, fromlist=[theme])
 
