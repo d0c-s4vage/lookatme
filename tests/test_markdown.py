@@ -131,12 +131,12 @@ def test_lists(mocker):
     stripped_rows = [
         b'',
         b'  - list 1',
-        b'      = list 2',
-        b'          ^ list 3',
-        b'              * list 4',
-        b'      = list 2',
-        b'          ^ list 3',
-        b'          ^ list 3',
+        b'    = list 2',
+        b'      ^ list 3',
+        b'        * list 4',
+        b'    = list 2',
+        b'      ^ list 3',
+        b'      ^ list 3',
         b'  - list 2',
         b'',
     ]
@@ -173,7 +173,7 @@ def test_lists_with_newline(mocker):
         b'',
         b'  - list 1',
         b'',
-        b'      = list 2',
+        b'    = list 2',
         b'',
     ]
     for idx, row in enumerate(rendered):
