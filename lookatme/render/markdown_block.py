@@ -171,15 +171,17 @@ def render_list_start(token, body, stack, loop):
     if in_list:
         list_level = _list_level(stack[-1]) + 1
     _set_is_list(res, list_level, ordered=token['ordered'])
+    _meta(res)['list_start_token'] = token
+    _meta(res)['max_list_marker_width'] = token.get('max_list_marker_width', 2)
     stack.append(res)
 
     widgets = []
     if not in_list:
         widgets.append(urwid.Divider())
-    widgets.append(urwid.Padding(res, left=2))
-    if not in_list:
+        widgets.append(urwid.Padding(res, left=2))
         widgets.append(urwid.Divider())
-    return widgets
+        return widgets
+    return res
 
 
 @contrib_first
@@ -189,6 +191,8 @@ def render_list_end(token, body, stack, loop):
     See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
     value descriptions.
     """
+    meta = _meta(stack[-1])
+    meta['list_start_token']['max_list_marker_width'] = meta['max_list_marker_width']
     stack.pop()
 
 
@@ -217,7 +221,9 @@ def _list_item_start(token, body, stack, loop):
     curr_count = _inc_item_count(stack[-1])
     pile = urwid.Pile(urwid.SimpleFocusListWalker([]))
 
-    if _meta(stack[-1])['ordered']:
+    meta = _meta(stack[-1])
+
+    if meta["ordered"]:
         numbering = config.STYLE["numbering"]
         list_marker_type = numbering.get(str(list_level), numbering["default"])
         sequence = {
@@ -231,8 +237,13 @@ def _list_item_start(token, body, stack, loop):
         list_marker = bullets.get(str(list_level), bullets["default"])
 
     marker_text = list_marker + " "
+    if len(marker_text) > meta["max_list_marker_width"]:
+        meta["max_list_marker_width"] = len(marker_text)
+    marker_col_width = meta['max_list_marker_width']
+
+    res = urwid.Text(("bold", marker_text))
     res = urwid.Columns([
-        (len(marker_text), urwid.Text(("bold", marker_text))),
+        (marker_col_width, urwid.Text(("bold", marker_text))),
         pile,
     ])
     stack.append(pile)

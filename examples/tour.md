@@ -70,6 +70,25 @@ A quote is below:
 
 ---
 
+# Markdown Support: Numbered Lists
+
+* Top level
+    1. Level 2
+        1. Level 3
+        1. Level 3
+        1. Level 3
+            * Level 4
+    1. Level 2
+        1. Level 3
+            1. Level 4
+            1. Level 4
+            1. Level 4
+    1. Level 2
+        * Level 3
+            * Level 4
+
+---
+
 # Extensions
 
 lookatme supports extensions that can add additional functionality to lookatme

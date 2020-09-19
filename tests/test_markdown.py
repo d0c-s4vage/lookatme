@@ -189,6 +189,12 @@ def test_numbered_lists(mocker):
     fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
     mocker.patch.object(lookatme.widgets.table, "config", fake_config)
     fake_config.STYLE = {
+        "bullets": {
+            "default": "*",
+            "1": "-",
+            "2": "=",
+            "3": "^",
+        },
         "numbering": {
             "default": "numeric",
             "1": "numeric",
@@ -208,21 +214,25 @@ def test_numbered_lists(mocker):
         1. roman2
         1. roman3
     1. alpha1.2
+        * test1
+        * test2
 1. list 3
 """)
 
     stripped_rows = [
         b'',
         b'  1. list 1',
-        b'       a. alpha1',
-        b'       b. alpha2',
-        b'       c. alpha3',
+        b'     a. alpha1',
+        b'     b. alpha2',
+        b'     c. alpha3',
         b'  2. list 2',
-        b'       a. alpha1.1',
-        b'            i. roman1',
-        b'            ii. roman2',
-        b'            iii. roman3',
-        b'       b. alpha1.2',
+        b'     a. alpha1.1',
+        b'        i.   roman1',
+        b'        ii.  roman2',
+        b'        iii. roman3',
+        b'     b. alpha1.2',
+        b'        ^ test1',
+        b'        ^ test2',
         b'  3. list 3',
         b'',
     ]
