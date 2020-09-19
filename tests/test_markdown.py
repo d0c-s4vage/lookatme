@@ -180,6 +180,59 @@ def test_lists_with_newline(mocker):
         stripped_row_text = row_text(row).rstrip()
         assert stripped_row_text == stripped_rows[idx]
 
+def test_numbered_lists(mocker):
+    """Test list rendering
+    """
+    import lookatme.widgets.table
+
+    mocker.patch.object(lookatme.config, "LOG")
+    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
+    mocker.patch.object(lookatme.widgets.table, "config", fake_config)
+    fake_config.STYLE = {
+        "numbering": {
+            "default": "numeric",
+            "1": "numeric",
+            "2": "alpha",
+            "3": "roman",
+        },
+    }
+
+    rendered = render_markdown("""
+1. list 1
+    1. alpha1
+    1. alpha2
+    1. alpha3
+1. list 2
+    1. alpha1.1
+        1. roman1
+        1. roman2
+        1. roman3
+    1. alpha1.2
+1. list 3
+""")
+
+    stripped_rows = [
+        b'',
+        b'  1. list 1',
+        b'       a. alpha1',
+        b'       b. alpha2',
+        b'       c. alpha3',
+        b'  2. list 2',
+        b'       a. alpha1.1',
+        b'            i. roman1',
+        b'            ii. roman2',
+        b'            iii. roman3',
+        b'       b. alpha1.2',
+        b'  3. list 3',
+        b'',
+    ]
+    # seven list items plus a pre and post Divider()
+    assert len(rendered) == len(stripped_rows)
+
+    for idx, row in enumerate(rendered):
+        stripped_row_text = row_text(row).rstrip()
+        assert stripped_row_text == stripped_rows[idx]
+
 
 def test_block_quote(mocker):
     """Test block quote rendering

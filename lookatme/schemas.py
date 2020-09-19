@@ -53,6 +53,23 @@ class BulletsSchema(Schema):
             "10": fields.Str(),
         }
 
+_NUMBERING_VALIDATION = validate.OneOf(["numeric", "alpha", "roman"])
+class NumberingSchema(Schema):
+    default = fields.Str(default="numeric", validate=_NUMBERING_VALIDATION)
+
+    class Meta:
+        include = {
+            "1": fields.Str(default="numeric", validate=_NUMBERING_VALIDATION),
+            "2": fields.Str(default="alpha", validate=_NUMBERING_VALIDATION),
+            "3": fields.Str(default="roman", validate=_NUMBERING_VALIDATION),
+            "4": fields.Str(validate=_NUMBERING_VALIDATION),
+            "5": fields.Str(validate=_NUMBERING_VALIDATION),
+            "6": fields.Str(validate=_NUMBERING_VALIDATION),
+            "7": fields.Str(validate=_NUMBERING_VALIDATION),
+            "8": fields.Str(validate=_NUMBERING_VALIDATION),
+            "9": fields.Str(validate=_NUMBERING_VALIDATION),
+            "10": fields.Str(validate=_NUMBERING_VALIDATION),
+        }
 
 class StyleFieldSchema(Schema):
     fg = fields.Str(default="")
@@ -150,6 +167,7 @@ class StyleSchema(Schema):
 
     headings = fields.Nested(HeadingsSchema, default=HeadingsSchema().dump(HeadingsSchema()))
     bullets = fields.Nested(BulletsSchema, default=BulletsSchema().dump(BulletsSchema()))
+    numbering = fields.Nested(NumberingSchema, default=NumberingSchema().dump(NumberingSchema()))
     table = fields.Nested(TableSchema, default=TableSchema().dump(TableSchema()))
     quote = fields.Nested(BlockQuoteSchema, default=BlockQuoteSchema().dump(BlockQuoteSchema()))
     link = fields.Nested(StyleFieldSchema, default={
