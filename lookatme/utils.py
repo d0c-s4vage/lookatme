@@ -226,3 +226,14 @@ def translate_color(raw_text):
         formated_text.append((urwid.AttrSpec(fgcolor, bgcolor), text))
 
     return formated_text
+
+def int_to_roman(integer):
+    integer = int(integer)
+    ints = [1000, 900,  500, 400, 100,  90, 50,  40, 10,  9,   5,  4,   1]
+    nums = ["m",  "cm", "d", "cd","c", "xc","l","xl","x","ix","v","iv","i"]
+    result = []
+    for i in range(len(ints)):
+        count = integer // ints[i]
+        result.append(nums[i] * count)
+        integer -= ints[i] * count
+    return "".join(result)

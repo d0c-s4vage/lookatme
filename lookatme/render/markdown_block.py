@@ -31,11 +31,18 @@ def _meta(item):
     return meta
 
 
-def _set_is_list(item, level=1):
+def _set_is_list(item, level=1, ordered=False):
     _meta(item).update({
         "is_list": True,
         "list_level": level,
+        "ordered": ordered,
+        "item_count": 0,
     })
+
+
+def _inc_item_count(item):
+    _meta(item)["item_count"] += 1
+    return _meta(item)["item_count"]
 
 
 def _is_list(item):
@@ -163,16 +170,18 @@ def render_list_start(token, body, stack, loop):
     list_level = 1
     if in_list:
         list_level = _list_level(stack[-1]) + 1
-    _set_is_list(res, list_level)
+    _set_is_list(res, list_level, ordered=token['ordered'])
+    _meta(res)['list_start_token'] = token
+    _meta(res)['max_list_marker_width'] = token.get('max_list_marker_width', 2)
     stack.append(res)
 
     widgets = []
     if not in_list:
         widgets.append(urwid.Divider())
-    widgets.append(urwid.Padding(res, left=2))
-    if not in_list:
+        widgets.append(urwid.Padding(res, left=2))
         widgets.append(urwid.Divider())
-    return widgets
+        return widgets
+    return res
 
 
 @contrib_first
@@ -182,11 +191,15 @@ def render_list_end(token, body, stack, loop):
     See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
     value descriptions.
     """
+    meta = _meta(stack[-1])
+    meta['list_start_token']['max_list_marker_width'] = meta['max_list_marker_width']
     stack.pop()
 
 
 def _list_item_start(token, body, stack, loop):
-    """Render the start of a list item. This function makes use of the styles:
+    """Render the start of a list item. This function makes use of two
+    different styles, one each for unordered lists (bullet styles) and ordered
+    lists (numbering styles):
 
     .. code-block:: yaml
 
@@ -195,18 +208,42 @@ def _list_item_start(token, body, stack, loop):
           '2': "⁃"
           '3': "◦"
           default: "•"
+        numbering:
+          '1': "numeric"
+          '2': "alpha"
+          '3': "roman"
+          default: "numeric"
 
     See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
     value descriptions.
     """
     list_level = _list_level(stack[-1])
+    curr_count = _inc_item_count(stack[-1])
     pile = urwid.Pile(urwid.SimpleFocusListWalker([]))
 
-    bullets = config.STYLE["bullets"]
-    list_bullet = bullets.get(str(list_level), bullets["default"])
+    meta = _meta(stack[-1])
 
+    if meta["ordered"]:
+        numbering = config.STYLE["numbering"]
+        list_marker_type = numbering.get(str(list_level), numbering["default"])
+        sequence = {
+            "numeric": lambda x: str(x),
+            "alpha": lambda x: chr(ord("a") + x - 1),
+            "roman": lambda x: int_to_roman(x),
+        }[list_marker_type]
+        list_marker = sequence(curr_count) + "."
+    else:
+        bullets = config.STYLE["bullets"]
+        list_marker = bullets.get(str(list_level), bullets["default"])
+
+    marker_text = list_marker + " "
+    if len(marker_text) > meta["max_list_marker_width"]:
+        meta["max_list_marker_width"] = len(marker_text)
+    marker_col_width = meta['max_list_marker_width']
+
+    res = urwid.Text(("bold", marker_text))
     res = urwid.Columns([
-        (2, urwid.Text(("bold", list_bullet + " "))),
+        (marker_col_width, urwid.Text(("bold", marker_text))),
         pile,
     ])
     stack.append(pile)

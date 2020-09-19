@@ -68,61 +68,65 @@ The default styles and formats are defined in the marshmallow schemas in
 
 .. code-block:: yaml
 
-
-    title:
-      bg: default
-      fg: '#f30,bold,italics'
-    author:
-      bg: default
-      fg: '#f30'
-    date:
-      bg: default
-      fg: '#777'
-    slides:
-      bg: default
-      fg: '#f30'
-    bullets:
-      '1': •
-      '2': ⁃
-      '3': ◦
-      default: •
-    headings:
-      '1':
-        bg: default
-        fg: '#9fc,bold'
-        prefix: '██ '
-        suffix: ''
-      '2':
-        bg: default
-        fg: '#1cc,bold'
-        prefix: '▓▓▓ '
-        suffix: ''
-      '3':
-        bg: default
-        fg: '#29c,bold'
-        prefix: '▒▒▒▒ '
-        suffix: ''
-      '4':
-        bg: default
-        fg: '#559,bold'
-        prefix: '░░░░░ '
-        suffix: ''
-      default:
-        bg: default
-        fg: '#346,bold'
-        prefix: '░░░░░ '
-        suffix: ''
-    link:
-      bg: default
-      fg: '#33c,underline'
-    quote:
-      bottom_corner: └
-      side: ╎
-      style:
-        bg: default
-        fg: italics,#aaa
-      top_corner: ┌
-    style: monokai
-    table:
-      column_spacing: 3
-      header_divider: ─
+   author:
+     bg: default
+     fg: '#f30'
+   bullets:
+     '1': •
+     '2': ⁃
+     '3': ◦
+     default: •
+   date:
+     bg: default
+     fg: '#777'
+   headings:
+     '1':
+       bg: default
+       fg: '#9fc,bold'
+       prefix: '██ '
+       suffix: ''
+     '2':
+       bg: default
+       fg: '#1cc,bold'
+       prefix: '▓▓▓ '
+       suffix: ''
+     '3':
+       bg: default
+       fg: '#29c,bold'
+       prefix: '▒▒▒▒ '
+       suffix: ''
+     '4':
+       bg: default
+       fg: '#559,bold'
+       prefix: '░░░░░ '
+       suffix: ''
+     default:
+       bg: default
+       fg: '#346,bold'
+       prefix: '░░░░░ '
+       suffix: ''
+   link:
+     bg: default
+     fg: '#33c,underline'
+   numbering:
+     '1': numeric
+     '2': alpha
+     '3': roman
+     default: numeric
+   quote:
+     bottom_corner: └
+     side: ╎
+     style:
+       bg: default
+       fg: italics,#aaa
+     top_corner: ┌
+   slides:
+     bg: default
+     fg: '#f30'
+   style: monokai
+   table:
+     column_spacing: 3
+     header_divider: ─
+   title:
+     bg: default
+     fg: '#f30,bold,italics'
