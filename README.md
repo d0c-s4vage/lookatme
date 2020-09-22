@@ -47,13 +47,14 @@ Sourcing external files example
 
 ## Navigating the Presentation
 
-| Action         | Keys                             | Notes |
-|----------------|----------------------------------|-------|
-| Next Slide     | `l j down right space`           |       |
-| Prev Slide     | `h k up left delete backspace`   |       |
-| Quit           | `q Q`                            |       |
-| Terminal Focus | Click on the terminal            |       |
-| Exit Terminal  | `ctrl+a` and then a slide action |       |
+| Action                         | Keys                             | Notes |
+|--------------------------------|----------------------------------|-------|
+| Next Slide                     | `l j right space`                |       |
+| Prev Slide                     | `h k left delete backspace`      |       |
+| Quit                           | `q Q`                            |       |
+| Terminal Focus                 | Click on the terminal            |       |
+| Exit Terminal                  | `ctrl+a` and then a slide action |       |
+| Vertically scroll within slide | `up/down or page up/page down`   |       |
 
 ## CLI Options
 
