@@ -1,5 +1,7 @@
 # Changelog
 
+- [v1.3.0](#v130)
+- [v1.2.1](#v121)
 - [v1.2.0](#v120)
 - [v1.1.1](#v111)
 - [v1.1.0](#v110)
@@ -10,6 +12,17 @@
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+## v1.3.0
+
+Vertical scrolling on overflowed slides now works, added `--single` and `--one`
+command-line options and hrule rendering.
+
+|    type | ticket                                                  | description                                             |
+|--------:|---------------------------------------------------------|---------------------------------------------------------|
+| feature | [#96](https://github.com/d0c-s4vage/lookatme/issues/96) | Add new cmd-line option to force single slide rendering |
+| feature | [#91](https://github.com/d0c-s4vage/lookatme/issues/91) | Single slide                                            |
+| feature | [#29](https://github.com/d0c-s4vage/lookatme/issues/29) | Slides should be vertically scrollable                  |
 
 ## v1.2.1
 
