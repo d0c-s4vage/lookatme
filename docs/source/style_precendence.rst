@@ -105,6 +105,11 @@ The default styles and formats are defined in the marshmallow schemas in
        fg: '#346,bold'
        prefix: '░░░░░ '
        suffix: ''
+   hrule:
+     char: ─
+     style:
+       bg: default
+       fg: '#777'
    link:
      bg: default
      fg: '#33c,underline'

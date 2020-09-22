@@ -23,14 +23,14 @@ def assert_render(correct_render, rendered, full_strip=False):
             assert correct_render[idx] == stripped
 
 
-def render_markdown(markdown, height=50):
+def render_markdown(markdown, height=50, width=200, single_slide=False):
     """Returns the rendered canvas contents of the markdown
     """
     loop = urwid.MainLoop(urwid.ListBox([]))
     renderer = lookatme.tui.SlideRenderer(loop)
     renderer.start()
 
-    parser = Parser()
+    parser = Parser(single_slide=single_slide)
     _, slides = parser.parse_slides({"title": ""}, markdown)
 
     renderer.stop()
@@ -39,7 +39,7 @@ def render_markdown(markdown, height=50):
 
     container = urwid.ListBox([urwid.Text("testing")])
     container.body = contents
-    return list(container.render((200,height)).content())
+    return list(container.render((width,height)).content())
 
 
 def spec_and_text(item):

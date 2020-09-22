@@ -58,13 +58,21 @@ from lookatme.schemas import StyleSchema
     is_flag=True,
     default=False,
 )
+@click.option(
+    "--single",
+    "--one",
+    "single_slide",
+    help="Render the source as a single slide",
+    is_flag=True,
+    default=False
+)
 @click.version_option(lookatme.__version__)
 @click.argument(
     "input_files",
     type=click.File("r"),
     nargs=-1,
 )
-def main(debug, log_path, theme, code_style, dump_styles, input_files, live_reload):
+def main(debug, log_path, theme, code_style, dump_styles, input_files, live_reload, single_slide):
     """lookatme - An interactive, terminal-based markdown presentation tool.
     """
     if debug:
@@ -74,7 +82,13 @@ def main(debug, log_path, theme, code_style, dump_styles, input_files, live_relo
 
     if len(input_files) == 0:
         input_files = [io.StringIO("")]
-    pres = Presentation(input_files[0], theme, code_style, live_reload=live_reload)
+    pres = Presentation(
+        input_files[0],
+        theme,
+        code_style,
+        live_reload=live_reload,
+        single_slide=single_slide
+    )
 
     if dump_styles:
         print(StyleSchema().dumps(pres.styles))
