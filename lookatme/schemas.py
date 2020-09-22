@@ -71,6 +71,7 @@ class NumberingSchema(Schema):
             "10": fields.Str(validate=_NUMBERING_VALIDATION),
         }
 
+
 class StyleFieldSchema(Schema):
     fg = fields.Str(default="")
     bg = fields.Str(default="")
@@ -81,6 +82,14 @@ class HeadingStyleSchema(Schema):
     suffix = fields.Str()
     fg = fields.Str(default="")
     bg = fields.Str(default="")
+
+
+class HruleSchema(Schema):
+    char = fields.Str(default="─")
+    style = fields.Nested(StyleFieldSchema, default=StyleFieldSchema().dump({
+        "fg": "#777",
+        "bg": "default",
+    }))
 
 
 class BlockQuoteSchema(Schema):
@@ -170,6 +179,7 @@ class StyleSchema(Schema):
     numbering = fields.Nested(NumberingSchema, default=NumberingSchema().dump(NumberingSchema()))
     table = fields.Nested(TableSchema, default=TableSchema().dump(TableSchema()))
     quote = fields.Nested(BlockQuoteSchema, default=BlockQuoteSchema().dump(BlockQuoteSchema()))
+    hrule = fields.Nested(HruleSchema, default=HruleSchema().dump(HruleSchema()))
     link = fields.Nested(StyleFieldSchema, default={
         "fg": "#33c,underline",
         "bg": "default",

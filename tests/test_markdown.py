@@ -222,6 +222,30 @@ def test_numbered_lists(mocker):
     assert_render(stripped_rows, rendered)
 
 
+def test_hrule(mocker):
+    """Test that hrules render correctly
+    """
+    mocker.patch.object(lookatme.config, "LOG")
+    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
+    fake_config.STYLE = {
+        "hrule": {
+            "style": {
+                "fg": "",
+                "bg": "",
+            },
+            "char": "=",
+        },
+    }
+
+    rendered = render_markdown("---", width=10, single_slide=True)
+    stripped_rows = [
+        b'',
+        b'==========',
+        b'',
+    ]
+    assert_render(stripped_rows, rendered)
+
+
 def test_block_quote(mocker):
     """Test block quote rendering
     """

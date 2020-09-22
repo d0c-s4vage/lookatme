@@ -23,6 +23,12 @@ theme = {
             "bg":"default",
         },
     },
+    "hrule": {
+        "style": {
+            "fg": "#555",
+            "bg": "default",
+        }
+    },
     "link": {
         "fg": "#22f,underline,bold",
         "bg": "default",

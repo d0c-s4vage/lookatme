@@ -20,7 +20,8 @@ from lookatme.utils import dict_deep_update
 class Presentation(object):
     """Defines a presentation
     """
-    def __init__(self, input_stream, theme, style_override=None, live_reload=False):
+    def __init__(self, input_stream, theme, style_override=None, live_reload=False,
+                 single_slide=False):
         """Creates a new Presentation
 
         :param stream input_stream: An input stream from which to read the
@@ -34,6 +35,7 @@ class Presentation(object):
         self.style_override = style_override
         self.live_reload = live_reload
         self.tui = None
+        self.single_slide = single_slide
 
         self.theme_mod = __import__("lookatme.themes." + theme, fromlist=[theme])
 
@@ -73,7 +75,7 @@ class Presentation(object):
             with open(self.input_filename, "r") as f:
                 data = f.read()
 
-        parser = Parser()
+        parser = Parser(single_slide=self.single_slide)
         self.meta, self.slides = parser.parse(data)
         lookatme.contrib.load_contribs(self.meta.get("extensions", []))
 

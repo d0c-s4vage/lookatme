@@ -18,9 +18,10 @@ class Parser(object):
     """A parser for markdown presentation files
     """
 
-    def __init__(self):
+    def __init__(self, single_slide=False):
         """Create a new Parser instance
         """
+        self._single_slide = single_slide
 
     def parse(self, input_data):
         """Parse the provided input data into a Presentation object
@@ -47,7 +48,12 @@ class Parser(object):
 
         num_hrules, hinfo = self._scan_for_smart_split(tokens)
 
-        if num_hrules == 0:
+        if self._single_slide:
+            def slide_split_check(token):
+                False
+            def heading_mod(token):
+                pass
+        elif num_hrules == 0:
             if meta["title"] in ["", None]:
                 meta["title"] = hinfo["title"]
             def slide_split_check(token):

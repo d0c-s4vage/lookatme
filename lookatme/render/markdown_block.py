@@ -64,6 +64,18 @@ def render_newline(token, body, stack, loop):
 
 
 @contrib_first
+def render_hrule(token, body, stack, loop):
+    """Render a newline
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
+    value descriptions.
+    """
+    hrule_conf = config.STYLE["hrule"]
+    div = urwid.Divider(hrule_conf['char'], top=1, bottom=1)
+    return urwid.Pile([urwid.AttrMap(div, spec_from_style(hrule_conf['style']))])
+
+
+@contrib_first
 def render_heading(token, body, stack, loop):
     """Render markdown headings, using the defined styles for the styling and
     prefix/suffix.

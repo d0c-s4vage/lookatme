@@ -59,7 +59,7 @@ Sourcing external files example
 ## CLI Options
 
 ```
-Usage: lookatme [OPTIONS] [INPUT_FILE]
+Usage: lookatme [OPTIONS] [INPUT_FILES]...
 
   lookatme - An interactive, terminal-based markdown presentation tool.
 
@@ -67,11 +67,15 @@ Options:
   --debug
   -l, --log PATH
   -t, --theme [dark|light]
-  -s, --style [default|emacs|friendly|colorful|autumn|murphy|manni|monokai|perldoc|pastie|borland|trac|native|fruity|bw|vim|vs|tango|rrt|xcode|igor|paraiso-light|paraiso-dark|lovelace|algol|algol_nu|arduino|rainbow_dash|abap|solarized-dark|solarized-light|sas|stata|stata-light|stata-dark]
+  -s, --style [default|emacs|friendly|colorful|autumn|murphy|manni|monokai|perldoc|pastie|borland|trac|native|fruity|bw|vim|vs|tango|rrt|xcode|igor|paraiso-light|paraiso-dark|lovelace|algol|algol_nu|arduino|rainbow_dash|abap|solarized-dark|solarized-light|sas|stata|stata-light|stata-dark|inkpot]
   --dump-styles                   Dump the resolved styles that will be used
                                   with the presentation to stdout
+
   --live, --live-reload           Watch the input filename for modifications
                                   and automatically reload
+
+  --single, --one                 Render the source as a single slide
+  --version                       Show the version and exit.
   --help                          Show this message and exit.
 ```
 
