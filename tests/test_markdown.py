@@ -219,12 +219,7 @@ def test_numbered_lists(mocker):
         b'  3. list 3',
         b'',
     ]
-    # seven list items plus a pre and post Divider()
-    assert len(rendered) == len(stripped_rows)
-
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).rstrip()
-        assert stripped_row_text == stripped_rows[idx]
+    assert_render(stripped_rows, rendered)
 
 
 def test_block_quote(mocker):
