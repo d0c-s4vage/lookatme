@@ -154,7 +154,6 @@ class SlideRenderer(threading.Thread):
     def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
         stack = [tmp_listbox]
-        stack = [tmp_pile]
         for token in tokens:
             self._log.debug(f"{'  '*len(stack)}Rendering token {token}")
 
@@ -169,9 +168,6 @@ class SlideRenderer(threading.Thread):
             if res is None:
                 continue
             pile_or_listbox_add(last_stack, res)
-
-        total = time.time() - start
-        self._log.debug(f"Rendered slide {slide_num} in {total}")
 
         return tmp_listbox.body
 
@@ -290,9 +286,9 @@ class MarkdownTui(urwid.Frame):
             pass
 
         slide_direction = 0
-        if key in ["left", "up", "backspace", "delete", "h", "k"]:
+        if key in ["left", "backspace", "delete", "h", "k"]:
             slide_direction = -1
-        elif key in ["right", "down", " ", "j", "l"]:
+        elif key in ["right", " ", "j", "l"]:
             slide_direction = 1
         elif key in ["q", "Q"]:
             lookatme.contrib.shutdown_contribs()
