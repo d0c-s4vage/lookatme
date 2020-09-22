@@ -139,9 +139,23 @@ class SlideRenderer(threading.Thread):
         self._log.debug(f"Rendering slide {slide_num}")
         start = time.time()
 
+        # initial processing loop - results are discarded, but render functions
+        # may add extra metadata to the token itself. For example, list rendering
+        # uses this to determine the max indent size for each level.
+        tokens = to_render.tokens
+        self._render_tokens(tokens)
+        res = self._render_tokens(tokens)
+
+        total = time.time() - start
+        self._log.debug(f"Rendered slide {slide_num} in {total}")
+
+        return res
+    
+    def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
         stack = [tmp_listbox]
-        for token in to_render.tokens:
+        stack = [tmp_pile]
+        for token in tokens:
             self._log.debug(f"{'  '*len(stack)}Rendering token {token}")
 
             last_stack = stack[-1]

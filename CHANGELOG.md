@@ -11,6 +11,14 @@
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
 
+## v1.2.1
+
+Fixes numbered lists and general list formatting.
+
+| type | ticket                                                  | description          |
+|-----:|---------------------------------------------------------|----------------------|
+|  bug | [#86](https://github.com/d0c-s4vage/lookatme/issues/93) | Fixes numbered lists |
+
 ## v1.2.0
 
 Adds `terminal-ex` mode to embedded terminal code blocks.

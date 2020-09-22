@@ -5,9 +5,9 @@ author: James Johnson
 extensions:
   - qrcode
 styles:
-  style: solarized-dark
+  style: monokai
   table:
-    column_spacing: 3
+    column_spacing: 10
 ---
 
 # Markdown Support: Inline
@@ -65,6 +65,25 @@ A quote is below:
         * Level 3
             * Level 4
     * Level 2
+        * Level 3
+            * Level 4
+
+---
+
+# Markdown Support: Numbered Lists
+
+* Top level
+    1. Level 2
+        1. Level 3
+        1. Level 3
+        1. Level 3
+            * Level 4
+    1. Level 2
+        1. Level 3
+            1. Level 4
+            1. Level 4
+            1. Level 4
+    1. Level 2
         * Level 3
             * Level 4
 
@@ -129,10 +148,8 @@ docker run --rm -it ubuntu:18.04
 
 # Live Editing
 
-Live editing is supported in `lookatme` with the `--live` command-line
-argument.
-
-More text from vim
+Hello from vim! lookatme supports live reloading when the source markdown changes
+with the `--live` option
 
 ---
 
@@ -140,7 +157,7 @@ More text from vim
 
 ```python
 def a_function(test):
-    pass
+    print "hello there"
 ```
 
 | h1     | h2     | h3    |
