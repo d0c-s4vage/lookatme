@@ -11,10 +11,22 @@ from lookatme.parser import Parser
 import lookatme.tui
 
 
+def assert_render(correct_render, rendered, full_strip=False):
+    for idx, row in enumerate(rendered):
+        if full_strip:
+            stripped = row_text(row).strip()
+        else:
+            stripped = row_text(row).rstrip()
+        if idx >= len(correct_render):
+            assert stripped == b""
+        else:
+            assert correct_render[idx] == stripped
+
+
 def render_markdown(markdown, height=50):
     """Returns the rendered canvas contents of the markdown
     """
-    loop = urwid.MainLoop(urwid.Pile([]))
+    loop = urwid.MainLoop(urwid.ListBox([]))
     renderer = lookatme.tui.SlideRenderer(loop)
     renderer.start()
 
@@ -22,12 +34,12 @@ def render_markdown(markdown, height=50):
     _, slides = parser.parse_slides({"title": ""}, markdown)
 
     renderer.stop()
-    pile_contents = renderer.render_slide(slides[0], force=True)
+    contents = renderer.render_slide(slides[0], force=True)
     renderer.join()
 
-    pile = urwid.Pile([urwid.Text("testing")])
-    pile.contents = pile_contents
-    return list(pile.render((height,)).content())
+    container = urwid.ListBox([urwid.Text("testing")])
+    container.body = contents
+    return list(container.render((200,height)).content())
 
 
 def spec_and_text(item):

@@ -8,7 +8,7 @@ import lookatme.contrib.file_loader as file_loader
 import lookatme.render.pygments
 
 
-from tests.utils import spec_and_text, row_text, render_markdown
+from tests.utils import spec_and_text, row_text, render_markdown, assert_render
 
 
 TEST_STYLE = {
@@ -49,9 +49,7 @@ relative: false
         b'',
         b'',
     ]
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).strip()
-        assert stripped_row_text == stripped_rows[idx]
+    assert_render(stripped_rows, rendered)
 
 
 def test_file_loader_with_transform(tmpdir, mocker):
@@ -89,9 +87,7 @@ transform: "grep -i apples | sort"
         b'',
         b'',
     ]
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).strip()
-        assert stripped_row_text == stripped_rows[idx]
+    assert_render(stripped_rows, rendered)
 
 
 def test_file_loader_relative(tmpdir, mocker):
@@ -120,9 +116,7 @@ relative: true
         b'',
         b'',
     ]
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).strip()
-        assert stripped_row_text == stripped_rows[idx]
+    assert_render(stripped_rows, rendered)
 
 
 def test_file_loader_not_found(mocker):
@@ -146,6 +140,4 @@ path: does_not_exist.py
         b'',
         b'',
     ]
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).strip()
-        assert stripped_row_text == stripped_rows[idx]
+    assert_render(stripped_rows, rendered)

@@ -15,6 +15,7 @@ import yaml
 
 import lookatme.render
 from lookatme.exceptions import IgnoredByContrib
+import lookatme.config
 
 
 class YamlRender:
@@ -77,6 +78,7 @@ def render_code(token, body, stack, loop):
     CREATED_TERMS.append(term)
 
     line_box = urwid.LineBox(urwid.BoxAdapter(term, height=term_data["rows"]))
+    line_box.no_cache = ["render"]
 
     res = []
 
@@ -99,6 +101,7 @@ def render_code(token, body, stack, loop):
 
 
 def shutdown():
-    for term in CREATED_TERMS:
+    for idx, term in enumerate(CREATED_TERMS):
+        lookatme.config.LOG.debug(f"Terminating terminal {idx+1}/{len(CREATED_TERMS)}")
         if term.pid is not None:
             term.terminate()

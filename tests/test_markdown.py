@@ -13,7 +13,7 @@ from lookatme.parser import Parser
 import lookatme.tui
 
 
-from tests.utils import spec_and_text, row_text, render_markdown
+from tests.utils import spec_and_text, row_text, render_markdown, assert_render
 
 
 TEST_STYLE = {
@@ -43,10 +43,6 @@ def test_headings(mocker):
 ---
 """)
 
-    # three lines for the headings plus an extra line of padding after each
-    # and one line of padding before the first one
-    assert len(rendered) == 7
-
     stripped_rows = [
         b"",
         b"|H1|",
@@ -56,9 +52,7 @@ def test_headings(mocker):
         b"|H3|",
         b"",
     ]
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).strip()
-        assert stripped_row_text == stripped_rows[idx]
+    assert_render(stripped_rows, rendered)
 
 
 def test_table(mocker):
@@ -83,17 +77,13 @@ def test_table(mocker):
 | 1       | 2      | 3      |
 """)
 
-    assert len(rendered) == 4
-
     stripped_rows = [
         b"H1        H2       H3",
         b"------- ------ ------",
         b"1value1 value2 value3",
         b"1          2        3",
     ]
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).strip()
-        assert stripped_row_text == stripped_rows[idx]
+    assert_render(stripped_rows, rendered, full_strip=True)
 
 
 def test_lists(mocker):
@@ -125,9 +115,6 @@ def test_lists(mocker):
 * list 2
 """)
 
-    # seven list items plus a pre and post Divider()
-    assert len(rendered) == 10
-
     stripped_rows = [
         b'',
         b'  - list 1',
@@ -140,9 +127,7 @@ def test_lists(mocker):
         b'  - list 2',
         b'',
     ]
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).rstrip()
-        assert stripped_row_text == stripped_rows[idx]
+    assert_render(stripped_rows, rendered)
 
 
 def test_lists_with_newline(mocker):
@@ -176,9 +161,7 @@ def test_lists_with_newline(mocker):
         b'    = list 2',
         b'',
     ]
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).rstrip()
-        assert stripped_row_text == stripped_rows[idx]
+    assert_render(stripped_rows, rendered)
 
 def test_numbered_lists(mocker):
     """Test list rendering
@@ -236,12 +219,7 @@ def test_numbered_lists(mocker):
         b'  3. list 3',
         b'',
     ]
-    # seven list items plus a pre and post Divider()
-    assert len(rendered) == len(stripped_rows)
-
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).rstrip()
-        assert stripped_row_text == stripped_rows[idx]
+    assert_render(stripped_rows, rendered)
 
 
 def test_block_quote(mocker):
@@ -265,8 +243,6 @@ def test_block_quote(mocker):
 > this is a quote
 """)
 
-    assert len(rendered) == 5
-
     stripped_rows = [
         b'',
         b'-',
@@ -274,9 +250,7 @@ def test_block_quote(mocker):
         b'=',
         b'',
     ]
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).rstrip()
-        assert stripped_row_text == stripped_rows[idx]
+    assert_render(stripped_rows, rendered)
 
 def test_code(mocker):
     """Test code block rendering
@@ -293,20 +267,13 @@ def some_fn(*args, **kargs):
     pass```
 """)
 
-    assert len(rendered) == 4
-
-    for row in rendered:
-        print(repr(row_text(row).rstrip()))
-
     stripped_rows = [
         b'',
         b'def some_fn(*args, **kargs):',
         b'    pass',
         b'',
     ]
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).rstrip()
-        assert stripped_row_text == stripped_rows[idx]
+    assert_render(stripped_rows, rendered)
 
 
 def test_empty_codeblock(mocker):
@@ -343,8 +310,6 @@ array:
   - item3
 ```""")
 
-    assert len(rendered) == 8
-
     stripped_rows = [
         b'',
         b'test: a value',
@@ -355,11 +320,7 @@ array:
         b'  - item3',
         b'',
     ]
-    for idx, row in enumerate(rendered):
-        stripped_row_text = row_text(row).rstrip()
-        assert stripped_row_text == stripped_rows[idx]
-
-
+    assert_render(stripped_rows, rendered)
 
 
 def test_inline(mocker):
@@ -377,46 +338,37 @@ def test_inline(mocker):
     }
 
     rendered = render_markdown("*emphasis*")
-    assert len(rendered) == 3
     assert rendered[1][0][0].foreground == "default,italics"
     assert row_text(rendered[1]).strip() == b"emphasis"
 
     rendered = render_markdown("**emphasis**")
-    assert len(rendered) == 3
     assert rendered[1][0][0].foreground == "default,underline"
     assert row_text(rendered[1]).strip() == b"emphasis"
 
     rendered = render_markdown("_emphasis_")
-    assert len(rendered) == 3
     assert rendered[1][0][0].foreground == "default,italics"
     assert row_text(rendered[1]).strip() == b"emphasis"
 
     rendered = render_markdown("__emphasis__")
-    assert len(rendered) == 3
     assert rendered[1][0][0].foreground == "default,underline"
     assert row_text(rendered[1]).strip() == b"emphasis"
 
     rendered = render_markdown("`inline code`")
-    assert len(rendered) == 3
     assert row_text(rendered[1]).rstrip() == b" inline code"
 
     rendered = render_markdown("~~strikethrough~~")
-    assert len(rendered) == 3
     assert rendered[1][0][0].foreground == "default,strikethrough"
     assert row_text(rendered[1]).rstrip() == b"strikethrough"
 
     rendered = render_markdown("[link](http://domain.tld)")
-    assert len(rendered) == 3
     assert rendered[1][0][0].foreground == "default,underline"
     assert row_text(rendered[1]).rstrip() == b"link"
 
     rendered = render_markdown("http://domain.tld")
-    assert len(rendered) == 3
     assert rendered[1][0][0].foreground == "default,underline"
     assert row_text(rendered[1]).rstrip() == b"http://domain.tld"
 
     rendered = render_markdown("![link](http://domain.tld)")
-    assert len(rendered) == 3
     assert rendered[1][0][0].foreground == "default,underline"
     assert row_text(rendered[1]).rstrip() == b"link"
 

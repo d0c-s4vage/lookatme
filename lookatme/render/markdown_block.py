@@ -164,7 +164,7 @@ def render_list_start(token, body, stack, loop):
     See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
     value descriptions.
     """
-    res = urwid.Pile(urwid.SimpleFocusListWalker([]))
+    res = urwid.Pile([])
 
     in_list = _is_list(stack[-1])
     list_level = 1
