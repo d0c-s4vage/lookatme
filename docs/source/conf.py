@@ -88,6 +88,7 @@ master_doc = "index"
 
 def get_contrib_functions(*file_parts):
     render_module = file_parts[-1].replace(".py", "")
+    full_mod_path = ".".join(list(file_parts[:-1]) + [render_module])
     lines = read_file(*file_parts).split("\n")
 
     res = []
@@ -103,7 +104,7 @@ def get_contrib_functions(*file_parts):
         elif line.startswith("def "):
             if in_contrib:
                 fn_name = line.split()[1].split("(")[0]
-                res.append(f":any:`{fn_name} <lookatme.render.{render_module}.{fn_name}>`")
+                res.append(f":any:`{fn_name} <{full_mod_path}.{fn_name}>`")
             in_contrib = False
     return res
 
@@ -111,6 +112,7 @@ def get_contrib_functions(*file_parts):
 contrib_fns = []
 contrib_fns += get_contrib_functions("lookatme", "render", "markdown_block.py")
 contrib_fns += get_contrib_functions("lookatme", "render", "markdown_inline.py")
+contrib_fns += get_contrib_functions("lookatme", "tui.py")
 
 
 list_text = []
