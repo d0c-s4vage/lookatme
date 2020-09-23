@@ -13,7 +13,7 @@ import urwid
 
 import lookatme.config
 import lookatme.config as config
-import lookatme.contrib
+from lookatme.contrib import shutdown_contribs, contrib_first
 import lookatme.render.markdown_block as lam_md
 from lookatme.utils import pile_or_listbox_add, spec_from_style
 
@@ -22,6 +22,17 @@ def text(style, data, align="left"):
     if isinstance(style, dict):
         style = spec_from_style(style)
     return urwid.Text((style, data), align=align)
+
+
+@contrib_first
+def root_urwid_widget(to_wrap):
+    """This function is overridable by contrib extensions that need to specify
+    the root urwid widget.
+    
+    The return value *must* return either the ``to_wrap`` widget itself, or
+    another widget that wraps the provided ``to_wrap`` widget.
+    """
+    return to_wrap
 
 
 class SlideRenderer(threading.Thread):
@@ -189,8 +200,9 @@ class MarkdownTui(urwid.Frame):
         urwid.set_encoding('utf8')
         screen = urwid.raw_display.Screen()
         screen.set_terminal_properties(colors=256)
+        root_widget = root_urwid_widget(urwid.Padding(self, left=2, right=2))
         self.loop = urwid.MainLoop(
-            urwid.Padding(self, left=2, right=2),
+            root_widget,
             screen=screen,
         )
 
