@@ -125,7 +125,7 @@ def render_heading(token, body, stack, loop):
 
     rendered = render_text(text=token["text"])
     if len(rendered) > 0:
-        raise Exception("lookatme doesn't know how to render complicated headings")
+        rendered = rendered[0]
 
     return [
         urwid.Divider(),

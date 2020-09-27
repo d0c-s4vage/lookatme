@@ -64,6 +64,7 @@ class Table(urwid.Pile):
         if self.table_headers is not None:
             header_columns = []
             for idx, header in enumerate(self.rend_headers[0]):
+                header = header[0]
                 header_with_div = urwid.Pile([
                     self.watch(header),
                     urwid.Divider(config.STYLE["table"]["header_divider"]),
@@ -73,8 +74,10 @@ class Table(urwid.Pile):
 
         for row_idx, rend_row in enumerate(self.rend_rows):
             row_columns = []
-            for idx, rend_cell in enumerate(rend_row):
-                row_columns.append((self.column_maxes[idx], self.watch(rend_cell)))
+            for cell_idx, rend_cell in enumerate(rend_row):
+                rend_widgets = [self.watch(rend_widget) for rend_widget in rend_cell]
+                rend_pile = urwid.Pile(rend_widgets)
+                row_columns.append((self.column_maxes[cell_idx], rend_pile))
 
             column_row = urwid.Columns(row_columns, cell_spacing)
             final_rows.append(column_row)
@@ -90,9 +93,13 @@ class Table(urwid.Pile):
     def watch(self, w):
         """Watch the provided widget w for changes
         """
+        if "change" not in getattr(w, "signals", []):
+            return w
+
         def wrapper(*args, **kwargs):
             self._invalidate()
             self._emit("change")
+
         urwid.connect_signal(w, "change", wrapper)
         return w
     
@@ -124,9 +131,14 @@ class Table(urwid.Pile):
         column_maxes = defaultdict(int)
         for row in self.rend_headers + self.rend_rows:
             for idx, cell in enumerate(row):
-                if idx > self.num_columns:
-                    break
-                column_maxes[idx] = max(column_maxes[idx], len(cell.text))
+                for widget in cell:
+                    if not isinstance(widget, urwid.Text):
+                        widg_len = 15
+                    else:
+                        widg_len = len(widget.text)
+                    if idx > self.num_columns:
+                        break
+                    column_maxes[idx] = max(column_maxes[idx], widg_len)
         return column_maxes
 
     def create_cells(self, body_rows, modifier=None):
@@ -141,11 +153,13 @@ class Table(urwid.Pile):
             for idx, cell in enumerate(row):
                 if idx >= self.num_columns:
                     break
-                rend_cell = render_text(text=cell)
-                rend_cell.align = self.table_aligns[idx] or "left"
-                if modifier is not None:
-                    rend_cell = modifier(rend_cell)
-                rend_row.append(rend_cell)
+                rend_cell_widgets = render_text(text=cell)
+                for widget in rend_cell_widgets:
+                    if isinstance(widget, urwid.Text):
+                        widget.align = self.table_aligns[idx] or "left"
+                        if modifier is not None:
+                            widget = modifier(widget)
+                rend_row.append(rend_cell_widgets)
             res.append(rend_row)
 
         return res
