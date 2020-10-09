@@ -124,7 +124,8 @@ def render_heading(token, body, stack, loop):
     suffix = styled_text(style["suffix"], style)
 
     rendered = render_text(text=token["text"])
-    styled_rendered = styled_text(rendered, style, supplement_style=True)
+    if len(rendered) > 0:
+        rendered = rendered[0]
 
     return [
         urwid.Divider(),
@@ -312,13 +313,13 @@ def render_list_item_end(token, body, stack, loop):
 def render_text(token=None, body=None, stack=None, loop=None, text=None):
     """Renders raw text. This function uses the inline markdown lexer
     from mistune with the :py:mod:`lookatme.render.markdown_inline` render module
-    to render the lexed inline markup to
+    to render the lexed inline markup to a list composed of widgets or
     `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_.
-    The created Text markup is then used to create and return a :any:`ClickableText`
-    instance.
+    The created list of widgets/Text markup is then used to create and return
+    a list composed entirely of widgets and :any:`ClickableText` instances.
 
     Many other functions call this function directly, passing in the extra
-    ``text`` argument and leaving all other arguments blank. 
+    ``text`` argument and leaving all other arguments blank.
 
     See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
     return value descriptions.
@@ -331,7 +332,20 @@ def render_text(token=None, body=None, stack=None, loop=None, text=None):
     if len(res) == 0:
         res = [""]
 
-    return ClickableText(res)
+    widget_list = []
+    curr_text_spec = []
+    for item in res:
+        if isinstance(item, urwid.Widget):
+            if len(curr_text_spec) > 0:
+                widget_list.append(ClickableText(curr_text_spec))
+                curr_text_spec = []
+            widget_list.append(item)
+        else:
+            curr_text_spec.append(item)
+    if len(curr_text_spec) > 0:
+        widget_list.append(ClickableText(curr_text_spec))
+
+    return widget_list
 
 
 @contrib_first
@@ -343,11 +357,7 @@ def render_paragraph(token, body, stack, loop):
     """
     token["text"] = token["text"].replace("\r\n", " ").replace("\n", " ")
     res = render_text(token, body, stack, loop)
-    return [
-        urwid.Divider(),
-        res,
-        urwid.Divider(),
-    ]
+    return [urwid.Divider()] + res + [urwid.Divider()]
 
 
 @contrib_first
@@ -427,5 +437,5 @@ def render_code(token, body, stack, loop):
     return [
         urwid.Divider(),
         res,
-        urwid.Divider(),
+        urwid.Divider()
     ]

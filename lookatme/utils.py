@@ -136,6 +136,12 @@ def flatten_text(text, new_spec=None):
     return res
 
 
+def can_style_item(item):
+    """Return true/false if ``style_text`` can work with the given item
+    """
+    return isinstance(item, (urwid.Text, list, tuple))
+
+
 def styled_text(text, new_styles, old_styles=None, supplement_style=False):
     """Return a styled text tuple that can be used within urwid.Text.
 
