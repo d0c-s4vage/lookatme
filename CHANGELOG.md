@@ -1,5 +1,6 @@
 # Changelog
 
+- [v2.0.0](#v200)
 - [v1.3.0](#v130)
 - [v1.2.1](#v121)
 - [v1.2.0](#v120)
@@ -12,6 +13,16 @@
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+## v2.0.0
+
+Changes `render_text` to be able to support widgets instead of only text
+attributes. This is a breaking change to the interface of `render_text`.
+Plugins that relied on `render_text` will need to be updated.
+
+|    type | ticket                                                    | description                                                    |
+|--------:|-----------------------------------------------------------|----------------------------------------------------------------|
+| feature | [#101](https://github.com/d0c-s4vage/lookatme/issues/101) | Inline render functions should be able to return urwid Widgets |
 
 ## v1.3.0
 
