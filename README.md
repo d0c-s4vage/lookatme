@@ -83,9 +83,10 @@ Options:
 
 Below is a list of known extensions for lookatme:
 
-| Extension Name | Install Name            | Url                                                   |
-|----------------|-------------------------|-------------------------------------------------------|
-| qrcode         | lookatme.contrib.qrcode | https://github.com/d0c-s4vage/lookatme.contrib.qrcode |
+| Extension Name | Install Name                    | Url                                                           |
+|----------------|---------------------------------|---------------------------------------------------------------|
+| qrcode         | lookatme.contrib.qrcode         | https://github.com/d0c-s4vage/lookatme.contrib.qrcode         |
+| image_ueberzug | lookatme.contrib.image_ueberzug | https://github.com/d0c-s4vage/lookatme.contrib.image_ueberzug |
 
 ## Documentation
 
