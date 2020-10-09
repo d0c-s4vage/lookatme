@@ -40,7 +40,7 @@ class Table(urwid.Pile):
             )
 
         def header_modifier(cell):
-            return ClickableText(styled_text(cell, "bold"), align=cell.align)
+            return ClickableText(styled_text(cell.text, "bold"), align=cell.align)
 
         if self.table_headers is not None:
             self.rend_headers = self.create_cells(
@@ -154,12 +154,14 @@ class Table(urwid.Pile):
                 if idx >= self.num_columns:
                     break
                 rend_cell_widgets = render_text(text=cell)
+                new_widgets = []
                 for widget in rend_cell_widgets:
                     if isinstance(widget, urwid.Text):
                         widget.align = self.table_aligns[idx] or "left"
                         if modifier is not None:
                             widget = modifier(widget)
-                rend_row.append(rend_cell_widgets)
+                    new_widgets.append(widget)
+                rend_row.append(new_widgets)
             res.append(rend_row)
 
         return res

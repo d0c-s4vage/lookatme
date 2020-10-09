@@ -313,13 +313,13 @@ def render_list_item_end(token, body, stack, loop):
 def render_text(token=None, body=None, stack=None, loop=None, text=None):
     """Renders raw text. This function uses the inline markdown lexer
     from mistune with the :py:mod:`lookatme.render.markdown_inline` render module
-    to render the lexed inline markup to
+    to render the lexed inline markup to a list composed of widgets or
     `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_.
-    The created Text markup is then used to create and return a :any:`ClickableText`
-    instance.
+    The created list of widgets/Text markup is then used to create and return
+    a list composed entirely of widgets and :any:`ClickableText` instances.
 
     Many other functions call this function directly, passing in the extra
-    ``text`` argument and leaving all other arguments blank. 
+    ``text`` argument and leaving all other arguments blank.
 
     See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
     return value descriptions.
