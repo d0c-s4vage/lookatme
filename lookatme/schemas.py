@@ -77,6 +77,13 @@ class StyleFieldSchema(Schema):
     bg = fields.Str(default="")
 
 
+class SpacingSchema(Schema):
+    top = fields.Int(default=0)
+    bottom = fields.Int(default=0)
+    left = fields.Int(default=0)
+    right = fields.Int(default=0)
+
+
 class HeadingStyleSchema(Schema):
     prefix = fields.Str()
     suffix = fields.Str()
@@ -146,6 +153,22 @@ class TableSchema(Schema):
     column_spacing = fields.Int(default=3)
 
 
+class SlideSchema(Schema):
+    fg = fields.Str(default="#f30")
+    bg = fields.Str(default="default")
+    margin = fields.Nested(SpacingSchema, default={
+        "top": 0,
+        "bottom": 0,
+        "left": 2,
+        "right": 2,
+    })
+    padding = fields.Nested(SpacingSchema, default={
+        "top": 0,
+        "bottom": 0,
+        "left": 10,
+        "right": 10,
+    })
+
 class StyleSchema(Schema):
     """Styles schema for themes and style overrides within presentations
     """
@@ -169,10 +192,7 @@ class StyleSchema(Schema):
         "fg": "#777",
         "bg": "default",
     })
-    slides = fields.Nested(StyleFieldSchema, default={
-        "fg": "#f30",
-        "bg": "default",
-    })
+    slides = fields.Nested(SlideSchema, default=SlideSchema().dump(SlideSchema()))
 
     headings = fields.Nested(HeadingsSchema, default=HeadingsSchema().dump(HeadingsSchema()))
     bullets = fields.Nested(BulletsSchema, default=BulletsSchema().dump(BulletsSchema()))
