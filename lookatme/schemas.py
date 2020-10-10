@@ -77,6 +77,13 @@ class StyleFieldSchema(Schema):
     bg = fields.Str(default="")
 
 
+class SpacingSchema(Schema):
+    top = fields.Int(default=0)
+    bottom = fields.Int(default=0)
+    left = fields.Int(default=0)
+    right = fields.Int(default=0)
+
+
 class HeadingStyleSchema(Schema):
     prefix = fields.Str()
     suffix = fields.Str()
@@ -172,6 +179,18 @@ class StyleSchema(Schema):
     slides = fields.Nested(StyleFieldSchema, default={
         "fg": "#f30",
         "bg": "default",
+    })
+    margin = fields.Nested(SpacingSchema, default={
+        "top": 0,
+        "bottom": 0,
+        "left": 2,
+        "right": 2,
+    })
+    padding = fields.Nested(SpacingSchema, default={
+        "top": 0,
+        "bottom": 0,
+        "left": 10,
+        "right": 10,
     })
 
     headings = fields.Nested(HeadingsSchema, default=HeadingsSchema().dump(HeadingsSchema()))

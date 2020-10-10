@@ -190,17 +190,25 @@ class MarkdownTui(urwid.Frame):
         #self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
         self.slide_body = urwid.ListBox(urwid.SimpleFocusListWalker([urwid.Text("test")]))
         self.slide_title = text("", "", "center")
+        self.top_spacing = urwid.Filler(self.slide_title, top=0, bottom=0)
+        self.top_spacing_box = urwid.BoxAdapter(self.top_spacing, 1)
 
         self.creation = text("", "")
         self.slide_num = text("", " test ", "right")
         self.slide_footer = urwid.Columns([self.creation, self.slide_num])
+        self.bottom_spacing = urwid.Filler(self.slide_footer, top=0, bottom=0)
+        self.bottom_spacing_box = urwid.BoxAdapter(self.bottom_spacing, 1)
 
         self._log = lookatme.config.LOG
 
         urwid.set_encoding('utf8')
         screen = urwid.raw_display.Screen()
         screen.set_terminal_properties(colors=256)
-        root_widget = root_urwid_widget(urwid.Padding(self, left=2, right=2))
+
+        self.root_margins = urwid.Padding(self, left=2, right=2)
+        self.root_paddings = urwid.Padding(self.slide_body, left=10, right=10)
+
+        root_widget = root_urwid_widget(self.root_margins)
         self.loop = urwid.MainLoop(
             root_widget,
             screen=screen,
@@ -215,9 +223,9 @@ class MarkdownTui(urwid.Frame):
 
         urwid.Frame.__init__(
             self,
-            urwid.Padding(self.slide_body, left=10, right=10),
-            self.slide_title,
-            self.slide_footer,
+            self.root_paddings,
+            self.top_spacing_box,
+            self.bottom_spacing_box,
         )
 
     def prep_pres(self, pres, start_idx=0):
@@ -269,9 +277,30 @@ class MarkdownTui(urwid.Frame):
         rendered = self.slide_renderer.render_slide(self.curr_slide)
         self.slide_body.body = rendered
 
+    def update_slide_settings(self):
+        """Update the slide margins and paddings
+        """
+        margin = config.STYLE["margin"]
+        padding = config.STYLE["padding"]
+
+        self.root_margins.left = margin["left"]
+        self.root_margins.right = margin["right"]
+
+        self.root_paddings.left = padding["left"]
+        self.root_paddings.right = padding["right"]
+
+        self.top_spacing.top = margin["top"]
+        self.top_spacing.bottom = padding["top"]
+        self.top_spacing_box.height = margin["top"] + 1 + padding["top"]
+
+        self.bottom_spacing.top = padding["bottom"]
+        self.bottom_spacing.bottom = margin["bottom"]
+        self.bottom_spacing_box.height = margin["bottom"] + 1 + padding["bottom"]
+
     def update(self):
         """
         """
+        self.update_slide_settings()
         self.update_slide_num()
         self.update_title()
         self.update_creation()

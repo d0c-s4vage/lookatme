@@ -1,13 +1,20 @@
 ---
 title: lookatme Tour
-date: 2019-12-02
+date: 2020-10-09
 author: James Johnson
 extensions:
   - qrcode
+  - image_ueberzug
 styles:
   style: monokai
   table:
-    column_spacing: 10
+    column_spacing: 15
+  margin:
+    top: 3
+    bottom: 3
+  padding:
+    top: 3
+    bottom: 3
 ---
 
 # Markdown Support: Inline
@@ -92,7 +99,13 @@ A quote is below:
 # Extensions
 
 lookatme supports extensions that can add additional functionality to lookatme
-presentations. E.g., with the [qrcode](https://github.com/d0c-s4vage/lookatme.contrib.qrcode)
+presentations.
+
+---
+
+# Extensions > QR Codes
+
+E.g., with the [qrcode](https://github.com/d0c-s4vage/lookatme.contrib.qrcode)
 extension enabled, this:
 
 ~~~
@@ -106,6 +119,15 @@ becomes
 ```qrcode
 hello
 ```
+---
+
+# Extensions > Images
+
+![15](./napoleon_dynamite.jpg)
+
+Extensions can also provide support for images! the
+[image_ueberzug](https://github.com/d0c-s4vage/lookatme.contrib.image_ueberzug)
+plugin makes images work in slides!
 
 ---
 
@@ -148,8 +170,8 @@ docker run --rm -it ubuntu:18.04
 
 # Live Editing
 
-Hello from vim! lookatme supports live reloading when the source markdown changes
-with the `--live` option
+Hello from vim! Lookatme supports live editing (reloading when the source
+file changes)
 
 ---
 
@@ -157,7 +179,7 @@ with the `--live` option
 
 ```python
 def a_function(test):
-    print "hello there"
+    print "Hello again from vim"
 ```
 
 | h1     | h2     | h3    |
@@ -167,3 +189,24 @@ def a_function(test):
 | value1 | value2 | value3 |
 | value1 | value2 | value3 |
 | value1 | value2 | value3 |
+
+--- 
+
+# Slide Scrolling
+
+* Slides
+* Can
+* Be
+* Scrolled
+* With
+* Up
+* And
+* Down
+* Arrows
+* **NOTE**
+  - Does
+  - Not
+  - Work
+  - Well
+  - With
+  - Images
