@@ -113,11 +113,21 @@ The default styles and formats are defined in the marshmallow schemas in
    link:
      bg: default
      fg: '#33c,underline'
+   margin:
+     bottom: 0
+     left: 2
+     right: 2
+     top: 0
    numbering:
      '1': numeric
      '2': alpha
      '3': roman
      default: numeric
+   padding:
+     bottom: 0
+     left: 10
+     right: 10
+     top: 0
    quote:
      bottom_corner: └
      side: ╎

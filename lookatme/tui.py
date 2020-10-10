@@ -280,9 +280,8 @@ class MarkdownTui(urwid.Frame):
     def update_slide_settings(self):
         """Update the slide margins and paddings
         """
-        slide_conf = config.STYLE["slides"]
-        margin = slide_conf["margin"]
-        padding = slide_conf["padding"]
+        margin = config.STYLE["margin"]
+        padding = config.STYLE["padding"]
 
         self.root_margins.left = margin["left"]
         self.root_margins.right = margin["right"]
