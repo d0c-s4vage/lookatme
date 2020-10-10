@@ -1,5 +1,6 @@
 # Changelog
 
+- [v2.1.0](#v210)
 - [v2.0.0](#v200)
 - [v1.3.0](#v130)
 - [v1.2.1](#v121)
@@ -13,6 +14,14 @@
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+## v2.1.0
+
+Adds customizable slide margins and paddings
+
+|    type | ticket                                                  | description                                 |
+|--------:|---------------------------------------------------------|---------------------------------------------|
+| feature | [#95](https://github.com/d0c-s4vage/lookatme/issues/95) | Make slide padding and margins customizable |
 
 ## v2.0.0
 
