@@ -83,10 +83,11 @@ Options:
 
 Below is a list of known extensions for lookatme:
 
-| Extension Name | Install Name                    | Url                                                           |
-|----------------|---------------------------------|---------------------------------------------------------------|
-| qrcode         | lookatme.contrib.qrcode         | https://github.com/d0c-s4vage/lookatme.contrib.qrcode         |
-| image_ueberzug | lookatme.contrib.image_ueberzug | https://github.com/d0c-s4vage/lookatme.contrib.image_ueberzug |
+| Extension Name | Install Name                                                                                     | Notes                                                                                                                         |
+|----------------|--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| qrcode         | [lookatme.contrib.qrcode](https://github.com/d0c-s4vage/lookatme.contrib.qrcode)                 | Renders QR codes from code blocks                                                                                             |
+| image_ueberzug | [lookatme.contrib.image_ueberzug](https://github.com/d0c-s4vage/lookatme.contrib.image_ueberzug) | Renders images with [ueberzug](https://github.com/seebye/ueberzug) (Linux only)                                               |
+| render         | [lookatme.contrib.render](https://github.com/d0c-s4vage/lookatme.contrib.render)                 | Renders supported code blocks (graphviz and mermaid-js) by calling an external program. requires an image-rendering extension |
 
 ## Documentation
 
