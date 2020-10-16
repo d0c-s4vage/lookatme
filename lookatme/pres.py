@@ -21,12 +21,13 @@ class Presentation(object):
     """Defines a presentation
     """
     def __init__(self, input_stream, theme, style_override=None, live_reload=False,
-                 single_slide=False):
+                 single_slide=False, preload_extensions=None):
         """Creates a new Presentation
 
         :param stream input_stream: An input stream from which to read the
             slide data
         """
+        self.preload_extensions = preload_extensions or []
         self.input_filename = None
         if hasattr(input_stream, "name"):
             lookatme.config.SLIDE_SOURCE_DIR = os.path.dirname(input_stream.name)
@@ -77,7 +78,10 @@ class Presentation(object):
 
         parser = Parser(single_slide=self.single_slide)
         self.meta, self.slides = parser.parse(data)
-        lookatme.contrib.load_contribs(self.meta.get("extensions", []))
+
+        all_exts = set(self.preload_extensions)
+        all_exts |= set(self.meta.get("extensions", []))
+        lookatme.contrib.load_contribs(all_exts)
 
         self.styles = lookatme.themes.ensure_defaults(self.theme_mod)
         dict_deep_update(self.styles, self.meta.get("styles", {}))

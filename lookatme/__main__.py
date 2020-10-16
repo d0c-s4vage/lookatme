@@ -59,6 +59,15 @@ from lookatme.schemas import StyleSchema
     default=False,
 )
 @click.option(
+    "-e",
+    "--exts",
+    "extensions",
+    help="A comma-separated list of extension names to automatically load"
+         " (LOOKATME_EXTS)",
+    envvar="LOOKATME_EXTS",
+    default="",
+)
+@click.option(
     "--single",
     "--one",
     "single_slide",
@@ -72,7 +81,8 @@ from lookatme.schemas import StyleSchema
     type=click.File("r"),
     nargs=-1,
 )
-def main(debug, log_path, theme, code_style, dump_styles, input_files, live_reload, single_slide):
+def main(debug, log_path, theme, code_style, dump_styles,
+         input_files, live_reload, extensions, single_slide):
     """lookatme - An interactive, terminal-based markdown presentation tool.
     """
     if debug:
@@ -82,12 +92,16 @@ def main(debug, log_path, theme, code_style, dump_styles, input_files, live_relo
 
     if len(input_files) == 0:
         input_files = [io.StringIO("")]
+
+    preload_exts = [x.strip() for x in extensions.split(',')]
+    preload_exts = list(filter(lambda x: x != '', preload_exts))
     pres = Presentation(
         input_files[0],
         theme,
         code_style,
         live_reload=live_reload,
-        single_slide=single_slide
+        single_slide=single_slide,
+        preload_extensions=preload_exts,
     )
 
     if dump_styles:
