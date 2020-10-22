@@ -74,6 +74,9 @@ Options:
   --live, --live-reload           Watch the input filename for modifications
                                   and automatically reload
 
+  -e, --exts TEXT                 A comma-separated list of extension names to
+                                  automatically load (LOOKATME_EXTS)
+
   --single, --one                 Render the source as a single slide
   --version                       Show the version and exit.
   --help                          Show this message and exit.

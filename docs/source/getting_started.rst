@@ -20,24 +20,27 @@ The ``lookatme`` CLI has a few options to control it's behavior:
 
 .. code-block:: text
 
-   Usage: lookatme [OPTIONS] [INPUT_FILES]...
+    Usage: lookatme [OPTIONS] [INPUT_FILES]...
 
-     lookatme - An interactive, terminal-based markdown presentation tool.
+      lookatme - An interactive, terminal-based markdown presentation tool.
 
-   Options:
-     --debug
-     -l, --log PATH
-     -t, --theme [dark|light]
-     -s, --style [default|emacs|friendly|colorful|autumn|murphy|manni|monokai|perldoc|pastie|borland|trac|native|fruity|bw|vim|vs|tango|rrt|xcode|igor|paraiso-light|paraiso-dark|lovelace|algol|algol_nu|arduino|rainbow_dash|abap|solarized-dark|solarized-light|sas|stata|stata-light|stata-dark|inkpot]
-     --dump-styles                   Dump the resolved styles that will be used
-                                     with the presentation to stdout
+    Options:
+      --debug
+      -l, --log PATH
+      -t, --theme [dark|light]
+      -s, --style [default|emacs|friendly|colorful|autumn|murphy|manni|monokai|perldoc|pastie|borland|trac|native|fruity|bw|vim|vs|tango|rrt|xcode|igor|paraiso-light|paraiso-dark|lovelace|algol|algol_nu|arduino|rainbow_dash|abap|solarized-dark|solarized-light|sas|stata|stata-light|stata-dark|inkpot]
+      --dump-styles                   Dump the resolved styles that will be used
+                                      with the presentation to stdout
 
-     --live, --live-reload           Watch the input filename for modifications
-                                     and automatically reload
+      --live, --live-reload           Watch the input filename for modifications
+                                      and automatically reload
 
-     --single, --one                 Render the source as a single slide
-     --version                       Show the version and exit.
-     --help                          Show this message and exit.
+      -e, --exts TEXT                 A comma-separated list of extension names to
+                                      automatically load (LOOKATME_EXTS)
+
+      --single, --one                 Render the source as a single slide
+      --version                       Show the version and exit.
+      --help                          Show this message and exit.
 
 ``--live`` / ``--live-reload``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -54,8 +57,15 @@ are possible:
   :width: 800
   :alt: Live Updates
 
+``-e EXT_NAME1,EXT_NAME2`` / ``--exts EXT_NAME1,EXT_NAME2``
+^^^^^^^^^^^^^^^^^^^
+
+Allows a comma-separated list of extension names to be pre-loaded into lookatme
+without requring them to be declared in the Markdown source.
+
+
 ``--single`` / ``--one``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Render the markdown source as a single slide, ignoring all hrules. Scroll
 overflowing slides with the up/down arrow keys and page up/page down.

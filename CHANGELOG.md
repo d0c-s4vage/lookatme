@@ -15,6 +15,16 @@
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
 
+## v2.2.0
+
+Removes copyrighted image, adds `-e` and `--exts` options
+
+|    type | ticket                                                    | description                         |
+|--------:|-----------------------------------------------------------|-------------------------------------|
+| feature | [#103](https://github.com/d0c-s4vage/lookatme/issues/103) | Adds ability to pre-load extensions |
+|     bug | [#107](https://github.com/d0c-s4vage/lookatme/issues/107) | Removes copyrighted image           |
+
+
 ## v2.1.0
 
 Adds customizable slide margins and paddings
