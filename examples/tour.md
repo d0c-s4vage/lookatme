@@ -6,15 +6,15 @@ extensions:
   - qrcode
   - image_ueberzug
 styles:
-  style: monokai
+  style: solarized-dark
   table:
-    column_spacing: 15
+    column_spacing: 5
   margin:
     top: 3
-    bottom: 3
+    bottom: 0
   padding:
-    top: 3
-    bottom: 3
+    top: 1
+    bottom: 1
 ---
 
 # Markdown Support: Inline
@@ -123,7 +123,7 @@ hello
 
 # Extensions > Images
 
-![15](./napoleon_dynamite.jpg)
+![15](./nasa_orion.jpg)
 
 Extensions can also provide support for images! the
 [image_ueberzug](https://github.com/d0c-s4vage/lookatme.contrib.image_ueberzug)
@@ -170,8 +170,8 @@ docker run --rm -it ubuntu:18.04
 
 # Live Editing
 
-Hello from vim! Lookatme supports live editing (reloading when the source
-file changes)
+When run with the `--live` option, lookatme watches for file changes and
+auto-reloads the source markdown 
 
 ---
 
