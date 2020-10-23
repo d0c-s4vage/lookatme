@@ -3,6 +3,7 @@ title: lookatme Tour
 date: 2020-10-09
 author: James Johnson
 extensions:
+  - terminal
   - qrcode
   - image_ueberzug
 styles:

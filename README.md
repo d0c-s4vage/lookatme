@@ -63,6 +63,8 @@ Usage: lookatme [OPTIONS] [INPUT_FILES]...
 
   lookatme - An interactive, terminal-based markdown presentation tool.
 
+  See https://lookatme.readthedocs.io/en/v{{VERSION}} for documentation
+
 Options:
   --debug
   -l, --log PATH
@@ -74,6 +76,14 @@ Options:
   --live, --live-reload           Watch the input filename for modifications
                                   and automatically reload
 
+  -s, --safe                      Do not load any new extensions specified in
+                                  the source markdown. Extensions specified
+                                  via env var or -e are still loaded
+
+  --no-ext-warn                   Load new extensions specified in the source
+                                  markdown without warning
+
+  -i, --ignore-ext-failure        Ignore load failures of extensions
   -e, --exts TEXT                 A comma-separated list of extension names to
                                   automatically load (LOOKATME_EXTS)
 
