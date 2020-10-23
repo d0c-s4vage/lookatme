@@ -42,6 +42,7 @@ class Presentation(object):
         self.safe = safe
         self.no_ext_warn = no_ext_warn
         self.ignore_ext_failure = ignore_ext_failure
+        self.initial_load_complete = False
 
         self.theme_mod = __import__("lookatme.themes." + theme, fromlist=[theme])
 
@@ -51,6 +52,7 @@ class Presentation(object):
             self.reload_thread.start()
 
         self.reload(data=input_stream.read())
+        self.initial_load_complete = True
 
     def reload_watcher(self):
         """Watch for changes to the input filename, automatically reloading
@@ -84,21 +86,24 @@ class Presentation(object):
         parser = Parser(single_slide=self.single_slide)
         self.meta, self.slides = parser.parse(data)
 
-        safe_exts = set(self.preload_extensions)
-        new_exts = set()
-        # only load if running with safe=False
-        if not self.safe:
-            source_exts = set(self.meta.get("extensions", []))
-            new_exts = source_exts - safe_exts
-            self.warn_exts(new_exts)
+        # only load extensions once! Live editing does not support
+        # auto-extension reloading
+        if not self.initial_load_complete:
+            safe_exts = set(self.preload_extensions)
+            new_exts = set()
+            # only load if running with safe=False
+            if not self.safe:
+                source_exts = set(self.meta.get("extensions", []))
+                new_exts = source_exts - safe_exts
+                self.warn_exts(new_exts)
 
-        all_exts = safe_exts | new_exts
+            all_exts = safe_exts | new_exts
 
-        lookatme.contrib.load_contribs(
-            all_exts,
-            safe_exts,
-            self.ignore_ext_failure,
-        )
+            lookatme.contrib.load_contribs(
+                all_exts,
+                safe_exts,
+                self.ignore_ext_failure,
+            )
 
         self.styles = lookatme.themes.ensure_defaults(self.theme_mod)
         dict_deep_update(self.styles, self.meta.get("styles", {}))
@@ -108,6 +113,7 @@ class Presentation(object):
             self.styles["style"] = self.style_override
 
         lookatme.config.STYLE = self.styles
+        self.initial_load_complete = True
 
     def warn_exts(self, exts):
         """Warn about source-provided extensions that are to-be-loaded

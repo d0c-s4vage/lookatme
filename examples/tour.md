@@ -7,15 +7,15 @@ extensions:
   - qrcode
   - image_ueberzug
 styles:
-  style: solarized-dark
+  style: monokai
   table:
-    column_spacing: 5
+    column_spacing: 15
   margin:
     top: 3
     bottom: 0
   padding:
-    top: 1
-    bottom: 1
+    top: 3
+    bottom: 3
 ---
 
 # Markdown Support: Inline
@@ -171,8 +171,8 @@ docker run --rm -it ubuntu:18.04
 
 # Live Editing
 
-When run with the `--live` option, lookatme watches for file changes and
-auto-reloads the source markdown 
+Hello from vim! The `--live` flag makes lookatme watch the source input
+for file changes and auto-reloads the slides.
 
 ---
 
@@ -180,7 +180,7 @@ auto-reloads the source markdown
 
 ```python
 def a_function(test):
-    print "Hello again from vim"
+    print "Hello again from vim again"
 ```
 
 | h1     | h2     | h3    |
