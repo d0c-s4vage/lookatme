@@ -1,5 +1,7 @@
 # Changelog
 
+- [v2.3.0](#v230)
+- [v2.2.0](#v220)
 - [v2.1.0](#v210)
 - [v2.0.0](#v200)
 - [v1.3.0](#v130)
@@ -14,6 +16,20 @@
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+## v2.3.0
+
+Makes the user aware of any new, not-already-manually-approved extensions
+that the source markdown wants to load.
+
+Also checks all loaded extensions for a `user_warnings` function that returns
+a list of messages to display to the user before using the extension.
+
+Adds new `-i`, `--safe`, and `--no-ext-warn` command-line arguments.
+
+|    type | ticket                                                    | description                                                   |
+|--------:|-----------------------------------------------------------|---------------------------------------------------------------|
+| feature | [#109](https://github.com/d0c-s4vage/lookatme/issues/109) | More robust extension handling, does not auto-load by default |
 
 ## v2.2.0
 
