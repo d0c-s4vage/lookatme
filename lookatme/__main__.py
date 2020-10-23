@@ -59,6 +59,27 @@ from lookatme.schemas import StyleSchema
     default=False,
 )
 @click.option(
+    "-s",
+    "--safe",
+    help="Do not load any new extensions specified in the source markdown. "
+         "Extensions specified via env var or -e are still loaded",
+    is_flag=True,
+    default=False,
+)
+@click.option(
+    "--no-ext-warn",
+    help="Load new extensions specified in the source markdown without warning",
+    is_flag=True,
+    default=False,
+)
+@click.option(
+    "-i",
+    "--ignore-ext-failure",
+    help="Ignore load failures of extensions",
+    is_flag=True,
+    default=False,
+)
+@click.option(
     "-e",
     "--exts",
     "extensions",
@@ -82,8 +103,11 @@ from lookatme.schemas import StyleSchema
     nargs=-1,
 )
 def main(debug, log_path, theme, code_style, dump_styles,
-         input_files, live_reload, extensions, single_slide):
+         input_files, live_reload, extensions, single_slide, safe, no_ext_warn,
+         ignore_ext_failure):
     """lookatme - An interactive, terminal-based markdown presentation tool.
+    
+    See https://lookatme.readthedocs.io/en/v{{VERSION}} for documentation
     """
     if debug:
         lookatme.config.LOG = lookatme.log.create_log(log_path)
@@ -102,6 +126,9 @@ def main(debug, log_path, theme, code_style, dump_styles,
         live_reload=live_reload,
         single_slide=single_slide,
         preload_extensions=preload_exts,
+        safe=safe,
+        no_ext_warn=no_ext_warn,
+        ignore_ext_failure=ignore_ext_failure,
     )
 
     if dump_styles:

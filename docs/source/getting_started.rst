@@ -24,6 +24,8 @@ The ``lookatme`` CLI has a few options to control it's behavior:
 
       lookatme - An interactive, terminal-based markdown presentation tool.
 
+      See https://lookatme.readthedocs.io/en/v{{VERSION}} for documentation
+
     Options:
       --debug
       -l, --log PATH
@@ -35,6 +37,14 @@ The ``lookatme`` CLI has a few options to control it's behavior:
       --live, --live-reload           Watch the input filename for modifications
                                       and automatically reload
 
+      -s, --safe                      Do not load any new extensions specified in
+                                      the source markdown. Extensions specified
+                                      via env var or -e are still loaded
+
+      --no-ext-warn                   Load new extensions specified in the source
+                                      markdown without warning
+
+      -i, --ignore-ext-failure        Ignore load failures of extensions
       -e, --exts TEXT                 A comma-separated list of extension names to
                                       automatically load (LOOKATME_EXTS)
 
@@ -58,10 +68,30 @@ are possible:
   :alt: Live Updates
 
 ``-e EXT_NAME1,EXT_NAME2`` / ``--exts EXT_NAME1,EXT_NAME2``
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Allows a comma-separated list of extension names to be pre-loaded into lookatme
 without requring them to be declared in the Markdown source.
+
+``-s`` / ``--safe``
+^^^^^^^^^^^^^^^^^^^
+
+Do **NOT** load any new extensions specified in the markdown (ignore them). New
+extensions are extensions that have not manually been allowed via the ``-e``
+argument or the ``LOOKATME_EXTS`` environment variable.
+
+``--no-ext-warn``
+^^^^^^^^^^^^^^^^^
+
+Do not warn about new extensions that are to-be-loaded that are specified in
+the source markdown. New extensions are extensions that have not manually been
+allowed via the ``-e`` argument or the ``LOOKATME_EXTS`` environment variable.
+
+``-i``
+^^^^^^
+
+Ignore failure loading extensions. This does not ignore warnings, but ignores
+any hard-errors during import, such as ``ImportError``.
 
 
 ``--single`` / ``--one``

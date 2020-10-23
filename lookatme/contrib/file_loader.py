@@ -16,6 +16,19 @@ import lookatme.config
 from lookatme.exceptions import IgnoredByContrib
 
 
+def user_warnings():
+    """Provide warnings to the user that loading this extension may cause
+    shell commands specified in the markdown to be run.
+    """
+    return [
+        "Code-blocks with a language starting with 'file' may cause shell",
+        "  commands from the source markdown to be run if the 'transform'",
+        "  field is set",
+        "See https://lookatme.readthedocs.io/en/latest/builtin_extensions/file_loader.html",
+        "  for more details",
+    ]
+
+
 class YamlRender:
     loads = lambda data: yaml.safe_load(data)
     dumps = lambda data: yaml.safe_dump(data)
