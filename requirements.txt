@@ -1,4 +1,4 @@
-marshmallow>=3,<4
+marshmallow==3.0.0
 Click>=7,<8
 PyYAML>=5,<6
 mistune>=0.8,<1
