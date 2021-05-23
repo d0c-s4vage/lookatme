@@ -44,13 +44,13 @@ class BulletsSchema(Schema):
             "1": fields.Str(default="•"),
             "2": fields.Str(default="⁃"),
             "3": fields.Str(default="◦"),
-            "4": fields.Str(),
-            "5": fields.Str(),
-            "6": fields.Str(),
-            "7": fields.Str(),
-            "8": fields.Str(),
-            "9": fields.Str(),
-            "10": fields.Str(),
+            "4": fields.Str(default="•"),
+            "5": fields.Str(default="⁃"),
+            "6": fields.Str(default="◦"),
+            "7": fields.Str(default="•"),
+            "8": fields.Str(default="⁃"),
+            "9": fields.Str(default="◦"),
+            "10": fields.Str(default="•"),
         }
 
 _NUMBERING_VALIDATION = validate.OneOf(["numeric", "alpha", "roman"])
@@ -62,13 +62,13 @@ class NumberingSchema(Schema):
             "1": fields.Str(default="numeric", validate=_NUMBERING_VALIDATION),
             "2": fields.Str(default="alpha", validate=_NUMBERING_VALIDATION),
             "3": fields.Str(default="roman", validate=_NUMBERING_VALIDATION),
-            "4": fields.Str(validate=_NUMBERING_VALIDATION),
-            "5": fields.Str(validate=_NUMBERING_VALIDATION),
-            "6": fields.Str(validate=_NUMBERING_VALIDATION),
-            "7": fields.Str(validate=_NUMBERING_VALIDATION),
-            "8": fields.Str(validate=_NUMBERING_VALIDATION),
-            "9": fields.Str(validate=_NUMBERING_VALIDATION),
-            "10": fields.Str(validate=_NUMBERING_VALIDATION),
+            "4": fields.Str(default="numeric", validate=_NUMBERING_VALIDATION),
+            "5": fields.Str(default="alpha", validate=_NUMBERING_VALIDATION),
+            "6": fields.Str(default="roman", validate=_NUMBERING_VALIDATION),
+            "7": fields.Str(default="numeric", validate=_NUMBERING_VALIDATION),
+            "8": fields.Str(default="alpha", validate=_NUMBERING_VALIDATION),
+            "9": fields.Str(default="roman", validate=_NUMBERING_VALIDATION),
+            "10": fields.Str(efault="numeric", validate=_NUMBERING_VALIDATION),
         }
 
 
@@ -193,12 +193,12 @@ class StyleSchema(Schema):
         "right": 10,
     })
 
-    headings = fields.Nested(HeadingsSchema, default=HeadingsSchema().dump(HeadingsSchema()))
-    bullets = fields.Nested(BulletsSchema, default=BulletsSchema().dump(BulletsSchema()))
-    numbering = fields.Nested(NumberingSchema, default=NumberingSchema().dump(NumberingSchema()))
-    table = fields.Nested(TableSchema, default=TableSchema().dump(TableSchema()))
-    quote = fields.Nested(BlockQuoteSchema, default=BlockQuoteSchema().dump(BlockQuoteSchema()))
-    hrule = fields.Nested(HruleSchema, default=HruleSchema().dump(HruleSchema()))
+    headings = fields.Nested(HeadingsSchema, default=HeadingsSchema().dump({}))
+    bullets = fields.Nested(BulletsSchema, default=BulletsSchema().dump({}))
+    numbering = fields.Nested(NumberingSchema, default=NumberingSchema().dump({}))
+    table = fields.Nested(TableSchema, default=TableSchema().dump({}))
+    quote = fields.Nested(BlockQuoteSchema, default=BlockQuoteSchema().dump({}))
+    hrule = fields.Nested(HruleSchema, default=HruleSchema().dump({}))
     link = fields.Nested(StyleFieldSchema, default={
         "fg": "#33c,underline",
         "bg": "default",
