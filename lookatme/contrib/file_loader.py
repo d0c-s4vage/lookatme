@@ -46,8 +46,8 @@ class FileSchema(Schema):
     transform = fields.Str(default=None, missing=None)
     lines = fields.Nested(
         LineRange,
-        default=LineRange().dump({}),
-        missing=LineRange().dump({})
+        default=LineRange().dump(None),
+        missing=LineRange().dump(None)
     )
 
     class Meta:
