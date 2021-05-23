@@ -193,12 +193,12 @@ class StyleSchema(Schema):
         "right": 10,
     })
 
-    headings = fields.Nested(HeadingsSchema, default=HeadingsSchema().dump({}))
-    bullets = fields.Nested(BulletsSchema, default=BulletsSchema().dump({}))
-    numbering = fields.Nested(NumberingSchema, default=NumberingSchema().dump({}))
-    table = fields.Nested(TableSchema, default=TableSchema().dump({}))
-    quote = fields.Nested(BlockQuoteSchema, default=BlockQuoteSchema().dump({}))
-    hrule = fields.Nested(HruleSchema, default=HruleSchema().dump({}))
+    headings = fields.Nested(HeadingsSchema, default=HeadingsSchema().dump(None))
+    bullets = fields.Nested(BulletsSchema, default=BulletsSchema().dump(None))
+    numbering = fields.Nested(NumberingSchema, default=NumberingSchema().dump(None))
+    table = fields.Nested(TableSchema, default=TableSchema().dump(None))
+    quote = fields.Nested(BlockQuoteSchema, default=BlockQuoteSchema().dump(None))
+    hrule = fields.Nested(HruleSchema, default=HruleSchema().dump(None))
     link = fields.Nested(StyleFieldSchema, default={
         "fg": "#33c,underline",
         "bg": "default",
@@ -217,5 +217,9 @@ class MetaSchema(Schema):
         missing=datetime.datetime.now(),
     )
     author = fields.Str(default="", missing="")
-    styles = fields.Nested(StyleSchema, default={}, missing={})
-    extensions = fields.List(fields.Str(), default=[], missing={})
+    styles = fields.Nested(
+        StyleSchema,
+        default=StyleSchema().dump(None),
+        missing=StyleSchema().dump(None),
+    )
+    extensions = fields.List(fields.Str(), default=[], missing=[])
