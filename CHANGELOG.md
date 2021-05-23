@@ -17,6 +17,16 @@
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
 
+## v2.3.2
+
+Fixes a problem in generating default schema values. This is most visible in the
+style defaults, such as the margin and padding.
+
+| type | ticket                                                    | description                    |
+|-----:|-----------------------------------------------------------|--------------------------------|
+|  bug | [#117](https://github.com/d0c-s4vage/lookatme/issues/117) | Fixes default style generation |
+
+
 ## v2.3.1
 
 Makes lookatme compatible with marshmallow `>= 13.12.1`
