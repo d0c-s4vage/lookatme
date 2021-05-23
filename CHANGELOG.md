@@ -17,6 +17,14 @@
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
 
+## v2.3.1
+
+Makes lookatme compatible with marshmallow `>= 13.12.1`
+
+|    type | ticket                                                    | description                                                   |
+|--------:|-----------------------------------------------------------|---------------------------------------------------------------|
+|     bug | [#114](https://github.com/d0c-s4vage/lookatme/issues/114) | Makes lookatme compatible with the latest marshmallow version |
+
 ## v2.3.0
 
 Makes the user aware of any new, not-already-manually-approved extensions
