@@ -14,6 +14,18 @@ from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
 
 
+PROGRESSIVE_SLIDE_DELIMITER = ":::"
+
+
+def is_progressive_slide_delimiter_token(token):
+    """Returns True if the token indicates the end of a progressive slide
+
+    :param dict token: The markdown token
+    :returns: True if the token is a progressive slide delimiter
+    """
+    return token["type"] == "paragraph" and token["text"] == PROGRESSIVE_SLIDE_DELIMITER
+
+
 class Parser(object):
     """A parser for markdown presentation files
     """
@@ -86,8 +98,7 @@ class Parser(object):
                 if keep_split_token and len(slides) == 0 and len(curr_slide_tokens) == 0:
                     pass
                 else:
-                    slide = Slide(curr_slide_tokens, md, len(slides))
-                    slides.append(slide)
+                    slides.extend(self._create_slides(curr_slide_tokens, md, len(slides)))
                 curr_slide_tokens = []
                 if keep_split_token:
                     curr_slide_tokens.append(token)
@@ -95,7 +106,7 @@ class Parser(object):
             else:
                 curr_slide_tokens.append(token)
 
-        slides.append(Slide(curr_slide_tokens, md, len(slides)))
+        slides.extend(self._create_slides(curr_slide_tokens, md, len(slides)))
 
         return "", slides
 
@@ -172,3 +183,21 @@ class Parser(object):
         yaml_data = "\n".join(yaml_data)
         data = MetaSchema().loads(yaml_data)
         return new_input, data
+
+    def _create_slides(self, tokens, md, number):
+        """Iterate on tokens and create slides out of them. Can create multiple
+        slides if the tokens contain progressive slide delimiters.
+
+        :param list tokens: The tokens to create slides out of
+        :param mistune.Markdown md: The Markdown instance to pass to the Slide class
+        :param int number: The starting slide number
+        :returns: A list of Slides
+        """
+        slide_tokens = []
+        for token in tokens:
+            if is_progressive_slide_delimiter_token(token):
+                yield Slide(slide_tokens[:], md, number)
+                number += 1
+            else:
+                slide_tokens.append(token)
+        yield Slide(slide_tokens, md, number)
