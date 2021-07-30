@@ -38,7 +38,6 @@ from lookatme.schemas import StyleSchema
     default="dark",
 )
 @click.option(
-    "-s",
     "--style",
     "code_style",
     default=None,
