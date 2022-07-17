@@ -39,11 +39,11 @@ class TerminalExSchema(Schema):
     """The schema used for ``terminal-ex`` code blocks.
     """
     command = fields.Str()
-    rows = fields.Int(default=10, missing=10)
-    init_text = fields.Str(default=None, missing=None)
-    init_wait = fields.Str(default=None, missing=None)
-    init_codeblock = fields.Bool(default=True, missing=True)
-    init_codeblock_lang = fields.Str(default="text", missing="text")
+    rows = fields.Int(dump_default=10, load_default=10)
+    init_text = fields.Str(dump_default=None, load_default=None)
+    init_wait = fields.Str(dump_default=None, load_default=None)
+    init_codeblock = fields.Bool(dump_default=True, load_default=True)
+    init_codeblock_lang = fields.Str(dump_default="text", load_default="text")
 
     class Meta:
         render_module = YamlRender

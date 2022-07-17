@@ -35,19 +35,19 @@ class YamlRender:
 
 
 class LineRange(Schema):
-    start = fields.Integer(default=0, missing=0)
-    end = fields.Integer(default=None, missing=None)
+    start = fields.Integer(dump_default=0, load_default=0)
+    end = fields.Integer(dump_default=None, load_default=None)
 
 
 class FileSchema(Schema):
     path = fields.Str()
-    relative = fields.Boolean(default=True, missing=True)
-    lang = fields.Str(default="auto", missing="auto")
-    transform = fields.Str(default=None, missing=None)
+    relative = fields.Boolean(dump_default=True, load_default=True)
+    lang = fields.Str(dump_default="auto", load_default="auto")
+    transform = fields.Str(dump_default=None, load_default=None)
     lines = fields.Nested(
         LineRange,
-        default=LineRange().dump(None),
-        missing=LineRange().dump(None)
+        dump_default=LineRange().dump(None),
+        load_default=LineRange().dump(None)
     )
 
     class Meta:

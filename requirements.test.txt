@@ -1,0 +1,6 @@
+pytest
+pytest-xdist
+pytest-mock
+pytest-cov
+coveralls
+six
