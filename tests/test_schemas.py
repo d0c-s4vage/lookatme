@@ -37,17 +37,23 @@ def _validate_field_recursive(path, field, gend_value):
     """
     if isinstance(field, Schema):
         for field_name, sub_field in field.fields.items():
-            _validate_field_recursive(path + "." + field_name, sub_field, gend_value[field_name])
+            _validate_field_recursive(f"{path}.{field_name}", sub_field, gend_value[field_name])
     elif isinstance(field, fields.Nested):
-        if field.default is None:
+        if field.dump_default is None:
             nested_field = field.nested()
             _validate_field_recursive(path, nested_field, gend_value)
         else:
-            assert field.default == gend_value, f"Default value not correct at {path}"
+            for field_name, sub_field in field.dump_default.items():
+                _validate_field_recursive(f"{path}.{field_name}", sub_field, gend_value[field_name])
     elif isinstance(field, fields.Field):
-        if isinstance(field.default, datetime.datetime):
+        if isinstance(field.dump_default, datetime.datetime):
             return
-        assert field.default == gend_value, f"Default value not correct at {path}"
+        assert field.dump_default == gend_value, f"Default value not correct at {path}"
+    elif isinstance(field, dict):
+        for field_name, sub_field in field.items():
+            _validate_field_recursive(f"{path}.{field_name}", sub_field, gend_value[field_name])
+    else:
+        assert field == gend_value, f"Default value not correct at {path}"
 
 
 def test_sanity_check_that_errors_are_detected():
@@ -61,7 +67,7 @@ def test_sanity_check_that_errors_are_detected():
     gend_default["styles"]["padding"]["left"] = 100
 
     with pytest.raises(AssertionError) as excinfo:
-        _validate_field_recursive("__root__.styles", schema.styles.nested(), gend_default['styles'])
+        _validate_field_recursive("__root__.styles", schema.fields["styles"], gend_default["styles"])
     assert "Default value not correct at __root__.styles.padding" in str(excinfo)
 
 
@@ -70,7 +76,7 @@ def test_styles_defaults():
     """
     schema = MetaSchema()
     gend_default = MetaSchema().dump(None)
-    _validate_field_recursive("__root__.styles", schema.styles.nested(), gend_default['styles'])
+    _validate_field_recursive("__root__.styles", schema.fields["styles"], gend_default["styles"])
 
 
 def test_meta_defaults():

@@ -37,80 +37,80 @@ class YamlRender:
 
 
 class BulletsSchema(Schema):
-    default = fields.Str(default="•")
+    default = fields.Str(dump_default="•")
 
     class Meta:
         include = {
-            "1": fields.Str(default="•"),
-            "2": fields.Str(default="⁃"),
-            "3": fields.Str(default="◦"),
-            "4": fields.Str(default="•"),
-            "5": fields.Str(default="⁃"),
-            "6": fields.Str(default="◦"),
-            "7": fields.Str(default="•"),
-            "8": fields.Str(default="⁃"),
-            "9": fields.Str(default="◦"),
-            "10": fields.Str(default="•"),
+            "1": fields.Str(dump_default="•"),
+            "2": fields.Str(dump_default="⁃"),
+            "3": fields.Str(dump_default="◦"),
+            "4": fields.Str(dump_default="•"),
+            "5": fields.Str(dump_default="⁃"),
+            "6": fields.Str(dump_default="◦"),
+            "7": fields.Str(dump_default="•"),
+            "8": fields.Str(dump_default="⁃"),
+            "9": fields.Str(dump_default="◦"),
+            "10": fields.Str(dump_default="•"),
         }
 
 _NUMBERING_VALIDATION = validate.OneOf(["numeric", "alpha", "roman"])
 class NumberingSchema(Schema):
-    default = fields.Str(default="numeric", validate=_NUMBERING_VALIDATION)
+    default = fields.Str(dump_default="numeric", validate=_NUMBERING_VALIDATION)
 
     class Meta:
         include = {
-            "1": fields.Str(default="numeric", validate=_NUMBERING_VALIDATION),
-            "2": fields.Str(default="alpha", validate=_NUMBERING_VALIDATION),
-            "3": fields.Str(default="roman", validate=_NUMBERING_VALIDATION),
-            "4": fields.Str(default="numeric", validate=_NUMBERING_VALIDATION),
-            "5": fields.Str(default="alpha", validate=_NUMBERING_VALIDATION),
-            "6": fields.Str(default="roman", validate=_NUMBERING_VALIDATION),
-            "7": fields.Str(default="numeric", validate=_NUMBERING_VALIDATION),
-            "8": fields.Str(default="alpha", validate=_NUMBERING_VALIDATION),
-            "9": fields.Str(default="roman", validate=_NUMBERING_VALIDATION),
-            "10": fields.Str(efault="numeric", validate=_NUMBERING_VALIDATION),
+            "1": fields.Str(dump_default="numeric", validate=_NUMBERING_VALIDATION),
+            "2": fields.Str(dump_default="alpha", validate=_NUMBERING_VALIDATION),
+            "3": fields.Str(dump_default="roman", validate=_NUMBERING_VALIDATION),
+            "4": fields.Str(dump_default="numeric", validate=_NUMBERING_VALIDATION),
+            "5": fields.Str(dump_default="alpha", validate=_NUMBERING_VALIDATION),
+            "6": fields.Str(dump_default="roman", validate=_NUMBERING_VALIDATION),
+            "7": fields.Str(dump_default="numeric", validate=_NUMBERING_VALIDATION),
+            "8": fields.Str(dump_default="alpha", validate=_NUMBERING_VALIDATION),
+            "9": fields.Str(dump_default="roman", validate=_NUMBERING_VALIDATION),
+            "10": fields.Str(dump_default="numeric", validate=_NUMBERING_VALIDATION),
         }
 
 
 class StyleFieldSchema(Schema):
-    fg = fields.Str(default="")
-    bg = fields.Str(default="")
+    fg = fields.Str(dump_default="")
+    bg = fields.Str(dump_default="")
 
 
 class SpacingSchema(Schema):
-    top = fields.Int(default=0)
-    bottom = fields.Int(default=0)
-    left = fields.Int(default=0)
-    right = fields.Int(default=0)
+    top = fields.Int(dump_default=0)
+    bottom = fields.Int(dump_default=0)
+    left = fields.Int(dump_default=0)
+    right = fields.Int(dump_default=0)
 
 
 class HeadingStyleSchema(Schema):
     prefix = fields.Str()
     suffix = fields.Str()
-    fg = fields.Str(default="")
-    bg = fields.Str(default="")
+    fg = fields.Str(dump_default="")
+    bg = fields.Str(dump_default="")
 
 
 class HruleSchema(Schema):
-    char = fields.Str(default="─")
-    style = fields.Nested(StyleFieldSchema, default=StyleFieldSchema().dump({
+    char = fields.Str(dump_default="─")
+    style = fields.Nested(StyleFieldSchema, dump_default=StyleFieldSchema().dump({
         "fg": "#777",
         "bg": "default",
     }))
 
 
 class BlockQuoteSchema(Schema):
-    side = fields.Str(default="╎")
-    top_corner = fields.Str(default="┌")
-    bottom_corner = fields.Str(default="└")
-    style = fields.Nested(StyleFieldSchema, default=StyleFieldSchema().dump({
+    side = fields.Str(dump_default="╎")
+    top_corner = fields.Str(dump_default="┌")
+    bottom_corner = fields.Str(dump_default="└")
+    style = fields.Nested(StyleFieldSchema, dump_default=StyleFieldSchema().dump({
         "fg": "italics,#aaa",
         "bg": "default",
     }))
 
 
 class HeadingsSchema(Schema):
-    default = fields.Nested(HeadingStyleSchema, default={
+    default = fields.Nested(HeadingStyleSchema, dump_default={
         "fg": "#346,bold",
         "bg": "default",
         "prefix": "░░░░░ ",
@@ -119,25 +119,25 @@ class HeadingsSchema(Schema):
 
     class Meta:
         include = {
-            "1": fields.Nested(HeadingStyleSchema, default={
+            "1": fields.Nested(HeadingStyleSchema, dump_default={
                 "fg": "#9fc,bold",
                 "bg": "default",
                 "prefix": "██ ",
                 "suffix": "",
             }),
-            "2": fields.Nested(HeadingStyleSchema, default={
+            "2": fields.Nested(HeadingStyleSchema, dump_default={
                 "fg": "#1cc,bold",
                 "bg": "default",
                 "prefix": "▓▓▓ ",
                 "suffix": "",
             }),
-            "3": fields.Nested(HeadingStyleSchema, default={
+            "3": fields.Nested(HeadingStyleSchema, dump_default={
                 "fg": "#29c,bold",
                 "bg": "default",
                 "prefix": "▒▒▒▒ ",
                 "suffix": "",
             }),
-            "4": fields.Nested(HeadingStyleSchema, default={
+            "4": fields.Nested(HeadingStyleSchema, dump_default={
                 "fg": "#559,bold",
                 "bg": "default",
                 "prefix": "░░░░░ ",
@@ -149,8 +149,8 @@ class HeadingsSchema(Schema):
 
 
 class TableSchema(Schema):
-    header_divider = fields.Str(default="─")
-    column_spacing = fields.Int(default=3)
+    header_divider = fields.Str(dump_default="─")
+    column_spacing = fields.Int(dump_default=3)
 
 
 class StyleSchema(Schema):
@@ -160,46 +160,46 @@ class StyleSchema(Schema):
         render_module = YamlRender
 
     style = fields.Str(
-        default="monokai",
+        dump_default="monokai",
         validate=validate.OneOf(list(pygments.styles.get_all_styles())),
     )
 
-    title = fields.Nested(StyleFieldSchema, default={
+    title = fields.Nested(StyleFieldSchema, dump_default={
         "fg": "#f30,bold,italics",
         "bg": "default",
     })
-    author = fields.Nested(StyleFieldSchema, default={
+    author = fields.Nested(StyleFieldSchema, dump_default={
         "fg": "#f30",
         "bg": "default",
     })
-    date = fields.Nested(StyleFieldSchema, default={
+    date = fields.Nested(StyleFieldSchema, dump_default={
         "fg": "#777",
         "bg": "default",
     })
-    slides = fields.Nested(StyleFieldSchema, default={
+    slides = fields.Nested(StyleFieldSchema, dump_default={
         "fg": "#f30",
         "bg": "default",
     })
-    margin = fields.Nested(SpacingSchema, default={
+    margin = fields.Nested(SpacingSchema, dump_default={
         "top": 0,
         "bottom": 0,
         "left": 2,
         "right": 2,
     })
-    padding = fields.Nested(SpacingSchema, default={
+    padding = fields.Nested(SpacingSchema, dump_default={
         "top": 0,
         "bottom": 0,
         "left": 10,
         "right": 10,
     })
 
-    headings = fields.Nested(HeadingsSchema, default=HeadingsSchema().dump(None))
-    bullets = fields.Nested(BulletsSchema, default=BulletsSchema().dump(None))
-    numbering = fields.Nested(NumberingSchema, default=NumberingSchema().dump(None))
-    table = fields.Nested(TableSchema, default=TableSchema().dump(None))
-    quote = fields.Nested(BlockQuoteSchema, default=BlockQuoteSchema().dump(None))
-    hrule = fields.Nested(HruleSchema, default=HruleSchema().dump(None))
-    link = fields.Nested(StyleFieldSchema, default={
+    headings = fields.Nested(HeadingsSchema, dump_default=HeadingsSchema().dump(None))
+    bullets = fields.Nested(BulletsSchema, dump_default=BulletsSchema().dump(None))
+    numbering = fields.Nested(NumberingSchema, dump_default=NumberingSchema().dump(None))
+    table = fields.Nested(TableSchema, dump_default=TableSchema().dump(None))
+    quote = fields.Nested(BlockQuoteSchema, dump_default=BlockQuoteSchema().dump(None))
+    hrule = fields.Nested(HruleSchema, dump_default=HruleSchema().dump(None))
+    link = fields.Nested(StyleFieldSchema, dump_default={
         "fg": "#33c,underline",
         "bg": "default",
     })
@@ -211,15 +211,15 @@ class MetaSchema(Schema):
     class Meta:
         render_module = YamlRender
 
-    title = fields.Str(default="", missing="")
+    title = fields.Str(dump_default="", load_default="")
     date = fields.Date(
-        default=datetime.datetime.now(),
-        missing=datetime.datetime.now(),
+        dump_default=datetime.datetime.now(),
+        load_default=datetime.datetime.now(),
     )
-    author = fields.Str(default="", missing="")
+    author = fields.Str(dump_default="", load_default="")
     styles = fields.Nested(
         StyleSchema,
-        default=StyleSchema().dump(None),
-        missing=StyleSchema().dump(None),
+        dump_default=StyleSchema().dump(None),
+        load_default=StyleSchema().dump(None),
     )
-    extensions = fields.List(fields.Str(), default=[], missing=[])
+    extensions = fields.List(fields.Str(), dump_default=[], load_default=[])
