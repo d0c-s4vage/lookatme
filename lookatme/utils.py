@@ -53,13 +53,14 @@ def spec_from_style(styles):
         return urwid.AttrSpec(styles.get("fg", ""), styles.get("bg", ""))
 
 
+def non_empty_split(data):
+    res = [x.strip() for x in data.split(",")]
+    return list(filter(None, res))
+
+
 def get_fg_bg_styles(style):
     if style is None:
         return [], []
-
-    def non_empty_split(data):
-        res = [x.strip() for x in data.split(",")]
-        return list(filter(None, res))
 
     # from lookatme.config.STYLE
     if isinstance(style, dict):
@@ -74,6 +75,8 @@ def get_fg_bg_styles(style):
 
 
 def overwrite_spec(orig_spec, new_spec):
+    import lookatme.widgets.clickable_text
+
     if orig_spec is None:
         orig_spec = urwid.AttrSpec("", "")
     if new_spec is None:
@@ -105,10 +108,15 @@ def overwrite_spec(orig_spec, new_spec):
     else:
         bg_new.append(bg_new_color)
 
-    return urwid.AttrSpec(
+    plain_spec = urwid.AttrSpec(
         ",".join(set(fg_orig + fg_new)),
         ",".join(set(bg_orig + bg_new)),
     )
+
+    if isinstance(orig_spec, lookatme.widgets.clickable_text.LinkIndicatorSpec):
+        return lookatme.widgets.clickable_text.LinkIndicatorSpec(orig_spec.link_label, orig_spec.link_target, plain_spec)
+    else:
+        return plain_spec
 
 
 def flatten_text(text, new_spec=None):
@@ -141,6 +149,14 @@ def can_style_item(item):
     """
     return isinstance(item, (urwid.Text, list, tuple))
 
+
+def spec_from_stack(spec_stack: list):
+    curr_spec = spec_stack[0]
+    for spec in spec_stack[1:]:
+        print(repr(curr_spec))
+        curr_spec = overwrite_spec(curr_spec, spec)
+
+    return curr_spec
 
 def styled_text(text, new_styles, old_styles=None, supplement_style=False):
     """Return a styled text tuple that can be used within urwid.Text.

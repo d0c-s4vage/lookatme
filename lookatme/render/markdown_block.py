@@ -17,7 +17,7 @@ import urwid
 import lookatme.config as config
 from lookatme.contrib import contrib_first
 import lookatme.render.pygments as pygments_render
-import lookatme.render.markdown_inline as markdown_inline_renderer
+import lookatme.render.markdown_inline as markdown_inline
 from lookatme.utils import *
 from lookatme.widgets.clickable_text import ClickableText
 
@@ -355,9 +355,17 @@ def render_paragraph(token, body, stack, loop):
     See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
     return value descriptions.
     """
-    token["text"] = token["text"].replace("\r\n", " ").replace("\n", " ")
-    res = render_text(token, body, stack, loop)
-    return [urwid.Divider()] + res + [urwid.Divider()]
+    res = []
+    res.append(urwid.Divider())
+
+    for child_token in token["children"]:
+        res += markdown_inline.render(child_token, body, stack, loop)
+
+    res.append(urwid.Divider())
+
+    __import__('pdb').set_trace()
+
+    return res
 
 
 @contrib_first

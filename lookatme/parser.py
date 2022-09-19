@@ -41,10 +41,10 @@ class Parser(object):
         :returns: tuple of (remaining_data, slide)
         """
         # slides are delimited by ---
-        md = mistune.Markdown()
+        md = mistune.create_markdown(renderer=mistune.AstRenderer())
 
         state = {}
-        tokens = md.block.parse(input_data, state)
+        tokens = md(input_data)
 
         num_hrules, hinfo = self._scan_for_smart_split(tokens)
 
@@ -123,7 +123,7 @@ class Parser(object):
 
         # started off with the lowest heading, make this title
         if hinfo["counts"] and hinfo["counts"][first_heading["level"]] == 1:
-            hinfo["title"] = first_heading["text"]
+            hinfo["title"] = first_heading["children"]
             del hinfo["counts"][first_heading["level"]]
             hinfo["title_level"] = first_heading["level"]
 
