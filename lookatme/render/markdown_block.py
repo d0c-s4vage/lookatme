@@ -11,6 +11,7 @@ import pygments.styles
 import mistune
 import re
 import shlex
+import sys
 import urwid
 
 
@@ -51,6 +52,36 @@ def _is_list(item):
 
 def _list_level(item):
     return _meta(item).get("list_level", 1)
+
+
+# =============================================================================
+
+
+def _propagate_meta(item1, item2):
+    """Copy the metadata from item1 to item2
+    """
+    meta = getattr(item1, "meta", {})
+    existing_meta = getattr(item2, "meta", {})
+    new_meta = copy.deepcopy(meta)
+    new_meta.update(existing_meta)
+    setattr(item2, "meta", new_meta)
+
+
+THIS_MOD = sys.modules[__name__]
+def render(token, stack, loop):
+    """Render a single token
+    """
+    last_stack = stack[-1]
+    last_stack_len = len(stack)
+
+    render_token = getattr(THIS_MOD, "render_{}".format(token["type"]))
+    res = render_token(token, stack[-1], stack, loop)
+    if len(stack) > last_stack_len:
+        _propagate_meta(last_stack, stack[-1])
+    if res is None:
+        return
+    pile_or_listbox_add(last_stack, res)
+    return res
 
 
 @contrib_first
@@ -169,7 +200,7 @@ def render_table(token, body, stack, loop):
 
 
 @contrib_first
-def render_list_start(token, body, stack, loop):
+def render_list(token, body, stack, loop):
     """Handles the indentation when starting rendering a new list. List items
     themselves (with the bullets) are rendered by the
     :any:`render_list_item_start` function.
@@ -180,13 +211,18 @@ def render_list_start(token, body, stack, loop):
     res = urwid.Pile([])
 
     in_list = _is_list(stack[-1])
-    list_level = 1
-    if in_list:
-        list_level = _list_level(stack[-1]) + 1
-    _set_is_list(res, list_level, ordered=token['ordered'])
+    _set_is_list(res, token["level"], ordered=token['ordered'])
+
     _meta(res)['list_start_token'] = token
     _meta(res)['max_list_marker_width'] = token.get('max_list_marker_width', 2)
+
     stack.append(res)
+    for child_token in token["children"]:
+        render(child_token, stack, loop)
+
+    meta = _meta(stack[-1])
+    meta['list_start_token']['max_list_marker_width'] = meta['max_list_marker_width']
+    stack.pop()
 
     widgets = []
     if not in_list:
@@ -198,18 +234,7 @@ def render_list_start(token, body, stack, loop):
 
 
 @contrib_first
-def render_list_end(token, body, stack, loop):
-    """Pops the pushed ``urwid.Pile()`` from the stack (decreases indentation)
-
-    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
-    value descriptions.
-    """
-    meta = _meta(stack[-1])
-    meta['list_start_token']['max_list_marker_width'] = meta['max_list_marker_width']
-    stack.pop()
-
-
-def _list_item_start(token, body, stack, loop):
+def render_list_item(token, body, stack, loop):
     """Render the start of a list item. This function makes use of two
     different styles, one each for unordered lists (bullet styles) and ordered
     lists (numbering styles):
@@ -230,7 +255,7 @@ def _list_item_start(token, body, stack, loop):
     See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
     value descriptions.
     """
-    list_level = _list_level(stack[-1])
+    list_level = token["level"]
     curr_count = _inc_item_count(stack[-1])
     pile = urwid.Pile(urwid.SimpleFocusListWalker([]))
 
@@ -259,8 +284,21 @@ def _list_item_start(token, body, stack, loop):
         (marker_col_width, urwid.Text(("bold", marker_text))),
         pile,
     ])
+
     stack.append(pile)
+    for child_token in token["children"]:
+        render(child_token, stack, loop)
+    stack.pop()
+
     return res
+
+
+@contrib_first
+def render_block_text(token, body, stack, loop):
+    """Render block text
+    """
+    inline_markup = markdown_inline.render_inline_children(token["children"], body, stack, loop)
+    return ClickableText(inline_markup)
 
 
 @contrib_first
@@ -357,13 +395,9 @@ def render_paragraph(token, body, stack, loop):
     """
     res = []
     res.append(urwid.Divider())
-
-    for child_token in token["children"]:
-        res += markdown_inline.render(child_token, body, stack, loop)
-
+    markup = markdown_inline.render_inline_children(token["children"], body, stack, loop)
+    res.append(ClickableText(markup))
     res.append(urwid.Divider())
-
-    __import__('pdb').set_trace()
 
     return res
 
@@ -432,13 +466,15 @@ def render_block_quote_end(token, body, stack, loop):
 
 
 @contrib_first
-def render_code(token, body, stack, loop):
+def render_block_code(token, body, stack, loop):
     """Renders a code block using the Pygments library.
 
     See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
     return value descriptions.
     """
-    lang = token.get("lang", "text") or "text"
+    info = token.get("info", "text")
+    lang = info.split()[0]
+    # TODO support line highlighting, etc?
     text = token["text"]
     res = pygments_render.render_text(text, lang=lang)
 

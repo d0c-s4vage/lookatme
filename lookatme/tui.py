@@ -15,7 +15,7 @@ import lookatme.config
 import lookatme.config as config
 from lookatme.contrib import shutdown_contribs, contrib_first
 import lookatme.render.markdown_block as lam_md
-from lookatme.utils import pile_or_listbox_add, spec_from_style
+from lookatme.utils import spec_from_style
 
 
 def text(style, data, align="left"):
@@ -80,15 +80,6 @@ class SlideRenderer(threading.Thread):
         """
         self.locks[slide_number].wait()
         return self.cache[slide.number]
-
-    def _propagate_meta(self, item1, item2):
-        """Copy the metadata from item1 to item2
-        """
-        meta = getattr(item1, "meta", {})
-        existing_meta = getattr(item2, "meta", {})
-        new_meta = copy.deepcopy(meta)
-        new_meta.update(existing_meta)
-        setattr(item2, "meta", new_meta)
 
     def stop(self):
         self.keep_running.clear()
@@ -167,18 +158,7 @@ class SlideRenderer(threading.Thread):
         stack = [tmp_listbox]
         for token in tokens:
             self._log.debug(f"{'  '*len(stack)}Rendering token {token}")
-
-            last_stack = stack[-1]
-            last_stack_len = len(stack)
-
-            #render_token = getattr(lam_md, f"render_{token['type']}", lambda *args: None)
-            render_token = getattr(lam_md, f"render_{token['type']}")
-            res = render_token(token, stack[-1], stack, self.loop)
-            if len(stack) > last_stack_len:
-                self._propagate_meta(last_stack, stack[-1])
-            if res is None:
-                continue
-            pile_or_listbox_add(last_stack, res)
+            lam_md.render(token, stack, self.loop)
 
         return tmp_listbox.body
 

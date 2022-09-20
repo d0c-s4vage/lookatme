@@ -52,10 +52,16 @@ def render(token, body, stack, loop, spec_stack=None):
     return fn(token, body, stack, loop, spec_stack)
 
 
-def _render_children(token, body, stack, loop, spec_stack):
+def render_inline_children(children, body, stack, loop, spec_stack=None):
+    if spec_stack is None:
+        spec_stack = []
+
     res = []
-    for child_token in token["children"]:
-        res += render(child_token, body, stack, loop, spec_stack)
+    prev = None
+    for child_token in children:
+        curr_res = render(child_token, body, stack, loop, spec_stack)
+        res += curr_res
+
     return res
 
 # -------------------------------------------------------------------------
@@ -92,7 +98,7 @@ def render_text(token, body, stack, loop, spec_stack):
         tuples.
     """
     final_spec = spec_from_stack(spec_stack)
-    return [ClickableText((final_spec, token["text"]))]
+    return [(final_spec, token["text"])]
 
 
 @contrib_first
@@ -135,6 +141,7 @@ def render_image(token, body, stack, loop, spec_stack):
     """
     return link(link_uri, title, text)
 
+LINK_ID = 0
 
 @contrib_first
 def render_link(token, body, stack, loop, spec_stack):
@@ -155,10 +162,13 @@ def render_link(token, body, stack, loop, spec_stack):
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    plain_spec = spec_from_style(config.STYLE["link"])
-    link_spec = LinkIndicatorSpec(token["link"], token["link"], plain_spec)
+    global LINK_ID
 
-    return _render_children(token, body, stack, loop, spec_stack + [link_spec])
+    plain_spec = spec_from_style(config.STYLE["link"])
+    link_spec = LinkIndicatorSpec(token["link"], token["link"], LINK_ID, plain_spec)
+    LINK_ID += 1
+
+    return render_inline_children(token["children"], body, stack, loop, spec_stack + [link_spec])
 
 
 @contrib_first
@@ -179,7 +189,7 @@ def render_emphasis(token, body, stack, loop, spec_stack):
         tuples.
     """
     this_spec = spec_from_style("italics")
-    return _render_children(token, body, stack, loop, spec_stack + [this_spec])
+    return render_inline_children(token["children"], body, stack, loop, spec_stack + [this_spec])
 
 
 @contrib_first
@@ -194,8 +204,9 @@ def render_codespan(token, body, stack, loop, spec_stack):
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    res = pygments_render.render_text(" " + text + " ", plain=True)
-    return res
+    spec, text = pygments_render.render_text(token["text"], plain=True)[0]
+    final_spec = spec_from_stack(spec_stack + [spec])
+    return [(final_spec, text)]
 
 
 @contrib_first
