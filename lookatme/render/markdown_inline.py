@@ -64,6 +64,30 @@ def render_inline_children(children, body, stack, loop, spec_stack=None):
 
     return res
 
+def render_tokens_full(children):
+    """Render all inline tokens and fully resolve them to widgets (not just
+    urwid text markup).
+
+    .. note: plugins may override some of these inlinen rendering functions to
+        return a full widget instead of markup text, especially with the image
+        related plugins.
+    """
+    res = []
+    curr_text_markup = []
+    for item in render_inline_children(children, None, None, None):
+        if isinstance(item, urwid.Widget):
+            if len(curr_text_markup) > 0:
+                res.append(ClickableText(curr_text_markup))
+                curr_text_markup = []
+            res.append(item)
+        if isinstance(item, str) or (isinstance(item, (tuple|list)) and len(item) == 2):
+            curr_text_markup.append(item)
+
+    if len(curr_text_markup) > 0:
+        res.append(ClickableText(curr_text_markup))
+
+    return res
+
 # -------------------------------------------------------------------------
 
 

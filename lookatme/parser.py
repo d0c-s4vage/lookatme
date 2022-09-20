@@ -41,7 +41,14 @@ class Parser(object):
         :returns: tuple of (remaining_data, slide)
         """
         # slides are delimited by ---
-        md = mistune.create_markdown(renderer=mistune.AstRenderer())
+        md = mistune.create_markdown(
+            renderer=mistune.AstRenderer(),
+            plugins=[
+                'footnotes',
+                'table',
+                'strikethrough',
+            ]
+        )
 
         state = {}
         tokens = md(input_data)

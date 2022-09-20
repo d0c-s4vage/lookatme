@@ -7,10 +7,11 @@ from collections import defaultdict
 import urwid
 
 
-from lookatme.render.markdown_block import render_text
+from lookatme.render.markdown_block import render_tokens_full
 import lookatme.config as config
 from lookatme.utils import styled_text
 from lookatme.widgets.clickable_text import ClickableText
+import lookatme.render.markdown_inline as markdown_inline
 
 
 class Table(urwid.Pile):
@@ -19,21 +20,20 @@ class Table(urwid.Pile):
 
     signals = ["change"]
 
-    def __init__(self, rows, headers=None, aligns=None):
+    def __init__(self, header=None, body=None):
         """Create a new table
 
         :param list columns: The rows to use for the table
         :param list headers: (optional) Headers for the table
         :param list aligns: (optional) Alignment values for each column
         """
-        self.table_rows = rows
-        self.table_headers = headers
-        self.table_aligns = aligns
+        self.header = header
+        self.body = body
 
-        if headers is not None:
-            self.num_columns = len(headers)
-        elif headers is None:
-            self.num_columns = len(rows[0])
+        if header is not None:
+            self.num_columns = len(header["children"])
+        elif body is not None:
+            self.num_columns = max(len(row["children"]) for row in body["children"])
         else:
             raise ValueError(
                 "Invalid table specification: could not determine # of columns"
@@ -42,13 +42,18 @@ class Table(urwid.Pile):
         def header_modifier(cell):
             return ClickableText(styled_text(cell.text, "bold"), align=cell.align)
 
-        if self.table_headers is not None:
+        if self.header is not None:
             self.rend_headers = self.create_cells(
-                [self.table_headers], modifier=header_modifier
+                [{"children": self.header["children"]}],
+                modifier=header_modifier
             )
         else:
             self.rend_headers = []
-        self.rend_rows = self.create_cells(self.table_rows)
+
+        if self.body is not None:
+            self.rend_rows = self.create_cells(self.body["children"])
+        else:
+            self.rend_rows = []
 
         self.column_maxes = self.calc_column_maxes()
 
@@ -61,7 +66,7 @@ class Table(urwid.Pile):
         final_rows = []
 
         # put headers in Columns
-        if self.table_headers is not None:
+        if self.header is not None:
             header_columns = []
             for idx, header in enumerate(self.rend_headers[0]):
                 header = header[0]
@@ -150,14 +155,14 @@ class Table(urwid.Pile):
 
         for row in body_rows:
             rend_row = []
-            for idx, cell in enumerate(row):
+            for idx, cell in enumerate(row["children"]):
                 if idx >= self.num_columns:
                     break
-                rend_cell_widgets = render_text(text=cell)
+                cell_widgets = markdown_inline.render_tokens_full(cell["children"])
                 new_widgets = []
-                for widget in rend_cell_widgets:
+                for widget in cell_widgets:
                     if isinstance(widget, urwid.Text):
-                        widget.align = self.table_aligns[idx] or "left"
+                        widget.align = cell.get("align", "left") or "left"
                         if modifier is not None:
                             widget = modifier(widget)
                     new_widgets.append(widget)

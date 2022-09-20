@@ -84,6 +84,14 @@ def render(token, stack, loop):
     return res
 
 
+def render_tokens_full(tokens):
+    tmp_listbox = urwid.ListBox([])
+    stack = [tmp_listbox]
+    for token in tokens:
+        render(token, stack, None) # TODO: Nothing uses the loop anyways... could just make this a global
+    return tmp_listbox.body
+
+
 @contrib_first
 def render_newline(token, body, stack, loop):
     """Render a newline
@@ -154,13 +162,11 @@ def render_heading(token, body, stack, loop):
     prefix = styled_text(style["prefix"], style)
     suffix = styled_text(style["suffix"], style)
 
-    rendered = render_text(text=token["text"])
-    if len(rendered) > 0:
-        rendered = rendered[0]
+    rendered_contents = markdown_inline.render_inline_children(token["children"], body, stack, loop)
 
     return [
         urwid.Divider(),
-        ClickableText([prefix] + styled_text(rendered, style) + [suffix]),
+        ClickableText([prefix] + rendered_contents + [suffix]),
         urwid.Divider(),
     ]
 
@@ -184,11 +190,18 @@ def render_table(token, body, stack, loop):
     """
     from lookatme.widgets.table import Table
 
-    headers = token["header"]
-    aligns = token["align"]
-    cells = token["cells"]
+    table_header = None
+    table_body = None
 
-    table = Table(cells, headers=headers, aligns=aligns)
+    for child_token in token["children"]:
+        if child_token["type"] == "table_head":
+            table_header = child_token
+        elif child_token["type"] == "table_body":
+            table_body = child_token
+        else:
+            raise NotImplementedError("Unsupported table child token: {!r}".format(child_token["type"]))
+
+    table = Table(header=table_header, body=table_body)
     padding = urwid.Padding(table, width=table.total_width + 2, align="center")
 
     def table_changed(*args, **kwargs):
@@ -362,6 +375,7 @@ def render_text(token=None, body=None, stack=None, loop=None, text=None):
     See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
     return value descriptions.
     """
+    __import__('pdb').set_trace()
     if text is None:
         text = token["text"]
 
