@@ -4,6 +4,7 @@ representations
 """
 
 
+import copy
 import pygments
 import pygments.formatters
 import pygments.lexers
@@ -65,6 +66,14 @@ def _propagate_meta(item1, item2):
     new_meta = copy.deepcopy(meta)
     new_meta.update(existing_meta)
     setattr(item2, "meta", new_meta)
+
+
+def stack_push(stack, new_item):
+    """Push to the stack and propagate metadata
+    """
+    if len(stack) > 0:
+        _propagate_meta(stack[-1], new_item)
+    stack.append(new_item)
 
 
 THIS_MOD = sys.modules[__name__]
@@ -229,7 +238,7 @@ def render_list(token, body, stack, loop):
     _meta(res)['list_start_token'] = token
     _meta(res)['max_list_marker_width'] = token.get('max_list_marker_width', 2)
 
-    stack.append(res)
+    stack_push(stack, res)
     for child_token in token["children"]:
         render(child_token, stack, loop)
 
@@ -292,13 +301,12 @@ def render_list_item(token, body, stack, loop):
         meta["max_list_marker_width"] = len(marker_text)
     marker_col_width = meta['max_list_marker_width']
 
-    res = urwid.Text(("bold", marker_text))
     res = urwid.Columns([
         (marker_col_width, urwid.Text(("bold", marker_text))),
         pile,
     ])
 
-    stack.append(pile)
+    stack_push(stack, pile)
     for child_token in token["children"]:
         render(child_token, stack, loop)
     stack.pop()
@@ -312,92 +320,6 @@ def render_block_text(token, body, stack, loop):
     """
     inline_markup = markdown_inline.render_inline_children(token["children"], body, stack, loop)
     return ClickableText(inline_markup)
-
-
-@contrib_first
-def render_list_item_start(token, body, stack, loop):
-    """Render the start of a list item. This function makes use of the styles:
-
-    .. code-block:: yaml
-
-        bullets:
-          '1': "•"
-          '2': "⁃"
-          '3': "◦"
-          default: "•"
-
-    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
-    value descriptions.
-    """
-    return _list_item_start(token, body, stack, loop)
-
-
-@contrib_first
-def render_loose_item_start(token, body, stack, loop):
-    """Render the start of a list item. This function makes use of the styles:
-
-    .. code-block:: yaml
-
-        bullets:
-          '1': "•"
-          '2': "⁃"
-          '3': "◦"
-          default: "•"
-
-    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
-    value descriptions.
-    """
-    return _list_item_start(token, body, stack, loop)
-
-
-@contrib_first
-def render_list_item_end(token, body, stack, loop):
-    """Pops the pushed ``urwid.Pile()`` from the stack (decreases indentation)
-
-    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
-    value descriptions.
-    """
-    stack.pop()
-
-
-@contrib_first
-def render_text(token=None, body=None, stack=None, loop=None, text=None):
-    """Renders raw text. This function uses the inline markdown lexer
-    from mistune with the :py:mod:`lookatme.render.markdown_inline` render module
-    to render the lexed inline markup to a list composed of widgets or
-    `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_.
-    The created list of widgets/Text markup is then used to create and return
-    a list composed entirely of widgets and :any:`ClickableText` instances.
-
-    Many other functions call this function directly, passing in the extra
-    ``text`` argument and leaving all other arguments blank.
-
-    See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
-    return value descriptions.
-    """
-    __import__('pdb').set_trace()
-    if text is None:
-        text = token["text"]
-
-    inline_lexer = mistune.InlineLexer(markdown_inline_renderer)
-    res = inline_lexer.output(text)
-    if len(res) == 0:
-        res = [""]
-
-    widget_list = []
-    curr_text_spec = []
-    for item in res:
-        if isinstance(item, urwid.Widget):
-            if len(curr_text_spec) > 0:
-                widget_list.append(ClickableText(curr_text_spec))
-                curr_text_spec = []
-            widget_list.append(item)
-        else:
-            curr_text_spec.append(item)
-    if len(curr_text_spec) > 0:
-        widget_list.append(ClickableText(curr_text_spec))
-
-    return widget_list
 
 
 @contrib_first
@@ -438,7 +360,7 @@ def render_block_quote_start(token, body, stack, loop):
     return value descriptions.
     """
     pile = urwid.Pile([])
-    stack.append(pile)
+    stack_push(stack, pile)
 
     styles = config.STYLE["quote"]
 

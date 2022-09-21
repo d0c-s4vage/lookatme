@@ -14,8 +14,10 @@ import urwid
 import lookatme.config
 import lookatme.config as config
 from lookatme.contrib import shutdown_contribs, contrib_first
-import lookatme.render.markdown_block as lam_md
+import lookatme.render.markdown_block as markdown_block
+import lookatme.render.markdown_inline as markdown_inline
 from lookatme.utils import spec_from_style
+from lookatme.widgets.clickable_text import ClickableText
 
 
 def text(style, data, align="left"):
@@ -158,7 +160,7 @@ class SlideRenderer(threading.Thread):
         stack = [tmp_listbox]
         for token in tokens:
             self._log.debug(f"{'  '*len(stack)}Rendering token {token}")
-            lam_md.render(token, stack, self.loop)
+            markdown_block.render(token, stack, self.loop)
 
         return tmp_listbox.body
 
@@ -169,7 +171,7 @@ class MarkdownTui(urwid.Frame):
         """
         #self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
         self.slide_body = urwid.ListBox(urwid.SimpleFocusListWalker([urwid.Text("test")]))
-        self.slide_title = text("", "", "center")
+        self.slide_title = ClickableText([""], align="center")
         self.top_spacing = urwid.Filler(self.slide_title, top=0, bottom=0)
         self.top_spacing_box = urwid.BoxAdapter(self.top_spacing, 1)
 
@@ -233,9 +235,10 @@ class MarkdownTui(urwid.Frame):
     def update_title(self):
         """Update the title
         """
-        title = self.pres.meta.get("title", "")
+        title = self.pres.meta.get("title", [])
         spec = spec_from_style(config.STYLE["title"])
-        self.slide_title.set_text([(spec, f" {title} ")])
+        title_markup = markdown_inline.render_inline_children(title, None, None, None, [spec])
+        self.slide_title.set_text(title_markup)
 
     def update_creation(self):
         """Update the author and date

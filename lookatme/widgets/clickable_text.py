@@ -10,6 +10,7 @@ import subprocess
 
 import lookatme.config as config
 from lookatme.utils import spec_from_style, row_text
+import lookatme.config
 
 
 class LinkIndicatorSpec(urwid.AttrSpec):
@@ -40,32 +41,31 @@ class ClickableText(urwid.Text):
 
     signals = ["click", "change"]
 
+    def __init__(self, *args, **kwargs):
+        self._log = lookatme.config.LOG.getChild("ClickableText")
+
+        super(ClickableText, self).__init__(*args, **kwargs)
+
     def mouse_event(self, size, event, button, x, y, focus):
         """Handle mouse events!
         """
         if button != 1 or not is_mouse_press(event):
             return False
 
-        rendered = self.render(size).content()
-        total_text = b"\n".join(row_text(x) for x in rendered)
-
         total_offset = (y * size[0]) + x
 
-        text, chunk_stylings = self.get_text()
-        curr_offset = 0
+        raw_text, chunk_stylings = self.get_text()
+        rendered = self.render(size).text
+
+        # TODO: this won't work too well with wrapped text!
+        curr_offset = rendered[0].decode().find(raw_text)
 
         found_style = None
-        found_text = None
-        found_idx = 0
-        found_length = 0
 
-        for idx, info in enumerate(chunk_stylings):
+        for info in chunk_stylings:
             style, length = info
             if curr_offset < total_offset <= curr_offset + length:
-                found_text = text[curr_offset:curr_offset + length]
                 found_style = style
-                found_idx = idx
-                found_length = length
                 break
             curr_offset += length
 
@@ -74,7 +74,7 @@ class ClickableText(urwid.Text):
             return True
 
         found_link = found_style.link_target
-        proc = subprocess.Popen(
+        subprocess.Popen(
             ["xdg-open", found_link],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT

@@ -61,7 +61,7 @@ class Parser(object):
             def heading_mod(token):
                 pass
         elif num_hrules == 0:
-            if meta["title"] in ["", None]:
+            if meta["title"] in ("", None):
                 meta["title"] = hinfo["title"]
             def slide_split_check(token):
                 return (
