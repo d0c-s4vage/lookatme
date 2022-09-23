@@ -100,9 +100,9 @@ class HruleSchema(Schema):
 
 
 class BlockQuoteSchema(Schema):
-    side = fields.Str(dump_default="╎")
-    top_corner = fields.Str(dump_default="┌")
-    bottom_corner = fields.Str(dump_default="└")
+    side = fields.Str(dump_default="│")
+    top_corner = fields.Str(dump_default="╭")
+    bottom_corner = fields.Str(dump_default="╰")
     style = fields.Nested(StyleFieldSchema, dump_default=StyleFieldSchema().dump({
         "fg": "italics,#aaa",
         "bg": "default",

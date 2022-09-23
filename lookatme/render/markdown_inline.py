@@ -5,6 +5,7 @@ interface
 
 
 import contextlib
+import re
 import sys
 import urwid
 
@@ -12,12 +13,14 @@ import urwid
 import lookatme.config as config
 from lookatme.contrib import contrib_first
 from lookatme.widgets.clickable_text import ClickableText
+from lookatme.render.context import Context
 import lookatme.render.pygments as pygments_render
 from lookatme.utils import *
 from lookatme.widgets.clickable_text import LinkIndicatorSpec
+from lookatme.render.markdown_html import LookatmeHTMLParser
 
 
-options = {}
+THIS_MOD = sys.modules[__name__]
 
 
 def expanded_styles(fn):
@@ -38,33 +41,26 @@ def expanded_styles(fn):
     return inner
 
 
-THIS_MOD = sys.modules[__name__]
-def render(token, body, stack, loop, spec_stack=None):
+def render(token, ctx: Context):
     """Render an inline token. These tokens come from "children" tokens of
     a block token.
     """
-    if spec_stack is None:
-        spec_stack = []
-
     fn = getattr(THIS_MOD, "render_{}".format(token["type"]), None)
     if fn is None:
         raise ValueError("Token type {!r} is not yet supported".format(token["type"]))
-    return fn(token, body, stack, loop, spec_stack)
+    return fn(token, ctx)
 
 
-def render_inline_children(children, body, stack, loop, spec_stack=None):
-    if spec_stack is None:
-        spec_stack = []
-
+def render_inline_children(children, ctx: Context):
     res = []
     prev = None
     for child_token in children:
-        curr_res = render(child_token, body, stack, loop, spec_stack)
+        curr_res = render(child_token, ctx)
         res += curr_res
 
     return res
 
-def render_tokens_full(children):
+def render_tokens_full(children, ctx: Context):
     """Render all inline tokens and fully resolve them to widgets (not just
     urwid text markup).
 
@@ -74,7 +70,7 @@ def render_tokens_full(children):
     """
     res = []
     curr_text_markup = []
-    for item in render_inline_children(children, None, None, None):
+    for item in render_inline_children(children, ctx):
         if isinstance(item, urwid.Widget):
             if len(curr_text_markup) > 0:
                 res.append(ClickableText(curr_text_markup))
@@ -98,77 +94,96 @@ def placeholder():
     return []
 
 
-def render_no_change(text):
+def render_no_change(text, ctx: Context):
     """Render inline markdown text with no changes
     """
-    return [text]
+    return [(ctx.spec, text)]
+
+
+OPEN_TAG_MATCHER = re.compile(r"""
+    ^                                      # match the start of the string
+    <(?P<tag>[a-z]+)\s*                    # <tag followed by one or more spaces
+        (\s+style=['"]                     # style attribute with ' or " quotes
+            color:\s*(?P<color>[#a-z0-9]+) # only the color attribute
+        ['"]                               # end with either ' or " quotes
+    )?>                                    # close the opening tag, opt attrs
+    $                                      # end of the string
+""", re.VERBOSE | re.MULTILINE | re.IGNORECASE)
+CLOSE_TAG_MATCHER = re.compile(r'</(?P<tag>[a-z]+)>')
+
+SPAN_MATCHER2 = re.compile(
+    r'^<span\s+style=[\'"]\s*color:\s*(?P<color>[#a-z0-9A-Z]+)[\'"]>(?P<content>.*)</span>$',
+    re.VERBOSE | re.MULTILINE | re.IGNORECASE
+)
 
 
 @contrib_first
-def render_inline_html(text):
+def render_inline_html(token, ctx: Context):
     """Renders inline html as plaintext
 
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    return render_no_change(text)
+    parser = LookatmeHTMLParser(ctx, THIS_MOD)
+    parser.feed(token["text"])
+    return []
 
 
 @contrib_first
-def render_text(token, body, stack, loop, spec_stack):
+def render_text(token, ctx: Context):
     """Renders plain text (does nothing)
 
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    final_spec = spec_from_stack(spec_stack)
-    return [(final_spec, token["text"])]
+    text = token["text"]
+    if not ctx.is_literal:
+        text = token["text"].replace("\r", "").replace("\n", " ")
+    return [(ctx.spec, text)]
 
 
 @contrib_first
-def render_escape(token, body, stack, loop, spec_stack):
+def render_escape(token, ctx: Context):
     """Renders escapes
 
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    return render_no_change(text)
+    return render_no_change(text, ctx)
 
 
 @contrib_first
-def render_autolink(token, body, stack, loop, spec_stack):
+def render_autolink(token, ctx: Context):
     """Renders a URI as a link
 
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    return link(link_uri, None, link_uri)
+    return render_link(token, ctx)
 
 
 @contrib_first
-def render_footnote_ref(token, body, stack, loop, spec_stack):
+def render_footnote_ref(token, ctx: Context):
     """Renders a footnote
 
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    return render_no_change(key)
+    return render_no_change(key, ctx)
 
 
 @contrib_first
-def render_image(token, body, stack, loop, spec_stack):
+def render_image(token, ctx: Context):
     """Renders an image as a link. This would be a cool extension to render
     referenced images as scaled-down ansii pixel blocks.
 
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    return link(link_uri, title, text)
-
-LINK_ID = 0
+    return render_link(token, ctx)
 
 @contrib_first
-def render_link(token, body, stack, loop, spec_stack):
+def render_link(token, ctx: Context):
     """Renders a link. This function does a few special things to make the
     clickable links happen. All text in lookatme is rendered using the
     :any:`ClickableText` class. The ``ClickableText`` class looks for
@@ -186,38 +201,37 @@ def render_link(token, body, stack, loop, spec_stack):
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    global LINK_ID
-
     plain_spec = spec_from_style(config.STYLE["link"])
-    link_spec = LinkIndicatorSpec(token["link"], token["link"], LINK_ID, plain_spec)
-    LINK_ID += 1
+    link_spec = LinkIndicatorSpec(token["link"], token["link"], plain_spec)
 
-    return render_inline_children(token["children"], body, stack, loop, spec_stack + [link_spec])
+    with ctx.use_spec(link_spec):
+        return render_inline_children(token["children"], ctx)
 
 
 @contrib_first
-def render_double_emphasis(token, body, stack, loop, spec_stack):
+def render_strong(token, ctx: Context):
     """Renders double emphasis. Handles both ``**word**`` and ``__word__``
 
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    return [styled_text(text, "underline", old_styles)]
+    with ctx.use_spec(spec_from_style("underline")):
+        return render_inline_children(token["children"], ctx)
 
 
 @contrib_first
-def render_emphasis(token, body, stack, loop, spec_stack):
+def render_emphasis(token, ctx: Context):
     """Renders double emphasis. Handles both ``*word*`` and ``_word_``
 
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    this_spec = spec_from_style("italics")
-    return render_inline_children(token["children"], body, stack, loop, spec_stack + [this_spec])
+    with ctx.use_spec(spec_from_style("italics")):
+        return render_inline_children(token["children"], ctx)
 
 
 @contrib_first
-def render_codespan(token, body, stack, loop, spec_stack):
+def render_codespan(token, ctx: Context):
     """Renders inline code using the pygments renderer. This function also makes
     use of the coding style:
 
@@ -228,13 +242,13 @@ def render_codespan(token, body, stack, loop, spec_stack):
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    spec, text = pygments_render.render_text(token["text"], plain=True)[0]
-    final_spec = spec_from_stack(spec_stack + [spec])
-    return [(final_spec, text)]
+    spec, text = pygments_render.render_text(" " + token["text"] + " ", plain=True)[0]
+    with ctx.use_spec(spec):
+        return [(ctx.spec, text)]
 
 
 @contrib_first
-def render_linebreak(token, body, stack, loop, spec_stack):
+def render_linebreak(token, ctx: Context):
     """Renders a line break
 
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
@@ -244,10 +258,11 @@ def render_linebreak(token, body, stack, loop, spec_stack):
 
 
 @contrib_first
-def render_strikethrough(token, body, stack, loop, spec_stack):
+def render_strikethrough(token, ctx: Context):
     """Renders strikethrough text (``~~text~~``)
 
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    return [styled_text(text, "strikethrough", old_styles)]
+    with ctx.use_spec(spec_from_style("strikethrough")):
+        return render_inline_children(token["children"], ctx)

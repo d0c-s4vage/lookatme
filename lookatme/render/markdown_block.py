@@ -22,19 +22,12 @@ import lookatme.render.pygments as pygments_render
 import lookatme.render.markdown_inline as markdown_inline
 from lookatme.utils import *
 from lookatme.widgets.clickable_text import ClickableText
-
-
-def _meta(item):
-    if not hasattr(item, "meta"):
-        meta = {}
-        setattr(item, "meta", meta)
-    else:
-        meta = getattr(item, "meta")
-    return meta
+from lookatme.render.context import Context
+from lookatme.render.markdown_html import LookatmeHTMLParser
 
 
 def _set_is_list(item, level=1, ordered=False):
-    _meta(item).update({
+    get_meta(item).update({
         "is_list": True,
         "list_level": level,
         "ordered": ordered,
@@ -43,66 +36,44 @@ def _set_is_list(item, level=1, ordered=False):
 
 
 def _inc_item_count(item):
-    _meta(item)["item_count"] += 1
-    return _meta(item)["item_count"]
+    get_meta(item)["item_count"] += 1
+    return get_meta(item)["item_count"]
 
 
 def _is_list(item):
-    return _meta(item).get("is_list", False)
+    return get_meta(item).get("is_list", False)
 
 
 def _list_level(item):
-    return _meta(item).get("list_level", 1)
+    return get_meta(item).get("list_level", 1)
 
 
 # =============================================================================
 
 
-def _propagate_meta(item1, item2):
-    """Copy the metadata from item1 to item2
-    """
-    meta = getattr(item1, "meta", {})
-    existing_meta = getattr(item2, "meta", {})
-    new_meta = copy.deepcopy(meta)
-    new_meta.update(existing_meta)
-    setattr(item2, "meta", new_meta)
-
-
-def stack_push(stack, new_item):
-    """Push to the stack and propagate metadata
-    """
-    if len(stack) > 0:
-        _propagate_meta(stack[-1], new_item)
-    stack.append(new_item)
-
-
 THIS_MOD = sys.modules[__name__]
-def render(token, stack, loop):
+def render(token, ctx: Context):
     """Render a single token
     """
-    last_stack = stack[-1]
-    last_stack_len = len(stack)
-
     render_token = getattr(THIS_MOD, "render_{}".format(token["type"]))
-    res = render_token(token, stack[-1], stack, loop)
-    if len(stack) > last_stack_len:
-        _propagate_meta(last_stack, stack[-1])
-    if res is None:
-        return
-    pile_or_listbox_add(last_stack, res)
+    res = render_token(token, ctx)
+
+    if res is not None:
+        pile_or_listbox_add(ctx.container, res)
+
     return res
 
 
-def render_tokens_full(tokens):
-    tmp_listbox = urwid.ListBox([])
-    stack = [tmp_listbox]
+def render_tokens_full(tokens, loop):
+    ctx = Context(loop)
+    ctx.container_push(urwid.ListBox([]))
     for token in tokens:
-        render(token, stack, None) # TODO: Nothing uses the loop anyways... could just make this a global
-    return tmp_listbox.body
+        render(token, ctx)
+    return ctx.container.body
 
 
 @contrib_first
-def render_newline(token, body, stack, loop):
+def render_newline(token, ctx: Context):
     """Render a newline
 
     See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
@@ -112,7 +83,7 @@ def render_newline(token, body, stack, loop):
 
 
 @contrib_first
-def render_hrule(token, body, stack, loop):
+def render_hrule(token, ctx: Context):
     """Render a newline
 
     See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
@@ -124,7 +95,7 @@ def render_hrule(token, body, stack, loop):
 
 
 @contrib_first
-def render_heading(token, body, stack, loop):
+def render_heading(token, ctx: Context):
     """Render markdown headings, using the defined styles for the styling and
     prefix/suffix.
 
@@ -171,7 +142,9 @@ def render_heading(token, body, stack, loop):
     prefix = styled_text(style["prefix"], style)
     suffix = styled_text(style["suffix"], style)
 
-    rendered_contents = markdown_inline.render_inline_children(token["children"], body, stack, loop)
+    header_spec = spec_from_style(style)
+    with ctx.use_spec(header_spec):
+        rendered_contents = markdown_inline.render_inline_children(token["children"], ctx)
 
     return [
         urwid.Divider(),
@@ -181,7 +154,7 @@ def render_heading(token, body, stack, loop):
 
 
 @contrib_first
-def render_table(token, body, stack, loop):
+def render_table(token, ctx: Context):
     """Renders a table using the :any:`Table` widget.
 
     See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
@@ -210,7 +183,7 @@ def render_table(token, body, stack, loop):
         else:
             raise NotImplementedError("Unsupported table child token: {!r}".format(child_token["type"]))
 
-    table = Table(header=table_header, body=table_body)
+    table = Table(header=table_header, body=table_body, ctx=ctx)
     padding = urwid.Padding(table, width=table.total_width + 2, align="center")
 
     def table_changed(*args, **kwargs):
@@ -222,7 +195,7 @@ def render_table(token, body, stack, loop):
 
 
 @contrib_first
-def render_list(token, body, stack, loop):
+def render_list(token, ctx: Context):
     """Handles the indentation when starting rendering a new list. List items
     themselves (with the bullets) are rendered by the
     :any:`render_list_item_start` function.
@@ -232,19 +205,18 @@ def render_list(token, body, stack, loop):
     """
     res = urwid.Pile([])
 
-    in_list = _is_list(stack[-1])
+    in_list = _is_list(ctx.container)
     _set_is_list(res, token["level"], ordered=token['ordered'])
 
-    _meta(res)['list_start_token'] = token
-    _meta(res)['max_list_marker_width'] = token.get('max_list_marker_width', 2)
+    get_meta(res)['list_start_token'] = token
+    get_meta(res)['max_list_marker_width'] = token.get('max_list_marker_width', 2)
 
-    stack_push(stack, res)
-    for child_token in token["children"]:
-        render(child_token, stack, loop)
+    with ctx.use_container(res):
+        for child_token in token["children"]:
+            render(child_token, ctx)
 
-    meta = _meta(stack[-1])
+    meta = get_meta(res)
     meta['list_start_token']['max_list_marker_width'] = meta['max_list_marker_width']
-    stack.pop()
 
     widgets = []
     if not in_list:
@@ -256,7 +228,7 @@ def render_list(token, body, stack, loop):
 
 
 @contrib_first
-def render_list_item(token, body, stack, loop):
+def render_list_item(token, ctx: Context):
     """Render the start of a list item. This function makes use of two
     different styles, one each for unordered lists (bullet styles) and ordered
     lists (numbering styles):
@@ -278,10 +250,10 @@ def render_list_item(token, body, stack, loop):
     value descriptions.
     """
     list_level = token["level"]
-    curr_count = _inc_item_count(stack[-1])
+    curr_count = _inc_item_count(ctx.container)
     pile = urwid.Pile(urwid.SimpleFocusListWalker([]))
 
-    meta = _meta(stack[-1])
+    meta = get_meta(ctx.container)
 
     if meta["ordered"]:
         numbering = config.STYLE["numbering"]
@@ -306,43 +278,47 @@ def render_list_item(token, body, stack, loop):
         pile,
     ])
 
-    stack_push(stack, pile)
-    for child_token in token["children"]:
-        render(child_token, stack, loop)
-    stack.pop()
+    with ctx.use_container(pile):
+        for child_token in token["children"]:
+            render(child_token, ctx)
 
     return res
 
 
 @contrib_first
-def render_block_text(token, body, stack, loop):
+def render_block_text(token, ctx: Context):
     """Render block text
     """
-    inline_markup = markdown_inline.render_inline_children(token["children"], body, stack, loop)
+    inline_markup = markdown_inline.render_inline_children(token["children"], ctx)
     return ClickableText(inline_markup)
 
 
 @contrib_first
-def render_paragraph(token, body, stack, loop):
+def render_block_html(token, ctx: Context):
+    """Render block html
+    """
+    parser = LookatmeHTMLParser(ctx, markdown_inline)
+    parser.feed(token["text"])
+
+
+@contrib_first
+def render_paragraph(token, ctx: Context):
     """Renders the provided text with additional pre and post paddings.
 
     See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
     return value descriptions.
     """
-    res = []
-    res.append(urwid.Divider())
-    markup = markdown_inline.render_inline_children(token["children"], body, stack, loop)
-    res.append(ClickableText(markup))
-    res.append(urwid.Divider())
-
-    return res
+    markup = markdown_inline.render_inline_children(token["children"], ctx)
+    return [
+        urwid.Divider(),
+        ClickableText(markup),
+        urwid.Divider(),
+    ]
 
 
 @contrib_first
-def render_block_quote_start(token, body, stack, loop):
-    """Begins rendering of a block quote. Pushes a new ``urwid.Pile()`` to the
-    stack that is indented, has styling applied, and has the quote markers
-    on the left.
+def render_block_quote(token, ctx: Context):
+    """
 
     This function makes use of the styles:
 
@@ -360,7 +336,6 @@ def render_block_quote_start(token, body, stack, loop):
     return value descriptions.
     """
     pile = urwid.Pile([])
-    stack_push(stack, pile)
 
     styles = config.STYLE["quote"]
 
@@ -369,8 +344,18 @@ def render_block_quote_start(token, body, stack, loop):
     quote_bottom_corner = styles["bottom_corner"]
     quote_style = styles["style"]
 
+    with ctx.use_container(pile):
+        with ctx.use_spec(spec_from_style(quote_style)):
+            for child_token in token["children"]:
+                render(child_token, ctx)
+
+    # remove leading/trailing divider if they were added to the pile
+    if isinstance(pile.contents[0][0], urwid.Divider):
+        pile.contents = pile.contents[1:]
+    if isinstance(pile.contents[-1][0], urwid.Divider):
+        pile.contents = pile.contents[:-1]
+
     return [
-        urwid.Divider(),
         urwid.LineBox(
             urwid.AttrMap(
                 urwid.Padding(pile, left=2),
@@ -380,29 +365,11 @@ def render_block_quote_start(token, body, stack, loop):
             tline=" ", trcorner="", tlcorner=quote_top_corner,
             bline=" ", brcorner="", blcorner=quote_bottom_corner,
         ),
-        urwid.Divider(),
     ]
 
 
 @contrib_first
-def render_block_quote_end(token, body, stack, loop):
-    """Pops the block quote start ``urwid.Pile()`` from the stack, taking
-    future renderings out of the block quote styling.
-
-    See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
-    return value descriptions.
-    """
-    pile = stack.pop()
-
-    # remove leading/trailing divider if they were added to the pile
-    if isinstance(pile.contents[0][0], urwid.Divider):
-        pile.contents = pile.contents[1:]
-    if isinstance(pile.contents[-1][0], urwid.Divider):
-        pile.contents = pile.contents[:-1]
-
-
-@contrib_first
-def render_block_code(token, body, stack, loop):
+def render_block_code(token, ctx: Context):
     """Renders a code block using the Pygments library.
 
     See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and

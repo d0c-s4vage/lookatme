@@ -15,6 +15,7 @@ import yaml
 
 import lookatme.render
 from lookatme.exceptions import IgnoredByContrib
+from lookatme.render.context import Context
 import lookatme.config
 
 
@@ -52,8 +53,9 @@ class TerminalExSchema(Schema):
 CREATED_TERMS = []
 
 
-def render_code(token, body, stack, loop):
-    lang = token["lang"] or ""
+def render_block_code(token, ctx: Context):
+    info = token.get("info", "text")
+    lang = info.split()[0]
 
     numbered_term_match = re.match(r'terminal(\d+)', lang)
     if lang != "terminal-ex" and numbered_term_match is None:
@@ -84,7 +86,7 @@ def render_code(token, body, stack, loop):
 
     term = urwid.Terminal(
         shlex.split(term_data["command"].strip()),
-        main_loop=loop,
+        main_loop=ctx.loop,
         encoding="utf8",
     )
     CREATED_TERMS.append(term)
@@ -97,10 +99,10 @@ def render_code(token, body, stack, loop):
     if term_data["init_codeblock"] is True:
         fake_token = {
             "text": term_data["init_text"],
-            "lang": term_data["init_codeblock_lang"],
+            "": term_data["init_codeblock_lang"],
         }
         res += lookatme.render.markdown_block.render_code(
-            fake_token, body, stack, loop
+            fake_token, ctx,
         )
     
     res += [

@@ -5,6 +5,18 @@
 import urwid
 
 
+from lookatme.widgets.smart_attr_spec import SmartAttrSpec
+
+
+def get_meta(item):
+    if not hasattr(item, "meta"):
+        meta = {}
+        setattr(item, "meta", meta)
+    else:
+        meta = getattr(item, "meta")
+    return meta
+
+
 def row_text(rendered_row):
     """Return all text joined together from the rendered row
     """
@@ -44,13 +56,13 @@ def dict_deep_update(to_update, new_vals):
 
 
 def spec_from_style(styles):
-    """Create an urwid.AttrSpec from a {fg:"", bg:""} style dict. If styles
+    """Create an SmartAttrSpec from a {fg:"", bg:""} style dict. If styles
     is a string, it will be used as the foreground
     """
     if isinstance(styles, str):
-        return urwid.AttrSpec(styles, "")
+        return SmartAttrSpec(styles, "")
     else:
-        return urwid.AttrSpec(styles.get("fg", ""), styles.get("bg", ""))
+        return SmartAttrSpec(styles.get("fg", ""), styles.get("bg", ""))
 
 
 def non_empty_split(data):
@@ -68,20 +80,25 @@ def get_fg_bg_styles(style):
     # just a str will only set the foreground color
     elif isinstance(style, str):
         return non_empty_split(style), []
-    elif isinstance(style, urwid.AttrSpec):
+    elif isinstance(style, SmartAttrSpec):
         return non_empty_split(style.foreground), non_empty_split(style.background)
     else:
         raise ValueError("Unsupported style value {!r}".format(style))
 
 
 def overwrite_spec(orig_spec, new_spec):
+    if orig_spec is None:
+        return new_spec
+    if new_spec is None:
+        return orig_spec
+
     import lookatme.widgets.clickable_text
     LinkIndicatorSpec = lookatme.widgets.clickable_text.LinkIndicatorSpec
 
     if orig_spec is None:
-        orig_spec = urwid.AttrSpec("", "")
+        orig_spec = SmartAttrSpec("", "")
     if new_spec is None:
-        new_spec = urwid.AttrSpec("", "")
+        new_spec = SmartAttrSpec("", "")
 
     fg_orig = orig_spec.foreground.split(",")
     fg_orig_color = orig_spec._foreground_color()
@@ -109,7 +126,7 @@ def overwrite_spec(orig_spec, new_spec):
     else:
         bg_new.append(bg_new_color)
 
-    plain_spec = urwid.AttrSpec(
+    plain_spec = SmartAttrSpec(
         ",".join(set(fg_orig + fg_new)),
         ",".join(set(bg_orig + bg_new)),
     )
@@ -131,7 +148,7 @@ def flatten_text(text, new_spec=None):
     to a new urwid.Text().
 
     :param urwid.Text text: The text to flatten
-    :param urwid.AttrSpec new_spec: A new spec to merge with existing styles
+    :param SmartAttrSpec new_spec: A new spec to merge with existing styles
     :returns: list of tuples
     """
     text, chunk_stylings = text.get_text()
@@ -159,7 +176,7 @@ def can_style_item(item):
 
 def spec_from_stack(spec_stack: list):
     if len(spec_stack) == 0:
-        return urwid.AttrSpec("default", "default")
+        return SmartAttrSpec("default", "default")
 
     curr_spec = spec_stack[0]
     for spec in spec_stack[1:]:
@@ -180,7 +197,7 @@ def styled_text(text, new_styles, old_styles=None, supplement_style=False):
         new_spec = spec_from_style(new_styles)
         return flatten_text(text, new_spec)
     elif (isinstance(text, tuple)
-            and isinstance(text[0], urwid.AttrSpec)
+            and isinstance(text[0], SmartAttrSpec)
             and isinstance(text[1], urwid.Text)):
         text = text[1].text
         old_styles = text[0]
@@ -191,7 +208,7 @@ def styled_text(text, new_styles, old_styles=None, supplement_style=False):
     def join(items):
         return ",".join(set(items))
 
-    spec = urwid.AttrSpec(
+    spec = SmartAttrSpec(
         join(new_fg + old_fg),
         join(new_bg + old_bg),
     )
@@ -276,9 +293,10 @@ def translate_color(raw_text):
             fgcolor = ''
             bgcolor = ''
 
-        formated_text.append((urwid.AttrSpec(fgcolor, bgcolor), text))
+        formated_text.append((SmartAttrSpec(fgcolor, bgcolor), text))
 
     return formated_text
+
 
 def int_to_roman(integer):
     integer = int(integer)

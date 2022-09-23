@@ -14,6 +14,7 @@ import urwid
 import lookatme.config
 import lookatme.config as config
 from lookatme.contrib import shutdown_contribs, contrib_first
+from lookatme.render.context import Context
 import lookatme.render.markdown_block as markdown_block
 import lookatme.render.markdown_inline as markdown_inline
 from lookatme.utils import spec_from_style
@@ -157,10 +158,11 @@ class SlideRenderer(threading.Thread):
     
     def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
-        stack = [tmp_listbox]
-        for token in tokens:
-            self._log.debug(f"{'  '*len(stack)}Rendering token {token}")
-            markdown_block.render(token, stack, self.loop)
+        ctx = Context(self.loop)
+        with ctx.use_container(tmp_listbox):
+            for token in tokens:
+                self._log.debug(f"{'  '*len(ctx.container_stack)}Rendering token {token}")
+                markdown_block.render(token, ctx)
 
         return tmp_listbox.body
 
@@ -237,7 +239,10 @@ class MarkdownTui(urwid.Frame):
         """
         title = self.pres.meta.get("title", [])
         spec = spec_from_style(config.STYLE["title"])
-        title_markup = markdown_inline.render_inline_children(title, None, None, None, [spec])
+
+        ctx = Context(self.loop)
+        with ctx.use_spec(spec):
+            title_markup = markdown_inline.render_inline_children(title, ctx)
         self.slide_title.set_text(title_markup)
 
     def update_creation(self):

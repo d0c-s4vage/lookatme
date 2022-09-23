@@ -3,9 +3,10 @@ This module contains code for ClickableText
 """
 
 
+import platform
+import subprocess
 import urwid
 from urwid.util import is_mouse_press
-import subprocess
 
 
 import lookatme.config as config
@@ -16,7 +17,7 @@ import lookatme.config
 class LinkIndicatorSpec(urwid.AttrSpec):
     """Used to track a link within an urwid.Text instance
     """
-    def __init__(self, link_label, link_target, link_id, orig_spec):
+    def __init__(self, link_label, link_target, orig_spec):
         """Create a new LinkIndicator spec from an existing urwid.AttrSpec
 
         :param str link_label: The label for the link
@@ -24,7 +25,6 @@ class LinkIndicatorSpec(urwid.AttrSpec):
         """
         self.link_label = link_label
         self.link_target = link_target
-        self.link_id = link_id
 
         urwid.AttrSpec.__init__(self, orig_spec.foreground, orig_spec.background)
 
@@ -32,7 +32,7 @@ class LinkIndicatorSpec(urwid.AttrSpec):
         """Create a new LinkIndicatorSpec with the same link information but
         new AttrSpec
         """
-        return LinkIndicatorSpec(self.link_label, self.link_target, self.link_id, new_spec)
+        return LinkIndicatorSpec(self.link_label, self.link_target, new_spec)
 
 
 class ClickableText(urwid.Text):
@@ -73,9 +73,22 @@ class ClickableText(urwid.Text):
             self._emit('click')
             return True
 
+        this_sys = platform.system()
+        link_cmd = {
+            "Linux": ["xdg-open"],
+            "Darwin": ["open"],
+            "Windows": ["start"],
+        }.get(this_sys, None)
+
+        if link_cmd is None:
+            self._log.debug(
+                "No link-opening command defined yet for {!r}".format(this_sys)
+            )
+            return True
+
         found_link = found_style.link_target
         subprocess.Popen(
-            ["xdg-open", found_link],
+            link_cmd + [found_link],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT
         )
