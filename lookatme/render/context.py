@@ -4,9 +4,18 @@
 
 import copy
 import contextlib
+from typing import Union, Tuple
+import urwid
 
 
+import lookatme.config
 import lookatme.utils as utils
+from lookatme.widgets.clickable_text import ClickableText
+
+
+class TagDisplay:
+    INLINE = "inline"
+    BLOCK = "block"
 
 
 class Context:
@@ -16,38 +25,131 @@ class Context:
     def __init__(self, loop):
         self.container_stack = []
         self.loop = loop
-        self.spec_stack = []
         self.tag_stack = []
-        self.literal_text_count = 0
+        self.spec_stack = []
+        self.inline_render_results = []
+        self.level = 0
 
-    def literal_push(self):
-        self.literal_text_count += 1
+        self._log = lookatme.config.LOG.getChild("ctx")
 
-    def literal_pop(self):
-        if self.literal_text_count == 0:
-            raise ValueError("Tried to pop off the literal text one too many times")
-        self.literal_text_count -= 1
+    @contextlib.contextmanager
+    def level_inc(self):
+        """
+        """
+        self.level += 1
+        try:
+            yield
+        finally:
+            self.level -= 1
+
+    def log_debug(self, msg):
+        indent = "  " * self.level
+        self._log.debug(indent + msg)
+
+
+    def inline_push(self, inline_result):
+        """Push a new inline render result onto the stack
+        """
+        self.inline_render_results.append(inline_result)
+
+    def inline_clear(self):
+        """Clear the inline rendered results
+        """
+        self.inline_render_results.clear()
+
+    def get_inline_markup(self):
+        """Return the current inline markup, ignoring any widgets that may
+        have made it in
+        """
+        res = filter(
+            lambda x: not isinstance(x, urwid.Widget),
+            self.inline_render_results
+        )
+        return list(res)
+
+    def get_inline_widgets(self):
+        """Return the results of any inline rendering that has occurred in
+        Widget form. The conversion here is necessary since inline rendering
+        functions often produce urwid Text Markup instead of widgets, which
+        need to be converted to ClickableText.
+        """
+        res = []
+        curr_text_markup = []
+        for render_res in self.inline_render_results:
+            if isinstance(render_res, urwid.Widget):
+                if len(curr_text_markup) > 0:
+                    res.append(ClickableText(curr_text_markup))
+                    curr_text_markup = []
+                res.append(render_res)
+            if (
+                isinstance(render_res, str) or
+                (isinstance(render_res, (tuple|list)) and len(render_res) == 2)
+            ):
+                curr_text_markup.append(render_res)
+
+        if len(curr_text_markup) > 0:
+            res.append(ClickableText(curr_text_markup))
+
+        res = [urwid.AttrMap(x, {None: self.spec_text}) for x in res]
+
+        return res
+    
+    def inline_convert_all_to_widgets(self):
+        self.inline_render_results = self.inline_widgets_consumed
+    inline_flush = inline_convert_all_to_widgets
+    
+    @property
+    def inline_markup_consumed(self):
+        """Return and clear the inline markup
+        """
+        res = self.get_inline_markup()
+        self.log_debug(">>>> InlineMarkup: {!r}".format(res))
+        self.inline_clear()
+        return res
+    
+    @property
+    def inline_widgets_consumed(self):
+        """Return and clear the inline widgets
+        """
+        res = self.get_inline_widgets()
+        self.log_debug(">>>> InlineWidgets: {!r}".format(res))
+        self.inline_clear()
+        return res
 
     @property
     def is_literal(self):
-        return self.literal_text_count > 0
+        # walk the tag_stack backwards and see if we are in any <pre> elements
+        for tag_name in reversed(self.tag_stack):
+            if tag_name == "pre":
+                return True
+        return False
 
-    def tag_push(self, new_tag, spec=None):
+    def tag_push(self, new_tag, spec=None, text_only_spec=False, display=TagDisplay.INLINE):
         """Push a new tag name onto the stack
         """
+        if display == TagDisplay.BLOCK:
+            self.inline_flush()
+
         if spec is not None:
-            self.spec_push(spec)
-        self.tag_stack.append((new_tag, spec is not None))
+            self.spec_push(spec, text_only=text_only_spec)
+        self.tag_stack.append((new_tag, spec is not None, display))
 
     def tag_pop(self):
         """Pop the most recent tag off of the tag stack
         """
         if len(self.tag_stack) == 0:
             raise ValueError("Tried to pop off the tag stack one too many times")
-        popped_tag, had_spec = self.tag_stack.pop()
+
+        popped_tag, had_spec, display = self.tag_stack.pop()
+
         if had_spec:
             self.spec_pop()
-        return (popped_tag, had_spec)
+
+        if display == TagDisplay.BLOCK:
+            self.log_debug("FLUSHING INLINE (BLOCK): {!r}".format(popped_tag))
+            self.inline_flush()
+
+        return (popped_tag, had_spec, display)
 
     @property
     def tag(self):
@@ -77,6 +179,21 @@ class Context:
             return self.container_stack[-1]
         return None
 
+    @property
+    def container_last(self):
+        if self.container is None:
+            return None
+
+        cont_children = []
+        if hasattr(self.container, "body"):
+            cont_children = self.container.body
+        elif hasattr(self.container, "contents"):
+            cont_children = self.container.contents
+
+        if len(cont_children) == 0:
+            return None
+        return cont_children[-1]
+
     @contextlib.contextmanager
     def use_container(self, new_container):
         """Ensure that the container is pushed/popped correctly
@@ -87,10 +204,10 @@ class Context:
         finally:
             self.container_pop()
     
-    def spec_push(self, new_spec):
+    def spec_push(self, new_spec, text_only=False):
         """Push a new AttrSpec onto the spec_stack
         """
-        self.spec_stack.append(new_spec)
+        self.spec_stack.append((new_spec, text_only))
     
     def spec_pop(self):
         """Push a new AttrSpec onto the spec_stack
@@ -100,10 +217,23 @@ class Context:
         return self.spec_stack.pop()
     
     @property
-    def spec(self):
+    def spec_general(self):
         """Return the current fully resolved current AttrSpec
         """
-        return utils.spec_from_stack(self.spec_stack)
+        return utils.spec_from_stack(
+            self.spec_stack,
+            lambda s, text_only: not text_only,
+        )
+    
+    @property
+    def spec_text(self):
+        """
+        """
+        return utils.spec_from_stack(
+            self.spec_stack,
+            # include all of the specs!
+            lambda s, text_only: True,
+        )
     
     @contextlib.contextmanager
     def use_spec(self, new_spec):

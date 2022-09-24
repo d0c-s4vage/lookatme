@@ -26,6 +26,9 @@ from lookatme.render.context import Context
 from lookatme.render.markdown_html import LookatmeHTMLParser
 
 
+THIS_MOD = sys.modules[__name__]
+
+
 def _set_is_list(item, level=1, ordered=False):
     get_meta(item).update({
         "is_list": True,
@@ -51,17 +54,23 @@ def _list_level(item):
 # =============================================================================
 
 
-THIS_MOD = sys.modules[__name__]
 def render(token, ctx: Context):
     """Render a single token
     """
-    render_token = getattr(THIS_MOD, "render_{}".format(token["type"]))
-    res = render_token(token, ctx)
+    with ctx.level_inc():
+        render_token = getattr(THIS_MOD, "render_{}".format(token["type"]))
+        res = render_token(token, ctx)
 
-    if res is not None:
-        pile_or_listbox_add(ctx.container, res)
+        if res is not None:
+            pile_or_listbox_add(ctx.container, res)
 
-    return res
+        return res
+
+
+def render_all(tokens, ctx: Context):
+    for token in tokens:
+        ctx.log_debug("Rendering block token: {!r}".format(token))
+        render(token, ctx)
 
 
 def render_tokens_full(tokens, loop):
@@ -144,13 +153,9 @@ def render_heading(token, ctx: Context):
 
     header_spec = spec_from_style(style)
     with ctx.use_spec(header_spec):
-        rendered_contents = markdown_inline.render_inline_children(token["children"], ctx)
+        markdown_inline.render_all(token["children"], ctx)
 
-    return [
-        urwid.Divider(),
-        ClickableText([prefix] + rendered_contents + [suffix]),
-        urwid.Divider(),
-    ]
+    return [urwid.Divider()] + ctx.inline_widgets_consumed + [urwid.Divider()]
 
 
 @contrib_first
@@ -218,10 +223,12 @@ def render_list(token, ctx: Context):
     meta = get_meta(res)
     meta['list_start_token']['max_list_marker_width'] = meta['max_list_marker_width']
 
+    wrapped_res = urwid.AttrMap(res, {None: ctx.spec_general})
+
     widgets = []
     if not in_list:
         widgets.append(urwid.Divider())
-        widgets.append(urwid.Padding(res, left=2))
+        widgets.append(urwid.Padding(wrapped_res, left=2))
         widgets.append(urwid.Divider())
         return widgets
     return res
@@ -282,6 +289,8 @@ def render_list_item(token, ctx: Context):
         for child_token in token["children"]:
             render(child_token, ctx)
 
+    pile_or_listbox_add(pile, ctx.inline_widgets_consumed)
+
     return res
 
 
@@ -289,16 +298,18 @@ def render_list_item(token, ctx: Context):
 def render_block_text(token, ctx: Context):
     """Render block text
     """
-    inline_markup = markdown_inline.render_inline_children(token["children"], ctx)
-    return ClickableText(inline_markup)
+    markdown_inline.render_all(token["children"], ctx)
+    # let the inline render results continue!
+    # return ctx.inline_widgets_consumed
+    return []
 
 
 @contrib_first
 def render_block_html(token, ctx: Context):
     """Render block html
     """
-    parser = LookatmeHTMLParser(ctx, markdown_inline)
-    parser.feed(token["text"])
+    LookatmeHTMLParser(ctx).feed(token["text"])
+    return ctx.inline_widgets_consumed
 
 
 @contrib_first
@@ -308,12 +319,9 @@ def render_paragraph(token, ctx: Context):
     See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
     return value descriptions.
     """
-    markup = markdown_inline.render_inline_children(token["children"], ctx)
-    return [
-        urwid.Divider(),
-        ClickableText(markup),
-        urwid.Divider(),
-    ]
+    markdown_inline.render_all(token["children"], ctx)
+    # return [urwid.Divider()] + ctx.inline_widgets_consumed + [urwid.Divider()]
+    return ctx.inline_widgets_consumed
 
 
 @contrib_first
@@ -375,7 +383,7 @@ def render_block_code(token, ctx: Context):
     See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
     return value descriptions.
     """
-    info = token.get("info", "text")
+    info = token.get("info", None) or "text"
     lang = info.split()[0]
     # TODO support line highlighting, etc?
     text = token["text"]

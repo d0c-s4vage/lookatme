@@ -7,11 +7,14 @@ from __future__ import annotations
 import re
 from typing import Dict, Optional
 from html.parser import HTMLParser
+import urwid
 
 
-from lookatme.render.context import Context
+import lookatme.config
+from lookatme.render.context import Context, TagDisplay
 from lookatme.widgets.clickable_text import ClickableText
 from lookatme.utils import overwrite_spec, spec_from_style, pile_or_listbox_add
+import lookatme.parser
 
 
 STYLE_MATCHER = re.compile(r"""
@@ -22,10 +25,15 @@ STYLE_MATCHER = re.compile(r"""
 
 
 class LookatmeHTMLParser(HTMLParser):
-    def __init__(self, ctx: Context, markdown_inline):
+    def __init__(self, ctx: Context):
+        import lookatme.render.markdown_block as block
+        import lookatme.render.markdown_inline as inline
+
         super(self.__class__, self).__init__()
+        self._log = lookatme.config.LOG.getChild("LookatmeHTMLParser")
         self.ctx = ctx
-        self.inline = markdown_inline
+        self.block = block
+        self.inline = inline
         self.queued_data = []
     
     def handle_starttag(self, tag, attrs):
@@ -34,6 +42,8 @@ class LookatmeHTMLParser(HTMLParser):
         style = self._parse_style(attrs.get("style", ""))
 
         spec = None
+        text_only_spec = False
+        display = TagDisplay.INLINE
         spec_styles = {
             "fg": style.get("color", ""),
             "bg": style.get("background-color", ""),
@@ -49,30 +59,57 @@ class LookatmeHTMLParser(HTMLParser):
             spec = overwrite_spec(spec, spec_from_style("blink"))
         elif tag == "em":
             spec = overwrite_spec(spec, spec_from_style("standout"))
+            text_only_spec = True
         elif tag == "u":
             spec = overwrite_spec(spec, spec_from_style("underline"))
-        elif tag == "pre":
-            self.ctx.literal_push()
         elif tag == "br":
-            self.ctx.literal_push()
-            self.handle_data("-")
-            self.ctx.literal_pop()
+            self.ctx.inline_push("\n")
+        elif tag == "div":
+            display = TagDisplay.BLOCK
+        elif tag == "p":
+            display = TagDisplay.BLOCK
+        elif tag == "details":
+            # TODO
+            pass
+        elif tag == "summary":
+            # TODO
+            pass
 
-        self.ctx.tag_push(tag, spec)
+        self.ctx.tag_push(tag, spec, text_only_spec, display)
+
+        # do this *after* we've added the spec to the context
+        if tag == "div":
+            #new_container = urwid.Pile([])
+            #pile_or_listbox_add(self.ctx.container, new_container)
+            #self.ctx.container_push(new_container)
+            #self.ctx.attr_map_spec_push(spec)
+            pass
     
     def handle_endtag(self, tag):
         if tag == self.ctx.tag:
-            if tag == "pre":
-                self.ctx.literal_pop()
             self.ctx.tag_pop()
+        if tag == "div":
+            #self.ctx.container_pop()
+            #self.ctx.attr_map_spec_pop()
+            pass
     
     def handle_data(self, data):
-        token = {
-            "type": "text",
-            "text": data,
-        }
-        res = self.inline.render_text(token, self.ctx)
-        pile_or_listbox_add(self.ctx.container, ClickableText(res))
+        if not self.ctx.is_literal:
+            data = data.strip()
+        if len(data) == 0:
+            return
+
+        tokens = lookatme.parser.md_to_tokens(data)
+        # if we don't do this, then the first text following a tag will NOT
+        # be inline, it will be a new paragraph
+        #
+        # E.g. he<span>ll</span>o would be rendered as three paragraphs
+        if len(tokens) > 0 and tokens[0]["type"] == "paragraph":
+            paragraph_token = tokens[0]
+            self.inline.render_all(paragraph_token["children"], self.ctx)
+            tokens = tokens[1:]
+
+        self.block.render_all(tokens, self.ctx)
 
     def _parse_style(self, style_contents):
         """Parse the style contents

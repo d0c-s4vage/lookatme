@@ -174,15 +174,20 @@ def can_style_item(item):
     return isinstance(item, (urwid.Text, list, tuple))
 
 
-def spec_from_stack(spec_stack: list):
+def spec_from_stack(spec_stack: list, filter_fn = None):
     if len(spec_stack) == 0:
         return SmartAttrSpec("default", "default")
 
-    curr_spec = spec_stack[0]
-    for spec in spec_stack[1:]:
-        curr_spec = overwrite_spec(curr_spec, spec)
+    if filter_fn is None:
+        filter_fn = lambda: True
 
-    return curr_spec
+    res_spec = None
+    for spec, text_only in spec_stack:
+        if not filter_fn(spec, text_only):
+            continue
+        res_spec = overwrite_spec(res_spec, spec)
+
+    return res_spec
 
 def styled_text(text, new_styles, old_styles=None, supplement_style=False):
     """Return a styled text tuple that can be used within urwid.Text.

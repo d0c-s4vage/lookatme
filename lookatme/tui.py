@@ -148,7 +148,13 @@ class SlideRenderer(threading.Thread):
         # may add extra metadata to the token itself. For example, list rendering
         # uses this to determine the max indent size for each level.
         tokens = to_render.tokens
+        self._log.debug("")
+        self._log.debug("PRE-Render====================================")
+        self._log.debug("")
         self._render_tokens(tokens)
+        self._log.debug("")
+        self._log.debug("FINAL-Render====================================")
+        self._log.debug("")
         res = self._render_tokens(tokens)
 
         total = time.time() - start
@@ -160,9 +166,7 @@ class SlideRenderer(threading.Thread):
         tmp_listbox = urwid.ListBox([])
         ctx = Context(self.loop)
         with ctx.use_container(tmp_listbox):
-            for token in tokens:
-                self._log.debug(f"{'  '*len(ctx.container_stack)}Rendering token {token}")
-                markdown_block.render(token, ctx)
+            markdown_block.render_all(tokens, ctx)
 
         return tmp_listbox.body
 
@@ -240,10 +244,13 @@ class MarkdownTui(urwid.Frame):
         title = self.pres.meta.get("title", [])
         spec = spec_from_style(config.STYLE["title"])
 
+        if not title:
+            return
+
         ctx = Context(self.loop)
         with ctx.use_spec(spec):
-            title_markup = markdown_inline.render_inline_children(title, ctx)
-        self.slide_title.set_text(title_markup)
+            markdown_inline.render_all(title, ctx)
+        self.slide_title.set_text(ctx.inline_markup_consumed)
 
     def update_creation(self):
         """Update the author and date

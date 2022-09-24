@@ -160,16 +160,16 @@ class Table(urwid.Pile):
         """
         res = []
 
-        ctx = Context(self.ctx.loop)
         if base_spec is not None:
-            ctx.spec_push(base_spec)
+            self.ctx.spec_push(base_spec)
 
         for row in body_rows:
             rend_row = []
             for idx, cell in enumerate(row["children"]):
                 if idx >= self.num_columns:
                     break
-                cell_widgets = markdown_inline.render_tokens_full(cell["children"], ctx)
+                markdown_inline.render_all(cell["children"], self.ctx)
+                cell_widgets = self.ctx.inline_widgets_consumed
                 new_widgets = []
                 for widget in cell_widgets:
                     if isinstance(widget, urwid.Text):
@@ -177,5 +177,8 @@ class Table(urwid.Pile):
                     new_widgets.append(widget)
                 rend_row.append(new_widgets)
             res.append(rend_row)
+
+        if base_spec is not None:
+            self.ctx.spec_pop()
 
         return res

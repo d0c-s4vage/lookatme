@@ -14,6 +14,18 @@ from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
 
 
+def md_to_tokens(md_text):
+    md = mistune.create_markdown(
+        renderer=mistune.AstRenderer(),
+        plugins=[
+            'footnotes',
+            'table',
+            'strikethrough',
+        ]
+    )
+    return md(md_text)
+
+
 class Parser(object):
     """A parser for markdown presentation files
     """
@@ -40,19 +52,7 @@ class Parser(object):
         :param str input_data: The input data string
         :returns: tuple of (remaining_data, slide)
         """
-        # slides are delimited by ---
-        md = mistune.create_markdown(
-            renderer=mistune.AstRenderer(),
-            plugins=[
-                'footnotes',
-                'table',
-                'strikethrough',
-            ]
-        )
-
-        state = {}
-        tokens = md(input_data)
-
+        tokens = md_to_tokens(input_data)
         num_hrules, hinfo = self._scan_for_smart_split(tokens)
 
         if self._single_slide:
@@ -93,7 +93,7 @@ class Parser(object):
                 if keep_split_token and len(slides) == 0 and len(curr_slide_tokens) == 0:
                     pass
                 else:
-                    slide = Slide(curr_slide_tokens, md, len(slides))
+                    slide = Slide(curr_slide_tokens, len(slides))
                     slides.append(slide)
                 curr_slide_tokens = []
                 if keep_split_token:
@@ -102,7 +102,7 @@ class Parser(object):
             else:
                 curr_slide_tokens.append(token)
 
-        slides.append(Slide(curr_slide_tokens, md, len(slides)))
+        slides.append(Slide(curr_slide_tokens, len(slides)))
 
         return "", slides
 
