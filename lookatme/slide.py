@@ -3,9 +3,6 @@ Slide info holder
 """ 
 
 
-import mistune
-
-
 class Slide(object):
     """This class defines a single slide. It operates on mistune's lexed
     tokens from the input markdown

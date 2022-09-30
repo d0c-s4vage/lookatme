@@ -5,25 +5,77 @@ This module defines the parser for the markdown presentation file
 
 from collections import defaultdict
 from marshmallow import fields, Schema
-import mistune
+#import mistune
+import markdown_it
+import markdown_it.token
 import re
+import time
+from typing import List, Dict, Any
 import yaml
 
 
 from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
+import lookatme.config
+
+
+HTML_TAG_LT_REPLACE = "TAG:LT:" + str(time.time())
+
+
+def obscure_html_tags(data: str) -> str:
+    return data.replace("<", HTML_TAG_LT_REPLACE)
+
+
+def unobscure_html_tags(data: str) -> str:
+    return data.replace(HTML_TAG_LT_REPLACE, "<")
 
 
 def md_to_tokens(md_text):
-    md = mistune.create_markdown(
-        renderer=mistune.AstRenderer(),
-        plugins=[
-            'footnotes',
-            'table',
-            'strikethrough',
-        ]
-    )
-    return md(md_text)
+    md = markdown_it.MarkdownIt("gfm-like").disable("html_block")
+    tokens = md.parse(md_text)
+    res = []
+    for token in tokens:
+        token = token.as_dict()
+        if token["type"] in ("heading_open", "heading_close"):
+            token["level"] = int(token["tag"].replace("h", ""))
+        res.append(token)
+
+    return res
+
+
+def is_heading(token):
+    return token["type"] == "heading"
+
+
+def is_hrule(token):
+    return token["type"] == "hr"
+
+
+def debug_print_tokens(tokens, level = 1):
+    """Print the tokens DFS
+    """
+    indent = lambda x: "  " * x
+
+    log = lookatme.config.LOG
+    log.debug(indent(level) + "DEBUG TOKENS")
+    level += 1
+
+    stack = list(reversed(tokens))
+    while len(stack) > 0:
+        token = stack.pop()
+        if "close" in token["type"]:
+            level -= 1
+
+        log.debug(indent(level) + repr(token))
+
+        if "open" in token["type"]:
+            level += 1
+
+        token_children = token.get("children", None)
+        if isinstance(token_children, list):
+            stack.append({"type": "children_close"})
+            stack += list(reversed(token_children))
+            stack.append({"type": "children_open"})
 
 
 class Parser(object):
@@ -53,6 +105,7 @@ class Parser(object):
         :returns: tuple of (remaining_data, slide)
         """
         tokens = md_to_tokens(input_data)
+        debug_print_tokens(tokens)
         num_hrules, hinfo = self._scan_for_smart_split(tokens)
 
         if self._single_slide:
@@ -65,7 +118,7 @@ class Parser(object):
                 meta["title"] = hinfo["title"]
             def slide_split_check(token):
                 return (
-                    token["type"] == "heading"
+                    is_heading(token)
                     and token["level"] == hinfo["lowest_non_title"]
                 )
             def heading_mod(token):
@@ -76,7 +129,7 @@ class Parser(object):
             keep_split_token = True
         else:
             def slide_split_check(token):
-                return token["type"] == "hrule"
+                return is_hrule(token)
             def heading_mod(token):
                 pass
             keep_split_token = False
@@ -85,7 +138,7 @@ class Parser(object):
         curr_slide_tokens = []
         for token in tokens:
             should_split = slide_split_check(token)
-            if token["type"] == "heading":
+            if is_heading(token):
                 heading_mod(token)
 
             # new slide!
@@ -121,9 +174,9 @@ class Parser(object):
         num_hrules = 0
         first_heading = None
         for token in tokens:
-            if token["type"] == "hrule":
+            if is_hrule(token):
                 num_hrules += 1
-            elif token["type"] == "heading":
+            elif is_heading(token):
                 hinfo["counts"][token["level"]] += 1
                 if first_heading is None:
                     first_heading = token

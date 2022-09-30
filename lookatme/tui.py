@@ -165,8 +165,10 @@ class SlideRenderer(threading.Thread):
     def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
         ctx = Context(self.loop)
-        with ctx.use_container(tmp_listbox):
-            markdown_block.render_all(tokens, ctx)
+        ctx.tokens_push(tokens)
+        with ctx.use_container(tmp_listbox, is_new_block=True):
+            markdown_block.render_all(ctx)
+        ctx.tokens_pop()
 
         return tmp_listbox.body
 

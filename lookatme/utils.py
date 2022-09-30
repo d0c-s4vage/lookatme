@@ -8,6 +8,14 @@ import urwid
 from lookatme.widgets.smart_attr_spec import SmartAttrSpec
 
 
+def core_widget(w) -> urwid.Widget:
+    """Resolve a wrapped widget to its core widget value
+    """
+    if isinstance(w, urwid.AttrMap):
+        return w.base_widget
+    return w
+
+
 def get_meta(item):
     if not hasattr(item, "meta"):
         meta = {}
@@ -116,12 +124,12 @@ def overwrite_spec(orig_spec, new_spec):
     bg_new_color = new_spec._background()
     bg_new.remove(bg_new_color)
 
-    if fg_new_color == "default":
+    if fg_new_color in ("", "default"):
         fg_orig.append(fg_orig_color)
     else:
         fg_new.append(fg_new_color)
 
-    if bg_new_color == "default":
+    if bg_new_color in ("", "default"):
         bg_orig.append(bg_orig_color)
     else:
         bg_new.append(bg_new_color)
@@ -176,10 +184,10 @@ def can_style_item(item):
 
 def spec_from_stack(spec_stack: list, filter_fn = None):
     if len(spec_stack) == 0:
-        return SmartAttrSpec("default", "default")
+        return SmartAttrSpec("", "")
 
     if filter_fn is None:
-        filter_fn = lambda: True
+        filter_fn = lambda _x, _y: True
 
     res_spec = None
     for spec, text_only in spec_stack:
@@ -223,12 +231,15 @@ def styled_text(text, new_styles, old_styles=None, supplement_style=False):
 def pile_or_listbox_add(container, widgets):
     """Add the widget/widgets to the container
     """
+    if isinstance(container, urwid.AttrMap):
+        container = container.base_widget
+
     if isinstance(container, urwid.ListBox):
         return listbox_add(container, widgets)
     elif isinstance(container, urwid.Pile):
         return pile_add(container, widgets)
     else:
-        raise ValueError("Container was not listbox, nor pile")
+        raise ValueError("Container was not listbox, nor pile: {!r}".format(container))
 
 
 def listbox_add(listbox, widgets):

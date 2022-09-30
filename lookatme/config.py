@@ -4,13 +4,13 @@ Config module for lookatme
 
 
 import os
+import logging
+from typing import Optional
 
 
-import lookatme.log
-
-
-LOG = None
+LOG: Optional[logging.Logger] = None
 STYLE = None
+
 
 # default to the current working directory - this will be set later by
 # pres:Presentation when reading the input stream

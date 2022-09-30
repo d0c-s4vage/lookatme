@@ -4,7 +4,8 @@
 
 import copy
 import contextlib
-from typing import Union, Tuple
+from dataclasses import dataclass
+from typing import Union, Tuple, Optional, Dict, Any, List
 import urwid
 
 
@@ -13,9 +14,32 @@ import lookatme.utils as utils
 from lookatme.widgets.clickable_text import ClickableText
 
 
-class TagDisplay:
-    INLINE = "inline"
-    BLOCK = "block"
+@dataclass
+class ContainerInfo:
+    container: urwid.Widget
+    meta: Dict[str, Any]
+
+
+class TokenIterator:
+    def __init__(self, tokens):
+        self.tokens = tokens
+        self.idx = 0
+
+    def next(self):
+        if self.idx >= len(self.tokens):
+            return None
+        token = self.tokens[self.idx]
+        self.idx += 1
+        return token
+
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        token = self.next()
+        if token is None:
+            raise StopIteration
+        return token
 
 
 class Context:
@@ -23,14 +47,66 @@ class Context:
     """
 
     def __init__(self, loop):
-        self.container_stack = []
+        self.container_stack: List[ContainerInfo] = []
         self.loop = loop
         self.tag_stack = []
         self.spec_stack = []
         self.inline_render_results = []
         self.level = 0
+        self.in_new_block = True
 
-        self._log = lookatme.config.LOG.getChild("ctx")
+        self.token_stack: List[TokenIterator] = []
+
+        self._log = lookatme.config.LOG
+
+    @property
+    def tokens(self) -> TokenIterator:
+        """Return the current token iterator
+        """
+        if not self.token_stack:
+            raise ValueError("Attempted to fetch tokens without providing any")
+        return self.token_stack[-1]
+
+    @property
+    def token_next(self):
+        """Return the next token in the token iterator, advancing the iterator
+        """
+        return self.tokens.next()
+    
+    def tokens_push(self, tokens: List[Dict]):
+        """
+        """
+        self.token_stack.append(TokenIterator(tokens))
+
+    def tokens_pop(self):
+        """
+        """
+        self.token_stack.pop()
+
+    @contextlib.contextmanager
+    def use_tokens(self, tokens):
+        """Create a context manager for pushing/popping tokens via a with block
+        """
+        self.tokens_push(tokens)
+        try:
+            yield
+        finally:
+            self.tokens_pop()
+
+    def ensure_new_block(self):
+        """Ensure that we are in a new block
+        """
+        if not self.in_new_block:
+            utils.pile_or_listbox_add(self.container, self.inline_widgets_consumed)
+            self.widget_add(urwid.Divider())
+
+        self.in_new_block = True
+
+    def widget_add(self, w):
+        """Add the provided widget to the current container.
+        """
+        self.in_new_block = False
+        utils.pile_or_listbox_add(self.container, w)
 
     @contextlib.contextmanager
     def level_inc(self):
@@ -50,6 +126,7 @@ class Context:
     def inline_push(self, inline_result):
         """Push a new inline render result onto the stack
         """
+        self.in_new_block = False
         self.inline_render_results.append(inline_result)
 
     def inline_clear(self):
@@ -67,6 +144,12 @@ class Context:
         )
         return list(res)
 
+    def wrap_widget(self, w: urwid.Widget) -> urwid.Widget:
+        """Wrap the provided widget with an AttrMap that will apply
+        the current styling to the entire widget (using spec_general)
+        """
+        return urwid.AttrMap(w, {None: self.spec_general})
+
     def get_inline_widgets(self):
         """Return the results of any inline rendering that has occurred in
         Widget form. The conversion here is necessary since inline rendering
@@ -77,7 +160,7 @@ class Context:
         curr_text_markup = []
         for render_res in self.inline_render_results:
             if isinstance(render_res, urwid.Widget):
-                if len(curr_text_markup) > 0:
+                if curr_text_markup:
                     res.append(ClickableText(curr_text_markup))
                     curr_text_markup = []
                 res.append(render_res)
@@ -94,9 +177,13 @@ class Context:
 
         return res
     
+    def inline_flush(self):
+        """Add all inline widgets to the current container
+        """
+        self.widget_add(self.inline_widgets_consumed)
+
     def inline_convert_all_to_widgets(self):
         self.inline_render_results = self.inline_widgets_consumed
-    inline_flush = inline_convert_all_to_widgets
     
     @property
     def inline_markup_consumed(self):
@@ -124,86 +211,131 @@ class Context:
                 return True
         return False
 
-    def tag_push(self, new_tag, spec=None, text_only_spec=False, display=TagDisplay.INLINE):
+    def tag_push(self, new_tag, spec=None, text_only_spec=False):
         """Push a new tag name onto the stack
         """
-        if display == TagDisplay.BLOCK:
-            self.inline_flush()
-
         if spec is not None:
             self.spec_push(spec, text_only=text_only_spec)
-        self.tag_stack.append((new_tag, spec is not None, display))
+        self.tag_stack.append((new_tag, spec is not None))
 
     def tag_pop(self):
         """Pop the most recent tag off of the tag stack
         """
-        if len(self.tag_stack) == 0:
+        if not self.tag_stack:
             raise ValueError("Tried to pop off the tag stack one too many times")
 
-        popped_tag, had_spec, display = self.tag_stack.pop()
+        popped_tag, had_spec = self.tag_stack.pop()
 
         if had_spec:
             self.spec_pop()
 
-        if display == TagDisplay.BLOCK:
-            self.log_debug("FLUSHING INLINE (BLOCK): {!r}".format(popped_tag))
-            self.inline_flush()
-
-        return (popped_tag, had_spec, display)
+        return (popped_tag, had_spec)
 
     @property
     def tag(self):
-        if len(self.tag_stack) == 0:
+        if self.tag_stack:
             return None
         return self.tag_stack[-1][0]
 
-    def container_push(self, new_item):
+    @property
+    def meta(self) -> Dict[Any, Any]:
+        """Return metadata associated with the current container, or None
+        if the current container is None.
+        """
+        if not self.container_stack:
+            raise ValueError("Tried to get meta with no containers!")
+
+        return self.container_stack[-1].meta
+
+    def container_push(self, new_item: urwid.Widget, is_new_block: bool, custom_add: Optional[urwid.Widget] = None):
         """Push to the stack and propagate metadata
         """
-        if len(self.container_stack) > 0:
-            self._propagate_meta(self.container, new_item)
-        self.container_stack.append(new_item)
+        if custom_add is not None:
+            custom_add = self.wrap_widget(custom_add)
+        else:
+            new_item = self.wrap_widget(new_item)
 
-    def container_pop(self):
+        self.log_debug("Container: {!r}".format(new_item))
+        new_meta = {}
+        if self.container_stack:
+            new_meta.update(self.meta)
+            self.inline_flush()
+
+            if custom_add is None:
+                utils.pile_or_listbox_add(self.container, new_item)
+            else:
+                utils.pile_or_listbox_add(self.container, custom_add)
+
+        elif self.inline_render_results:
+            raise Exception("How do you have render results with no containers?")
+
+        new_info = ContainerInfo(container=new_item, meta=new_meta)
+        self.container_stack.append(new_info)
+        self.in_new_block = is_new_block
+
+    def container_pop(self) -> ContainerInfo:
         """Pop the last element off the stack. Returns the popped widget
         """
-        if len(self.container_stack) == 0:
+        if not self.container_stack:
             raise ValueError("Tried to pop off the widget stack one too many times")
+
+        self.inline_flush()
         return self.container_stack.pop()
 
     @property
-    def container(self):
+    def container(self) -> urwid.Widget:
         """Return the current container
         """
-        if len(self.container_stack) > 0:
-            return self.container_stack[-1]
-        return None
+        if not self.container_stack:
+            raise ValueError("Tried to get container with no containers")
+        return self.container_stack[-1].container
 
-    @property
-    def container_last(self):
-        if self.container is None:
-            return None
-
-        cont_children = []
-        if hasattr(self.container, "body"):
-            cont_children = self.container.body
-        elif hasattr(self.container, "contents"):
-            cont_children = self.container.contents
-
-        if len(cont_children) == 0:
-            return None
-        return cont_children[-1]
+#     @property
+#     def container_last(self):
+#         if self.container is None:
+#             return None
+# 
+#         cont_children = []
+#         if hasattr(self.container, "body"):
+#             cont_children = self.container.body
+#         elif hasattr(self.container, "contents"):
+#             cont_children = self.container.contents
+# 
+#         if len(cont_children) == 0:
+#             return None
+#         return cont_children[-1]
 
     @contextlib.contextmanager
-    def use_container(self, new_container):
+    def use_container(self, new_container: urwid.Widget, is_new_block: bool):
         """Ensure that the container is pushed/popped correctly
         """
-        self.container_push(new_container)
+        self.container_push(new_container, is_new_block)
         try:
             yield
         finally:
             self.container_pop()
-    
+
+    @contextlib.contextmanager
+    def use_container_tmp(self, new_container: urwid.Widget):
+        """Swap out the entire container stack for a new one with the
+        new container as the only item, while keeping spec and tag stacks
+        """
+        tmp_inline_render_results = self.inline_render_results
+        tmp_container_stack = self.container_stack
+        tmp_in_new_block = self.in_new_block
+
+        self.inline_render_results = []
+        self.container_stack = []
+
+        self.container_push(new_container, is_new_block=True)
+        try:
+            yield
+        finally:
+            self.container_pop()
+            self.inline_render_results = tmp_inline_render_results
+            self.container_stack = tmp_container_stack
+            self.in_new_block = tmp_in_new_block
+
     def spec_push(self, new_spec, text_only=False):
         """Push a new AttrSpec onto the spec_stack
         """
@@ -212,7 +344,7 @@ class Context:
     def spec_pop(self):
         """Push a new AttrSpec onto the spec_stack
         """
-        if len(self.spec_stack) == 0:
+        if not self.spec_stack:
             raise ValueError("Tried to pop off the spec stack one too many times")
         return self.spec_stack.pop()
     
@@ -234,26 +366,20 @@ class Context:
             # include all of the specs!
             lambda s, text_only: True,
         )
+
+    def spec_text_with(self, other_spec: urwid.AttrSpec):
+        return utils.spec_from_stack(
+            [(self.spec_text, True), (other_spec, True)],
+        )
     
     @contextlib.contextmanager
-    def use_spec(self, new_spec):
+    def use_spec(self, new_spec, text_only=False):
         """Ensure that specs are pushed/popped correctly
         """
-        self.spec_push(new_spec)
+        if new_spec is not None:
+            self.spec_push(new_spec, text_only)
         try:
             yield
         finally:
-            self.spec_pop()
-
-    # -------------------------------------------------------------------------
-    # private functions -------------------------------------------------------
-    # -------------------------------------------------------------------------
-
-    def _propagate_meta(self, item1, item2):
-        """Copy the metadata from item1 to item2
-        """
-        meta = getattr(item1, "meta", {})
-        existing_meta = getattr(item2, "meta", {})
-        new_meta = copy.deepcopy(meta)
-        new_meta.update(existing_meta)
-        setattr(item2, "meta", new_meta)
+            if new_spec is not None:
+                self.spec_pop()
