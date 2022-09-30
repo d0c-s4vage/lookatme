@@ -9,7 +9,7 @@ import urwid
 
 from lookatme.render.context import Context
 import lookatme.config as config
-from lookatme.utils import styled_text, spec_from_style, get_meta, core_widget, pile_or_listbox_add
+import lookatme.utils as utils
 import lookatme.render.markdown_inline as markdown_inline
 import lookatme.render.markdown_block as markdown_block
 from lookatme.render.context import Context
@@ -43,22 +43,28 @@ class Table(urwid.Pile):
                 "Invalid table specification: could not determine # of columns"
             )
 
+        self.header_rows = []
         if self.header is not None:
             if len(self.header["children"]) != 1:
                 raise ValueError("Token error: thead should only have one child!")
 
-            self.rend_headers = self.create_cells(
+            self.header_rows = self.create_cells(
                 self.header["children"],
-                base_spec=spec_from_style("bold"),
+                base_spec=ctx.spec_text_with(utils.spec_from_style("bold")),
+                header=True
             )
-        else:
-            self.rend_headers = []
 
+        self.body_rows = []
         if self.body is not None:
-            self.rend_rows = self.create_cells(self.body["children"])
-        else:
-            self.rend_rows = []
+            self.body_rows = self.create_cells(self.body["children"])
 
+#        max_column_widths: Dict[int, int] = self.get_max_column_widths(
+#            self.header_rows + self.body_rows,
+#        )
+        
+        super(self.__class__, self).__init__(self.header_rows + self.body_rows)
+
+    # def create_final_rows(self, headers, body_rows):
 #        self.column_maxes = self.calc_column_maxes()
 #
 #        cell_spacing = config.STYLE["table"]["column_spacing"]
@@ -90,11 +96,11 @@ class Table(urwid.Pile):
 #            column_row = urwid.Columns(row_columns, cell_spacing)
 #            final_rows.append(column_row)
         
-        final_rows = [urwid.Columns(self.rend_headers[0], 10)]
-        for row in self.rend_rows:
-            final_rows.append(urwid.Columns(row, 10))
-
-        urwid.Pile.__init__(self, final_rows)
+#         final_rows = [urwid.Columns(self.rend_headers[0], 10)]
+#         for row in self.rend_rows:
+#             final_rows.append(urwid.Columns(row, 10))
+# 
+#         urwid.Pile.__init__(self, final_rows)
 
 #     def on_cell_change(self, *args, **kwargs):
 #         self._invalidate()
@@ -162,7 +168,7 @@ class Table(urwid.Pile):
 #                     column_maxes[idx] = max(column_maxes[idx], widg_len)
 #         return column_maxes
 
-    def create_cells(self, body_rows, base_spec=None):
+    def create_cells(self, body_rows, base_spec=None, header=False):
         """Create the rows for the body, optionally calling a modifier function
         on each created cell Text. The modifier must accept an urwid.Text object
         and must return an urwid.Text object.
@@ -175,19 +181,28 @@ class Table(urwid.Pile):
         for row in body_rows:
             rend_row = []
             for idx, cell in enumerate(row["children"]):
-                if idx >= self.num_columns:
-                    break
+                #if idx >= self.num_columns:
+                #    break
                 cell_container = urwid.Pile([])
                 with self.ctx.use_container_tmp(cell_container):
                     with self.ctx.use_tokens(cell["children"]):
                         markdown_block.render_all(self.ctx)
+                        if header:
+                            divider = urwid.Divider(config.STYLE["table"]["header_divider"])
+                            self.ctx.inline_flush()
+                            self.ctx.widget_add(divider)
 
+                # set alignment for all text widgets
                 for widget in cell_container.widget_list:
-                    widget = core_widget(widget)
+                    widget = utils.core_widget(widget)
                     if isinstance(widget, urwid.Text):
                         widget.align = cell.get("align", "left") or "left"
+
                 rend_row.append(cell_container)
-            res.append(rend_row)
+
+            # we'll adjust the spacing later!
+            column = urwid.Columns(rend_row, 1)
+            res.append(column)
 
         if base_spec is not None:
             self.ctx.spec_pop()

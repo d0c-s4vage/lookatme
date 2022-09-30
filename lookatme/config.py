@@ -5,11 +5,11 @@ Config module for lookatme
 
 import os
 import logging
-from typing import Optional
+from typing import Optional, Dict
 
 
-LOG: Optional[logging.Logger] = None
-STYLE = None
+LOG: logging.Logger = logging.getLogger(__name__)
+STYLE: Dict = {}
 
 
 # default to the current working directory - this will be set later by

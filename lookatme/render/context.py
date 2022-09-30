@@ -25,11 +25,18 @@ class TokenIterator:
         self.tokens = tokens
         self.idx = 0
 
-    def next(self):
+    def peek(self) -> Optional[Dict]:
+        """Return the next token in the token stream, or None if it does
+        not exist
+        """
         if self.idx >= len(self.tokens):
             return None
-        token = self.tokens[self.idx]
-        self.idx += 1
+        return self.tokens[self.idx]
+
+    def next(self):
+        token = self.peek()
+        if token is not None:
+            self.idx += 1
         return token
 
     def __iter__(self):
@@ -98,7 +105,7 @@ class Context:
         """
         if not self.in_new_block:
             utils.pile_or_listbox_add(self.container, self.inline_widgets_consumed)
-            self.widget_add(urwid.Divider())
+            self.widget_add(self.wrap_widget(urwid.Divider()))
 
         self.in_new_block = True
 
@@ -306,10 +313,10 @@ class Context:
 #         return cont_children[-1]
 
     @contextlib.contextmanager
-    def use_container(self, new_container: urwid.Widget, is_new_block: bool):
+    def use_container(self, new_container: urwid.Widget, is_new_block: bool, custom_add: Optional[urwid.Widget] = None):
         """Ensure that the container is pushed/popped correctly
         """
-        self.container_push(new_container, is_new_block)
+        self.container_push(new_container, is_new_block, custom_add)
         try:
             yield
         finally:

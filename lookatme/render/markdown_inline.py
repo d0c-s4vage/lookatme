@@ -75,6 +75,14 @@ def render_softbreak(_, ctx: Context):
     ctx.inline_push((ctx.spec_text, "\n"))
 
 
+def render_code_inline(token, ctx: Context):
+    # TODO: add a style for the default programming language for inline text
+    # blocks
+    spec, text = pygments_render.render_text(" " + token["content"] + " ", plain=True)[0]
+    with ctx.use_spec(spec):
+        ctx.inline_push((ctx.spec_text, text))
+
+
 def render_html_inline(token, ctx: Context):
     tags = Tag.parse(token["content"])
 
@@ -110,7 +118,7 @@ def render_html_tag_default_close(_, _tag: Tag, ctx: Context, _style_spec: Union
 
 def render_html_tag_u_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
     style_spec = overwrite_spec(style_spec, spec_from_style("underline"))
-    ctx.tag_push(tag.name, style_spec)
+    ctx.tag_push(tag.name, style_spec, text_only_spec=True)
 
 
 def render_html_tag_i_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
@@ -138,6 +146,17 @@ def render_html_tag_br_open(_, tag: Tag, ctx: Context, style_spec: Union[None, u
     ctx.inline_push((ctx.spec_text, "\n"))
 
 
+def render_html_tag_div_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+    ctx.ensure_new_block()
+    ctx.container_push(urwid.Pile([]), is_new_block=True)
+    ctx.tag_push(tag.name, style_spec)
+
+
+def render_html_tag_div_close(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+    ctx.container_pop()
+    ctx.tag_pop()
+
+
 def render_html_tag_ul_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
     ctx.tag_push(tag.name, style_spec)
     markdown_block().render_bullet_list_open(
@@ -163,7 +182,7 @@ def render_html_tag_li_open(_, tag: Tag, ctx: Context, style_spec: Union[None, u
 
 
 def render_html_tag_li_close(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
-    ctx.tag_push(tag.name, style_spec)
+    ctx.tag_pop()
     markdown_block().render_list_item_close(
         {"type": "list_item_close"},
         ctx
