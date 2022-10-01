@@ -1,8 +1,10 @@
 name: "testing"
 
 on:
+  push:
+    branches: [ "main" ]
   pull_request:
-    types: [opened, review_requested]
+    branches: [ "main" ]
 
 jobs:
   lint:
