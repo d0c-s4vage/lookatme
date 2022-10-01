@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  lint:
+  isort:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -23,9 +23,40 @@ jobs:
       - name: Check if imports are sorted
         run: |
           bin/ci isort
+
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          architecture: 'x64'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.test.txt
       - name: Lint with flake8
         run: |
           bin/ci flake8
+
+  pyright:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          architecture: 'x64'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.test.txt
+      - name: Analyze with pyright
+        run: |
+          bin/ci pyright
 
   unit-test:
     runs-on: ubuntu-latest
@@ -50,6 +81,3 @@ jobs:
       - name: Test
         run: |
           bin/ci pytest
-      - name: Analyze with pyright
-        run: |
-          bin/ci pyright
