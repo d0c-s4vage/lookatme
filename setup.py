@@ -27,7 +27,7 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     python_requires=">=3.6",
-    packages=find_packages(exclude=["docs", ".gitignore", "README.md"]),
+    packages=find_packages(exclude=["docs", ".gitignore", "README.md", "tests"]),
     install_requires=required,
     classifiers=[
         "Environment :: Console",
