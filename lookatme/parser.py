@@ -14,16 +14,13 @@ from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
 
 
-PROGRESSIVE_SLIDE_DELIMITER = ":::"
-
-
 def is_progressive_slide_delimiter_token(token):
     """Returns True if the token indicates the end of a progressive slide
 
     :param dict token: The markdown token
     :returns: True if the token is a progressive slide delimiter
     """
-    return token["type"] == "paragraph" and token["text"] == PROGRESSIVE_SLIDE_DELIMITER
+    return token["type"] == "close_html" and re.match(r'<!--\s*stop\s*-->', token["text"])
 
 
 class Parser(object):

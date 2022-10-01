@@ -8,10 +8,10 @@ With some content.
 
 - This is the first part.
 
-:::
+<!-- stop -->
 
 - And this is the second part.
 
-:::
+<!-- stop -->
 
-- Parts are separated by a `:::` paragraph.
+- Parts are separated by a `<!-- stop -->` paragraph.
