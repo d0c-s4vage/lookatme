@@ -3,18 +3,18 @@ This module defines the text user interface (TUI) for lookatme
 """
 
 
+from collections import defaultdict
 import copy
 import threading
 import time
-from collections import defaultdict
 from queue import Queue
-
 import urwid
+
 
 import lookatme.config
 import lookatme.config as config
+from lookatme.contrib import shutdown_contribs, contrib_first
 import lookatme.render.markdown_block as lam_md
-from lookatme.contrib import contrib_first, shutdown_contribs
 from lookatme.utils import pile_or_listbox_add, spec_from_style
 
 
@@ -28,7 +28,7 @@ def text(style, data, align="left"):
 def root_urwid_widget(to_wrap):
     """This function is overridable by contrib extensions that need to specify
     the root urwid widget.
-
+    
     The return value *must* return either the ``to_wrap`` widget itself, or
     another widget that wraps the provided ``to_wrap`` widget.
     """
@@ -92,7 +92,7 @@ class SlideRenderer(threading.Thread):
 
     def stop(self):
         self.keep_running.clear()
-
+    
     def run(self):
         """Run the main render thread
         """
@@ -135,7 +135,7 @@ class SlideRenderer(threading.Thread):
             indentation.
           * ``loop`` - the ``urwid.MainLoop`` instance being used by lookatme.
             This won't usually be used, but is available if needed.
-
+        
         Main render functions (those defined in markdown_block.py) may have
         three types of return values:
 
@@ -161,7 +161,7 @@ class SlideRenderer(threading.Thread):
         self._log.debug(f"Rendered slide {slide_num} in {total}")
 
         return res
-
+    
     def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
         stack = [tmp_listbox]
@@ -188,8 +188,7 @@ class MarkdownTui(urwid.Frame):
         """
         """
         #self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
-        self.slide_body = urwid.ListBox(
-            urwid.SimpleFocusListWalker([urwid.Text("test")]))
+        self.slide_body = urwid.ListBox(urwid.SimpleFocusListWalker([urwid.Text("test")]))
         self.slide_title = text("", "", "center")
         self.top_spacing = urwid.Filler(self.slide_title, top=0, bottom=0)
         self.top_spacing_box = urwid.BoxAdapter(self.top_spacing, 1)
@@ -296,8 +295,7 @@ class MarkdownTui(urwid.Frame):
 
         self.bottom_spacing.top = padding["bottom"]
         self.bottom_spacing.bottom = margin["bottom"]
-        self.bottom_spacing_box.height = margin["bottom"] + \
-            1 + padding["bottom"]
+        self.bottom_spacing_box.height = margin["bottom"] + 1 + padding["bottom"]
 
     def update(self):
         """
@@ -355,6 +353,7 @@ class MarkdownTui(urwid.Frame):
 
     def run(self):
         self.loop.run()
+
 
 
 def create_tui(pres, start_slide=0):

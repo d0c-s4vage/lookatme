@@ -5,14 +5,15 @@ interface
 
 
 import contextlib
-
 import urwid
 
+
 import lookatme.config as config
-import lookatme.render.pygments as pygments_render
 from lookatme.contrib import contrib_first
+import lookatme.render.pygments as pygments_render
 from lookatme.utils import *
 from lookatme.widgets.clickable_text import LinkIndicatorSpec
+
 
 options = {}
 

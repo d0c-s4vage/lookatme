@@ -5,6 +5,7 @@ This module tests that markdown presentations can be correctly parsed
 
 import datetime
 
+
 from lookatme.parser import Parser
 
 

@@ -7,11 +7,13 @@ Contrib modules are directly used
 
 import contextlib
 
-import lookatme.ascii_art
-import lookatme.prompt
-from lookatme.exceptions import IgnoredByContrib
 
-from . import file_loader, terminal
+import lookatme.ascii_art
+from lookatme.exceptions import IgnoredByContrib
+import lookatme.prompt
+from . import terminal
+from . import file_loader
+
 
 CONTRIB_MODULES = []
 

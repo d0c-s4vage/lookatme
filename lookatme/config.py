@@ -5,7 +5,9 @@ Config module for lookatme
 
 import os
 
+
 import lookatme.log
+
 
 LOG = None
 STYLE = None

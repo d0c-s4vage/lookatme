@@ -6,14 +6,14 @@ This module contains code for ClickableText
 import urwid
 from urwid.util import is_mouse_press
 
+
 import lookatme.config as config
-from lookatme.utils import row_text, spec_from_style
+from lookatme.utils import spec_from_style, row_text
 
 
 class LinkIndicatorSpec(urwid.AttrSpec):
     """Used to track a link within an urwid.Text instance
     """
-
     def __init__(self, link_label, link_target, orig_spec):
         """Create a new LinkIndicator spec from an existing urwid.AttrSpec
 
@@ -23,8 +23,7 @@ class LinkIndicatorSpec(urwid.AttrSpec):
         self.link_label = link_label
         self.link_target = link_target
 
-        urwid.AttrSpec.__init__(
-            self, orig_spec.foreground, orig_spec.background)
+        urwid.AttrSpec.__init__(self, orig_spec.foreground, orig_spec.background)
 
 
 class ClickableText(urwid.Text):
@@ -65,7 +64,7 @@ class ClickableText(urwid.Text):
         if found_style is None or not isinstance(found_style, LinkIndicatorSpec):
             self._emit('click')
             return True
-
+        
         # it's a link, so change the text and update the RLE!
         if found_text == found_style.link_label:
             new_text = found_style.link_target
@@ -81,5 +80,5 @@ class ClickableText(urwid.Text):
         self._invalidate()
 
         self._emit("change")
-
+        
         return True

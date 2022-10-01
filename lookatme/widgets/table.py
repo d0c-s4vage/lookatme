@@ -4,11 +4,11 @@ Defines a basic Table widget for urwid
 
 
 from collections import defaultdict
-
 import urwid
 
-import lookatme.config as config
+
 from lookatme.render.markdown_block import render_text
+import lookatme.config as config
 from lookatme.utils import styled_text
 from lookatme.widgets.clickable_text import ClickableText
 
@@ -69,21 +69,19 @@ class Table(urwid.Pile):
                     self.watch(header),
                     urwid.Divider(config.STYLE["table"]["header_divider"]),
                 ])
-                header_columns.append(
-                    (self.column_maxes[idx], header_with_div))
+                header_columns.append((self.column_maxes[idx], header_with_div))
             final_rows.append(urwid.Columns(header_columns, cell_spacing))
 
         for row_idx, rend_row in enumerate(self.rend_rows):
             row_columns = []
             for cell_idx, rend_cell in enumerate(rend_row):
-                rend_widgets = [self.watch(rend_widget)
-                                for rend_widget in rend_cell]
+                rend_widgets = [self.watch(rend_widget) for rend_widget in rend_cell]
                 rend_pile = urwid.Pile(rend_widgets)
                 row_columns.append((self.column_maxes[cell_idx], rend_pile))
 
             column_row = urwid.Columns(row_columns, cell_spacing)
             final_rows.append(column_row)
-
+        
         urwid.Pile.__init__(self, final_rows)
 
     def render(self, *args, **kwargs):
@@ -91,7 +89,7 @@ class Table(urwid.Pile):
         """
         self.set_column_maxes()
         return urwid.Pile.render(self, *args, **kwargs)
-
+    
     def watch(self, w):
         """Watch the provided widget w for changes
         """
@@ -104,7 +102,7 @@ class Table(urwid.Pile):
 
         urwid.connect_signal(w, "change", wrapper)
         return w
-
+    
     def _invalidate(self):
         self.set_column_maxes()
         urwid.Pile._invalidate(self)

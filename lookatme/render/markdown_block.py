@@ -4,20 +4,20 @@ representations
 """
 
 
-import re
-import shlex
-
-import mistune
 import pygments
 import pygments.formatters
 import pygments.lexers
 import pygments.styles
+import mistune
+import re
+import shlex
 import urwid
 
+
 import lookatme.config as config
-import lookatme.render.markdown_inline as markdown_inline_renderer
-import lookatme.render.pygments as pygments_render
 from lookatme.contrib import contrib_first
+import lookatme.render.pygments as pygments_render
+import lookatme.render.markdown_inline as markdown_inline_renderer
 from lookatme.utils import *
 from lookatme.widgets.clickable_text import ClickableText
 

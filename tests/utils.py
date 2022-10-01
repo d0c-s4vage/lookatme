@@ -6,8 +6,9 @@ Defines utilities for testing lookatme
 import pytest
 import urwid
 
-import lookatme.tui
+
 from lookatme.parser import Parser
+import lookatme.tui
 
 
 def assert_render(correct_render, rendered, full_strip=False):
@@ -38,7 +39,7 @@ def render_markdown(markdown, height=50, width=200, single_slide=False):
 
     container = urwid.ListBox([urwid.Text("testing")])
     container.body = contents
-    return list(container.render((width, height)).content())
+    return list(container.render((width,height)).content())
 
 
 def spec_and_text(item):

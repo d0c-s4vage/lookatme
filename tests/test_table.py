@@ -4,6 +4,8 @@ This module tests the Table widget in lookatme/widgets/table.py
 
 
 import lookatme.widgets.table
+
+
 from tests.utils import *
 
 
@@ -96,7 +98,7 @@ def test_basic_render(mocker):
 def test_table_no_headers(mocker):
     """This situation could never happen as parsed from Markdown. See
     https://stackoverflow.com/a/17543474.
-
+    
     However this situation could happen manually when using the Table() class
     directly.
     """
