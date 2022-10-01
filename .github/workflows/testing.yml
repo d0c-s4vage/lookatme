@@ -45,4 +45,6 @@ jobs:
           pip install -r requirements.txt -r requirements.test.txt
       - name: Test
           pytest
-      -name
+      - name: Analyze with pyright
+        run: |
+          pyright lookatme tests
