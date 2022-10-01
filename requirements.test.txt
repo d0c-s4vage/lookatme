@@ -2,5 +2,8 @@ pytest
 pytest-xdist
 pytest-mock
 pytest-cov
-coveralls
+pyright
+isort
+flake8
+autopep8
 six
