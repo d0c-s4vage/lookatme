@@ -130,9 +130,16 @@ class Context:
         self._log.debug(indent + msg)
 
 
-    def inline_push(self, inline_result):
-        """Push a new inline render result onto the stack
+    def inline_push(self, inline_result: Union[urwid.Widget, str, Tuple[urwid.AttrSpec, str]]):
+        """Push a new inline render result onto the stack. Either a widget, or
+        text markup
         """
+        if isinstance(inline_result, str) and len(inline_result) == 0:
+            return
+        if isinstance(inline_result, tuple) and len(inline_result) == 2:
+            if len(inline_result[1]) == 0:
+                return
+
         self.in_new_block = False
         self.inline_render_results.append(inline_result)
 

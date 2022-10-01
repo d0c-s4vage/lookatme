@@ -34,7 +34,6 @@ def render(token, ctx: Context):
     a block token[""]
     """
     with ctx.level_inc():
-        #token_type = token["get"]_type().lower()
         token_type = token["type"].lower()
         fn = getattr(THIS_MOD, "render_{}".format(token_type), None)
         if fn is None:
