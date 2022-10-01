@@ -4,18 +4,18 @@ within a slide.
 """
 
 
-from marshmallow import fields, Schema
 import os
 import re
 import shlex
 import signal
+
 import urwid
 import yaml
+from marshmallow import Schema, fields
 
-
+import lookatme.config
 import lookatme.render
 from lookatme.exceptions import IgnoredByContrib
-import lookatme.config
 
 
 def user_warnings():
@@ -31,8 +31,8 @@ def user_warnings():
 
 
 class YamlRender:
-    loads = lambda data: yaml.safe_load(data)
-    dumps = lambda data: yaml.safe_dump(data)
+    def loads(data): return yaml.safe_load(data)
+    def dumps(data): return yaml.safe_dump(data)
 
 
 class TerminalExSchema(Schema):
@@ -73,14 +73,13 @@ def render_code(token, body, stack, loop):
             orig_command = term_data["command"]
             term_data["command"] = " ".join([shlex.quote(x) for x in [
                 "expect", "-c", ";".join([
-                   'spawn -noecho {}'.format(term_data["command"]),
+                    'spawn -noecho {}'.format(term_data["command"]),
                     'expect {{{}}}'.format(term_data["init_wait"]),
                     'send {{{}}}'.format(term_data["init_text"]),
                     'interact',
                     'exit',
                 ])
             ]])
-            
 
     term = urwid.Terminal(
         shlex.split(term_data["command"].strip()),
@@ -102,7 +101,7 @@ def render_code(token, body, stack, loop):
         res += lookatme.render.markdown_block.render_code(
             fake_token, body, stack, loop
         )
-    
+
     res += [
         urwid.Divider(),
         line_box,
@@ -114,6 +113,7 @@ def render_code(token, body, stack, loop):
 
 def shutdown():
     for idx, term in enumerate(CREATED_TERMS):
-        lookatme.config.LOG.debug(f"Terminating terminal {idx+1}/{len(CREATED_TERMS)}")
+        lookatme.config.LOG.debug(
+            f"Terminating terminal {idx+1}/{len(CREATED_TERMS)}")
         if term.pid is not None:
             term.terminate()

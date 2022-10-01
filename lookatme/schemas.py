@@ -4,9 +4,10 @@ Defines all schemas used in lookatme
 
 
 import datetime
-from marshmallow import Schema, fields, validate
+
 import pygments.styles
 import yaml
+from marshmallow import Schema, fields, validate
 
 
 class NoDatesSafeLoader(yaml.SafeLoader):
@@ -28,12 +29,14 @@ class NoDatesSafeLoader(yaml.SafeLoader):
             cls.yaml_implicit_resolvers[first_letter] = [
                 (tag, regexp) for tag, regexp in mappings if tag != tag_to_remove
             ]
+
+
 NoDatesSafeLoader.remove_implicit_resolver('tag:yaml.org,2002:timestamp')
 
 
 class YamlRender:
-    loads = lambda data: yaml.load(data, Loader=NoDatesSafeLoader)
-    dumps = lambda data: yaml.safe_dump(data, allow_unicode=True)
+    def loads(data): return yaml.load(data, Loader=NoDatesSafeLoader)
+    def dumps(data): return yaml.safe_dump(data, allow_unicode=True)
 
 
 class BulletsSchema(Schema):
@@ -53,9 +56,13 @@ class BulletsSchema(Schema):
             "10": fields.Str(dump_default="•"),
         }
 
+
 _NUMBERING_VALIDATION = validate.OneOf(["numeric", "alpha", "roman"])
+
+
 class NumberingSchema(Schema):
-    default = fields.Str(dump_default="numeric", validate=_NUMBERING_VALIDATION)
+    default = fields.Str(dump_default="numeric",
+                         validate=_NUMBERING_VALIDATION)
 
     class Meta:
         include = {
@@ -193,11 +200,15 @@ class StyleSchema(Schema):
         "right": 10,
     })
 
-    headings = fields.Nested(HeadingsSchema, dump_default=HeadingsSchema().dump(None))
-    bullets = fields.Nested(BulletsSchema, dump_default=BulletsSchema().dump(None))
-    numbering = fields.Nested(NumberingSchema, dump_default=NumberingSchema().dump(None))
+    headings = fields.Nested(
+        HeadingsSchema, dump_default=HeadingsSchema().dump(None))
+    bullets = fields.Nested(
+        BulletsSchema, dump_default=BulletsSchema().dump(None))
+    numbering = fields.Nested(
+        NumberingSchema, dump_default=NumberingSchema().dump(None))
     table = fields.Nested(TableSchema, dump_default=TableSchema().dump(None))
-    quote = fields.Nested(BlockQuoteSchema, dump_default=BlockQuoteSchema().dump(None))
+    quote = fields.Nested(
+        BlockQuoteSchema, dump_default=BlockQuoteSchema().dump(None))
     hrule = fields.Nested(HruleSchema, dump_default=HruleSchema().dump(None))
     link = fields.Nested(StyleFieldSchema, dump_default={
         "fg": "#33c,underline",

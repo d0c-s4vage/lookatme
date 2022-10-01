@@ -195,6 +195,7 @@ def listbox_add(listbox, widgets):
             continue
         listbox.body.append(w)
 
+
 def pile_add(pile, widgets):
     """
     """
@@ -217,16 +218,16 @@ def translate_color(raw_text):
 
     for at in raw_text.split("\x1b["):
         try:
-            attr, text = at.split("m",1)
+            attr, text = at.split("m", 1)
         except:
             attr = '0'
-            text = at.split("m",1)
+            text = at.split("m", 1)
 
-        list_attr = [ int(i) for i in attr.split(';') ]
+        list_attr = [int(i) for i in attr.split(';')]
         list_attr.sort()
         fg = -1
         bg = -1
-       
+
         for elem in list_attr:
             if elem <= 29:
                 pass
@@ -238,7 +239,7 @@ def translate_color(raw_text):
                 fg = fg + 8
             elif elem >= 100 and elem <= 104:
                 bg = bg + 8
-            
+
         fgcolor = color_list[fg]
         bgcolor = color_list[bg]
 
@@ -255,10 +256,12 @@ def translate_color(raw_text):
 
     return formated_text
 
+
 def int_to_roman(integer):
     integer = int(integer)
     ints = [1000, 900,  500, 400, 100,  90, 50,  40, 10,  9,   5,  4,   1]
-    nums = ["m",  "cm", "d", "cd","c", "xc","l","xl","x","ix","v","iv","i"]
+    nums = ["m",  "cm", "d", "cd", "c", "xc",
+            "l", "xl", "x", "ix", "v", "iv", "i"]
     result = []
     for i in range(len(ints)):
         count = integer // ints[i]

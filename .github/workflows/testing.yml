@@ -22,10 +22,10 @@ jobs:
           pip install -r requirements.test.txt
       - name: Check if imports are sorted
         run: |
-          isort --check --diff lookatme tests
+          bin/ci isort
       - name: Lint with flake8
         run: |
-          flake8 lookatme tests
+          bin/ci flake8
 
   unit-test:
     runs-on: ubuntu-latest
@@ -49,7 +49,7 @@ jobs:
           pip install -r requirements.txt -r requirements.test.txt
       - name: Test
         run: |
-          pytest
+          bin/ci pytest
       - name: Analyze with pyright
         run: |
-          pyright lookatme tests
+          bin/ci pyright

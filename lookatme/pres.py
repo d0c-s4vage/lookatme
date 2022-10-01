@@ -3,24 +3,25 @@ Defines Presentation specific objects
 """
 
 
-import mistune
 import os
 import threading
 import time
 
+import mistune
 
 import lookatme.config
 import lookatme.contrib
-from lookatme.parser import Parser
 import lookatme.prompt
 import lookatme.themes
 import lookatme.tui
+from lookatme.parser import Parser
 from lookatme.utils import dict_deep_update
 
 
 class Presentation(object):
     """Defines a presentation
     """
+
     def __init__(self, input_stream, theme, style_override=None, live_reload=False,
                  single_slide=False, preload_extensions=None, safe=False,
                  no_ext_warn=False, ignore_ext_failure=False):
@@ -32,7 +33,8 @@ class Presentation(object):
         self.preload_extensions = preload_extensions or []
         self.input_filename = None
         if hasattr(input_stream, "name"):
-            lookatme.config.SLIDE_SOURCE_DIR = os.path.dirname(input_stream.name)
+            lookatme.config.SLIDE_SOURCE_DIR = os.path.dirname(
+                input_stream.name)
             self.input_filename = input_stream.name
 
         self.style_override = style_override
@@ -44,7 +46,8 @@ class Presentation(object):
         self.ignore_ext_failure = ignore_ext_failure
         self.initial_load_complete = False
 
-        self.theme_mod = __import__("lookatme.themes." + theme, fromlist=[theme])
+        self.theme_mod = __import__(
+            "lookatme.themes." + theme, fromlist=[theme])
 
         if self.live_reload:
             self.reload_thread = threading.Thread(target=self.reload_watcher)
@@ -60,7 +63,7 @@ class Presentation(object):
         """
         if self.input_filename is None:
             return
-        
+
         last_mod_time = os.path.getmtime(self.input_filename)
         while True:
             try:
