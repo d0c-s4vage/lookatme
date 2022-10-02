@@ -52,7 +52,7 @@ class Table(urwid.Pile):
 
         self.column_maxes = self.calc_column_maxes()
 
-        cell_spacing = config.STYLE["table"]["column_spacing"]
+        cell_spacing = config.get_style()["table"]["column_spacing"]
         self.total_width = sum(self.column_maxes.values()) + (
             cell_spacing * (self.num_columns - 1)
         )
@@ -67,7 +67,8 @@ class Table(urwid.Pile):
                 header = header[0]
                 header_with_div = urwid.Pile([
                     self.watch(header),
-                    urwid.Divider(config.STYLE["table"]["header_divider"]),
+                    urwid.Divider(config.get_style()[
+                                  "table"]["header_divider"]),
                 ])
                 header_columns.append(
                     (self.column_maxes[idx], header_with_div))
@@ -113,7 +114,7 @@ class Table(urwid.Pile):
         """Calculate and set the column maxes for this table
         """
         self.column_maxes = self.calc_column_maxes()
-        cell_spacing = config.STYLE["table"]["column_spacing"]
+        cell_spacing = config.get_style()["table"]["column_spacing"]
         self.total_width = sum(self.column_maxes.values()) + (
             cell_spacing * (self.num_columns - 1)
         )

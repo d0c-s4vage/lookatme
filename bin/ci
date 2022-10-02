@@ -17,6 +17,7 @@ SUBCOMMAND="all"
 AUTOFIX=false
 COLOR=false
 RUN_PREFIX="run_boxed"
+FORWARDED_OPTS=()
 
 CODE_DIRS=(
     lookatme
@@ -65,7 +66,7 @@ function run_pytest {
         local color_opt=""
         [ "$COLOR" == true ] && color_opt="--color=yes"
 
-        $RUN_PREFIX pytest "$color_opt"
+        $RUN_PREFIX pytest $color_opt "$@"
     fi
 }
 
@@ -111,7 +112,7 @@ function run_all {
 
 function show_help {
     cat <<-EOF
-USAGE: ${THIS_PROG} [SUBCOMMAND] [--auto|--autofix] [--color]
+USAGE: ${THIS_PROG} [SUBCOMMAND] [--auto|--autofix] [--color] [-- fwd opts]
 
 This is a basic way to run CI locally for lookatme. This is the same script
 that lookatme's CI uses in GitHub actions. Running this script with zero
@@ -128,6 +129,7 @@ SUBCOMMAND may be one of the below values. The default is "all":
  --autofix  Run the command's autofix functionality
  --color    Run the command with color
  --plain    Do not box the output of the command, let it be printed plain
+ --         Forward all remaining options to the subcommand
 EOF
     exit 1
 }
@@ -154,6 +156,12 @@ function parse_args {
             --autofix|--auto)
                 AUTOFIX=true
                 ;;
+            --)
+                while [ $# -ne 0 ] ; do
+                    FORWARDED_OPTS+=("$1")
+                    shift
+                done
+                ;;
             *)
                 echo "[!] Unrecognized parameter $param"
                 echo
@@ -171,18 +179,18 @@ case "$SUBCOMMAND" in
         run_all
         ;;
     isort)
-        run_isort
+        run_isort "${FORWARDED_OPTS[@]}"
         ;;
     flake8)
-        run_flake8
+        run_flake8 "${FORWARDED_OPTS[@]}"
         ;;
     autopep8)
-        run_autopep8
+        run_autopep8 "${FORWARDED_OPTS[@]}"
         ;;
     pyright)
-        run_pyright
+        run_pyright "${FORWARDED_OPTS[@]}"
         ;;
     test|pytest)
-        run_pytest
+        run_pytest "${FORWARDED_OPTS[@]}"
         ;;
 esac

@@ -132,7 +132,7 @@ def link(link_uri, title, link_text):
     raw_link_text = "".join(raw_link_text)
 
     spec, text = utils.styled_text(
-        link_text, utils.spec_from_style(config.STYLE["link"]))
+        link_text, utils.spec_from_style(config.get_style()["link"]))
     spec = LinkIndicatorSpec(raw_link_text, link_uri, spec)
     return [(spec, text)]
 

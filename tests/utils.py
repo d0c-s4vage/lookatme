@@ -5,8 +5,17 @@ Defines utilities for testing lookatme
 
 import urwid
 
+import lookatme.config
 import lookatme.tui
 from lookatme.parser import Parser
+
+
+def setup_lookatme(tmpdir, mocker, style=None):
+    mocker.patch.object(lookatme.config, "LOG")
+    mocker.patch("lookatme.config.SLIDE_SOURCE_DIR", new=str(tmpdir))
+
+    if style is not None:
+        mocker.patch("lookatme.config.STYLE", new=style)
 
 
 def assert_render(correct_render, rendered, full_strip=False):

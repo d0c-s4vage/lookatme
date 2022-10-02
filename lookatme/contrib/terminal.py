@@ -110,7 +110,7 @@ def render_code(token, body, stack, loop):
 
 def shutdown():
     for idx, term in enumerate(CREATED_TERMS):
-        lookatme.config.LOG.debug(
+        lookatme.config.get_log().debug(
             f"Terminating terminal {idx+1}/{len(CREATED_TERMS)}")
         if term.pid is not None:
             term.terminate()

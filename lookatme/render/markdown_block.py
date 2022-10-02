@@ -63,7 +63,7 @@ def render_hrule(token, body, stack, loop):
     See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
     value descriptions.
     """
-    hrule_conf = config.STYLE["hrule"]
+    hrule_conf = config.get_style()["hrule"]
     div = urwid.Divider(hrule_conf['char'], top=1, bottom=1)
     return urwid.Pile([urwid.AttrMap(div, utils.spec_from_style(hrule_conf['style']))])
 
@@ -109,9 +109,9 @@ def render_heading(token, body, stack, loop):
 
     :returns: A list of urwid Widgets or a single urwid Widget
     """
-    headings = config.STYLE["headings"]
+    headings = config.get_style()["headings"]
     level = token["level"]
-    style = config.STYLE["headings"].get(str(level), headings["default"])
+    style = config.get_style()["headings"].get(str(level), headings["default"])
 
     prefix = utils.styled_text(style["prefix"], style)
     suffix = utils.styled_text(style["suffix"], style)
@@ -231,7 +231,7 @@ def _list_item_start(token, body, stack, loop):
     meta = _meta(stack[-1])
 
     if meta["ordered"]:
-        numbering = config.STYLE["numbering"]
+        numbering = config.get_style()["numbering"]
         list_marker_type = numbering.get(str(list_level), numbering["default"])
         sequence = {
             "numeric": lambda x: str(x),
@@ -240,7 +240,7 @@ def _list_item_start(token, body, stack, loop):
         }[list_marker_type]
         list_marker = sequence(curr_count) + "."
     else:
-        bullets = config.STYLE["bullets"]
+        bullets = config.get_style()["bullets"]
         list_marker = bullets.get(str(list_level), bullets["default"])
 
     marker_text = list_marker + " "
@@ -378,7 +378,7 @@ def render_block_quote_start(token, body, stack, loop):
     pile = urwid.Pile([])
     stack.append(pile)
 
-    styles = config.STYLE["quote"]
+    styles = config.get_style()["quote"]
 
     quote_side = styles["side"]
     quote_top_corner = styles["top_corner"]

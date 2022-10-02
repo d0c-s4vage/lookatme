@@ -55,14 +55,14 @@ def render_text(text, lang="text", style_name=None, plain=False):
     """Render the provided text with the pygments renderer
     """
     if style_name is None:
-        style_name = config.STYLE["style"]
+        style_name = config.get_style()["style"]
 
     lexer = get_lexer(lang)
     formatter, style_bg = get_formatter(style_name)
 
     start = time.time()
     code_tokens = lexer.get_tokens(text)
-    config.LOG.debug(f"Took {time.time()-start}s to render {len(text)} bytes")
+    config.get_log().debug(f"Took {time.time()-start}s to render {len(text)} bytes")
 
     markup = []
     for x in formatter.formatgenerator(code_tokens):

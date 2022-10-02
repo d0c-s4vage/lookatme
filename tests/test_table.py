@@ -3,24 +3,28 @@ This module tests the Table widget in lookatme/widgets/table.py
 """
 
 
+import pytest
+
 import lookatme.widgets.table
 import tests.utils as utils
 
+TEST_STYLE = {
+    "style": "monokai",
+    "table": {
+        "column_spacing": 3,
+        "header_divider": "&",
+    },
+}
 
-def test_basic_render(mocker):
+
+@pytest.fixture(autouse=True)
+def table_setup(tmpdir, mocker):
+    utils.setup_lookatme(tmpdir, mocker, style=TEST_STYLE)
+
+
+def test_basic_render(tmpdir, mocker):
     """Test that a Table widget renders correctly
     """
-    column_spacing = 3
-
-    fake_config = mocker.patch.object(lookatme.widgets.table, "config")
-    fake_config.STYLE = {
-        "style": "monokai",
-        "table": {
-            "column_spacing": column_spacing,
-            "header_divider": "&",
-        },
-    }
-
     headers = ["H1", "H2", "H3"]
     aligns = ["left", "center", "right"]
     rows = [
@@ -100,15 +104,6 @@ def test_table_no_headers(mocker):
     However this situation could happen manually when using the Table() class
     directly.
     """
-    fake_config = mocker.patch.object(lookatme.widgets.table, "config")
-    fake_config.STYLE = {
-        "style": "monokai",
-        "table": {
-            "column_spacing": 3,
-            "header_divider": "&",
-        },
-    }
-
     headers = None
     aligns = ["left", "center", "right"]
     rows = [
@@ -126,15 +121,6 @@ def test_table_no_headers(mocker):
 def test_ignored_extra_column(mocker):
     """Test that extra columns beyond header values are ignored
     """
-    fake_config = mocker.patch.object(lookatme.widgets.table, "config")
-    fake_config.STYLE = {
-        "style": "monokai",
-        "table": {
-            "column_spacing": 3,
-            "header_divider": "&",
-        },
-    }
-
     headers = ["H1", "H2", "H3"]
     aligns = ["left", "center", "right"]
     rows = [

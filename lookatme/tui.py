@@ -45,7 +45,7 @@ class SlideRenderer(threading.Thread):
         self.queue = Queue()
         self.loop = loop
         self.cache = {}
-        self._log = lookatme.config.LOG.getChild("RENDER")
+        self._log = lookatme.config.get_log().getChild("RENDER")
 
     def flush_cache(self):
         """Clea everything out of the queue and the cache.
@@ -192,7 +192,7 @@ class MarkdownTui(urwid.Frame):
         self.bottom_spacing = urwid.Filler(self.slide_footer, top=0, bottom=0)
         self.bottom_spacing_box = urwid.BoxAdapter(self.bottom_spacing, 1)
 
-        self._log = lookatme.config.LOG
+        self._log = lookatme.config.get_log()
 
         urwid.set_encoding('utf8')
         screen = urwid.raw_display.Screen()
@@ -239,24 +239,24 @@ class MarkdownTui(urwid.Frame):
             self.curr_slide.number + 1,
             len(self.pres.slides),
         )
-        spec = spec_from_style(config.STYLE["slides"])
+        spec = spec_from_style(config.get_style()["slides"])
         self.slide_num.set_text([(spec, slide_text)])
 
     def update_title(self):
         """Update the title
         """
         title = self.pres.meta.get("title", "")
-        spec = spec_from_style(config.STYLE["title"])
+        spec = spec_from_style(config.get_style()["title"])
         self.slide_title.set_text([(spec, f" {title} ")])
 
     def update_creation(self):
         """Update the author and date
         """
         author = self.pres.meta.get('author', '')
-        author_spec = spec_from_style(config.STYLE["author"])
+        author_spec = spec_from_style(config.get_style()["author"])
 
         date = self.pres.meta.get('date', '')
-        date_spec = spec_from_style(config.STYLE["date"])
+        date_spec = spec_from_style(config.get_style()["date"])
 
         self.creation.set_text([
             (author_spec, f"  {author} "),
@@ -272,8 +272,8 @@ class MarkdownTui(urwid.Frame):
     def update_slide_settings(self):
         """Update the slide margins and paddings
         """
-        margin = config.STYLE["margin"]
-        padding = config.STYLE["padding"]
+        margin = config.get_style()["margin"]
+        padding = config.get_style()["padding"]
 
         self.root_margins.left = margin["left"]
         self.root_margins.right = margin["right"]
@@ -343,12 +343,15 @@ class MarkdownTui(urwid.Frame):
         self.update()
 
     def _get_key(self, size, key):
+        """Resolve the key that was pressed.
+        """
         try:
             key = urwid.Frame.keypress(self, size, key)
             if key is None:
                 return
         except Exception:
             pass
+        return key
 
     def run(self):
         self.loop.run()

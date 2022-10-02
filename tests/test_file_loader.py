@@ -3,7 +3,10 @@ Test the file loader built-in extension
 """
 
 
+import pytest
+
 import lookatme.config
+import lookatme.contrib.file_loader
 import lookatme.render.pygments
 from tests.utils import assert_render, render_markdown
 
@@ -20,14 +23,19 @@ TEST_STYLE = {
 }
 
 
+@pytest.fixture(autouse=True)
+def file_loader_setup(tmpdir, mocker):
+    mocker.patch.object(lookatme.config, "LOG")
+    mocker.patch("lookatme.config.SLIDE_SOURCE_DIR", new=str(tmpdir))
+    mocker.patch("lookatme.contrib.CONTRIB_MODULES", new=[
+        lookatme.contrib.file_loader
+    ])
+    mocker.patch("lookatme.config.STYLE", new=TEST_STYLE)
+
+
 def test_file_loader(tmpdir, mocker):
     """Test the built-in file loader extension
     """
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
-    mocker.patch.object(lookatme.render.pygments, "config", fake_config)
-    fake_config.STYLE = TEST_STYLE
-
     tmppath = tmpdir.join("test.py")
     tmppath.write("print('hello')")
 
@@ -51,11 +59,6 @@ relative: false
 def test_file_loader_with_transform(tmpdir, mocker):
     """Test the built-in file loader extension
     """
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
-    mocker.patch.object(lookatme.render.pygments, "config", fake_config)
-    fake_config.STYLE = TEST_STYLE
-
     tmppath = tmpdir.join("test.py")
     tmppath.write("""
 Hello
@@ -89,12 +92,6 @@ transform: "grep -i apples | sort"
 def test_file_loader_relative(tmpdir, mocker):
     """Test the built-in file loader extension
     """
-    mocker.patch.object(lookatme.config, "LOG")
-    mocker.patch.object(lookatme.config, "SLIDE_SOURCE_DIR", str(tmpdir))
-    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
-    mocker.patch.object(lookatme.render.pygments, "config", fake_config)
-    fake_config.STYLE = TEST_STYLE
-
     tmppath = tmpdir.join("test.py")
     tmppath.write("print('hello')")
 
@@ -118,11 +115,6 @@ relative: true
 def test_file_loader_not_found(mocker):
     """Test the built-in file loader extension
     """
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
-    mocker.patch.object(lookatme.render.pygments, "config", fake_config)
-    fake_config.STYLE = TEST_STYLE
-
     rendered = render_markdown("""
 ```file
 path: does_not_exist.py

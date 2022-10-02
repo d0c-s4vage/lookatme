@@ -140,7 +140,7 @@ def main(debug, log_path, theme, code_style, dump_styles,
         if not debug:
             click.echo("Rerun with --debug to view the full traceback in logs")
         else:
-            lookatme.config.LOG.exception(
+            lookatme.config.get_log().exception(
                 f"Error rendering slide {number}: {e}")
             click.echo(f"See {log_path} for traceback")
         raise click.Abort()

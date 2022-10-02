@@ -61,7 +61,7 @@ def get_fg_bg_styles(style):
         res = [x.strip() for x in data.split(",")]
         return list(filter(None, res))
 
-    # from lookatme.config.STYLE
+    # from lookatme.config.get_style()
     if isinstance(style, dict):
         return non_empty_split(style["fg"]), non_empty_split(style["bg"])
     # just a str will only set the foreground color
