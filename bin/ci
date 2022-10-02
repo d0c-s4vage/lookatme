@@ -1,0 +1,188 @@
+#!/usr/bin/env bash
+
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+THIS_PROG="$0"
+
+set -o pipefail
+
+# load utility functions
+. "${DIR}/_utils.sh"
+
+# -----------------------------------------------------------------
+# Main Functions --------------------------------------------------
+# -----------------------------------------------------------------
+
+SUBCOMMAND="all"
+AUTOFIX=false
+COLOR=false
+RUN_PREFIX="run_boxed"
+
+CODE_DIRS=(
+    lookatme
+    tests
+)
+
+function run_flake8 {
+    if [ "$AUTOFIX" == "true" ] ; then
+        log "No autofix for flake8"
+    else
+        local exit_code=0
+        local color_opt=""
+        [ "$COLOR" == true ] && color_opt="--color always"
+
+        $RUN_PREFIX flake8 "${CODE_DIRS[@]}" $color_opt \
+            --count \
+            --select=E9,F63,F7,F82 \
+            --show-source \
+            --statistics
+        [ $? -ne 0 ] && exit_code=1
+
+        $RUN_PREFIX flake8 "${CODE_DIRS[@]}" $color_opt \
+            --count \
+            --exit-zero \
+            --max-complexity=10 \
+            --max-line-length=127 \
+            --statistics
+        [ $? -ne 0 ] && exit_code=1
+
+        return $exit_code
+    fi
+}
+
+function run_autopep8 {
+    if [ "$AUTOFIX" == "true" ] ; then
+        $RUN_PREFIX autopep8 -r --in-place "${CODE_DIRS[@]}"
+    else
+        log "autopep8 is only used with --autofix"
+    fi
+}
+
+function run_pytest {
+    if [ "$AUTOFIX" == "true" ] ; then
+        log "🤣 LOL, no autofix for pytest!"
+    else
+        local color_opt=""
+        [ "$COLOR" == true ] && color_opt="--color=yes"
+
+        $RUN_PREFIX pytest "$color_opt"
+    fi
+}
+
+function run_isort {
+    if [ "$AUTOFIX" == "true" ] ; then
+        $RUN_PREFIX isort "${CODE_DIRS[@]}"
+    else
+        $RUN_PREFIX isort --check --diff "${CODE_DIRS[@]}"
+    fi
+}
+
+function run_pyright {
+    if [ "$AUTOFIX" == "true" ] ; then
+        log "🤣 LOL, no autofix for pyright!"
+    else
+        if [ "$COLOR" == true ] ; then
+            pyright "${CODE_DIRS[@]}"
+        else
+            $RUN_PREFIX pyright "${CODE_DIRS[@]}"
+        fi
+    fi
+}
+
+function run_all {
+    check_deps --log \
+        isort \
+        flake8 \
+        pytest \
+        autopep8 \
+        pyright
+    if [ $? -ne 0 ] ; then
+        log "Can't run all, did you forget to use a virtual environment?"
+        exit 1
+    fi
+
+    run_with_summary \
+        run_isort \
+        run_flake8 \
+        run_autopep8 \
+        run_pyright \
+        run_pytest
+}
+
+function show_help {
+    cat <<-EOF
+USAGE: ${THIS_PROG} [SUBCOMMAND] [--auto|--autofix] [--color]
+
+This is a basic way to run CI locally for lookatme. This is the same script
+that lookatme's CI uses in GitHub actions. Running this script with zero
+arguments (or the subcommand "all") will run all linting/analysis/tests that
+CI runs.
+
+SUBCOMMAND may be one of the below values. The default is "all":
+       all - Run all commands
+     isort - Run isort
+    pytest - Run pytest tests
+    flake8 - Run flake8
+  autopep8 - Run autopep8
+
+ --autofix  Run the command's autofix functionality
+ --color    Run the command with color
+ --plain    Do not box the output of the command, let it be printed plain
+EOF
+    exit 1
+}
+
+function parse_args {
+    while [ $# -ne 0 ] ; do
+        param="$1"
+        shift
+
+        case "$param" in
+            --help|-h)
+                show_help
+                exit 1
+                ;;
+            all|pytest|flake8|test|isort|autopep8|pyright)
+                SUBCOMMAND="$param"
+                ;;
+            --plain)
+                RUN_PREFIX=""
+                ;;
+            --color)
+                COLOR=true
+                ;;
+            --autofix|--auto)
+                AUTOFIX=true
+                ;;
+            *)
+                echo "[!] Unrecognized parameter $param"
+                echo
+                show_help
+                exit 1
+                ;;
+        esac
+    done
+}
+
+parse_args "$@"
+
+case "$SUBCOMMAND" in
+    all)
+        run_all
+        ;;
+    isort)
+        run_isort
+        ;;
+    flake8)
+        run_flake8
+        ;;
+    autopep8)
+        run_autopep8
+        ;;
+    pyright)
+        run_pyright
+        ;;
+    test|pytest)
+        run_pytest
+        ;;
+esac
