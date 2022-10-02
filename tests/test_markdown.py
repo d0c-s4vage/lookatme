@@ -3,14 +3,11 @@ Test basic markdown renderings
 """
 
 
-import urwid
-
 import lookatme.config
 import lookatme.render.markdown_block
 import lookatme.render.pygments
 import lookatme.tui
-from lookatme.parser import Parser
-from tests.utils import assert_render, render_markdown, row_text, spec_and_text
+from tests.utils import assert_render, render_markdown, row_text
 
 TEST_STYLE = {
     "style": "monokai",
@@ -307,7 +304,7 @@ def test_empty_codeblock(mocker):
         "style": "monokai",
     }
 
-    rendered = render_markdown("""
+    render_markdown("""
 ```python
 
 ```""")

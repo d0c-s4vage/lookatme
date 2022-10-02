@@ -5,6 +5,7 @@
 import time
 
 import pygments
+import pygments.lexers
 import pygments.util
 import urwid
 from pygments.formatter import Formatter
@@ -98,7 +99,6 @@ class UrwidFormatter(Formatter):
                 default: 256"""
         self.usebold = options.get('usebold', True)
         self.usebg = options.get('usebg', True)
-        colors = options.get('colors', 256)
         self.style_attrs = {}
         Formatter.__init__(self, **options)
 
@@ -147,7 +147,7 @@ class UrwidFormatter(Formatter):
         return bestcol.foreground
 
     def findclosestattr(self, fgcolstr=None, bgcolstr=None, othersettings='', colors=256):
-        """Takes two hex colstring (e.g. 'ff00dd') and returns the 
+        """Takes two hex colstring (e.g. 'ff00dd') and returns the
         nearest urwid style."""
         fg = bg = 'default'
         if fgcolstr:
@@ -159,7 +159,7 @@ class UrwidFormatter(Formatter):
         return urwid.AttrSpec(fg, bg, colors)
 
     def _setup_styles(self, colors=256):
-        """Fills self.style_attrs with urwid.AttrSpec attributes 
+        """Fills self.style_attrs with urwid.AttrSpec attributes
         corresponding to the closest equivalents to the given style."""
         for ttype, ndef in self.style:
             fgcolstr = bgcolstr = None
@@ -174,7 +174,7 @@ class UrwidFormatter(Formatter):
                 fgcolstr, bgcolstr, othersettings, colors)
 
     def formatgenerator(self, tokensource):
-        """Takes a token source, and generates 
+        """Takes a token source, and generates
         (tokenstring, urwid.AttrSpec) pairs"""
         for (ttype, tstring) in tokensource:
             parts = str(ttype).split(".")

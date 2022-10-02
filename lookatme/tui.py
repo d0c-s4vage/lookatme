@@ -312,12 +312,9 @@ class MarkdownTui(urwid.Frame):
         """Handle keypress events
         """
         self._log.debug(f"KEY: {key}")
-        try:
-            key = urwid.Frame.keypress(self, size, key)
-            if key is None:
-                return
-        except Exception:
-            pass
+        key = self._get_key(size, key)
+        if key is None:
+            return
 
         slide_direction = 0
         if key in ["left", "backspace", "delete", "h", "k"]:
@@ -344,6 +341,14 @@ class MarkdownTui(urwid.Frame):
 
         self.curr_slide = self.pres.slides[new_slide_num]
         self.update()
+
+    def _get_key(self, size, key):
+        try:
+            key = urwid.Frame.keypress(self, size, key)
+            if key is None:
+                return
+        except Exception:
+            pass
 
     def run(self):
         self.loop.run()

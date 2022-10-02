@@ -4,7 +4,7 @@ This module tests the Table widget in lookatme/widgets/table.py
 
 
 import lookatme.widgets.table
-from tests.utils import *
+import tests.utils as utils
 
 
 def test_basic_render(mocker):
@@ -40,54 +40,54 @@ def test_basic_render(mocker):
     assert len(content) == 4
 
     header_row = content[0]
-    spec, text = spec_and_text(header_row[0])
+    spec, text = utils.spec_and_text(header_row[0])
     assert "bold" in spec.foreground
     assert text == b"H1"
-    spec, text = spec_and_text(header_row[2])
+    spec, text = utils.spec_and_text(header_row[2])
     assert "bold" in spec.foreground
     assert text == b"H2"
-    spec, text = spec_and_text(header_row[5])
+    spec, text = utils.spec_and_text(header_row[5])
     assert "bold" in spec.foreground
     assert text == b"H3"
 
     divider_row = content[1]
-    spec, text = spec_and_text(divider_row[0])
+    spec, text = utils.spec_and_text(divider_row[0])
     # no styling applied to the divider
     assert spec is None
     assert text == b"&&"
-    spec, text = spec_and_text(divider_row[2])
+    spec, text = utils.spec_and_text(divider_row[2])
     # no styling applied to the divider
     assert spec is None
     assert text == b"&&"
-    spec, text = spec_and_text(divider_row[4])
+    spec, text = utils.spec_and_text(divider_row[4])
     # no styling applied to the divider
     assert spec is None
     assert text == b"&&&"
 
     content_row1 = content[2]
-    spec, text = spec_and_text(content_row1[0])
+    spec, text = utils.spec_and_text(content_row1[0])
     # no styling applied to this row
     assert spec is None
     assert text == b"1 "
-    spec, text = spec_and_text(content_row1[2])
+    spec, text = utils.spec_and_text(content_row1[2])
     # no styling applied to this row
     assert spec is None
     assert text == b"22"
-    spec, text = spec_and_text(content_row1[4])
+    spec, text = utils.spec_and_text(content_row1[4])
     # no styling applied to this row
     assert spec is None
     assert text == b"333"
 
     content_row1 = content[3]
-    spec, text = spec_and_text(content_row1[0])
+    spec, text = utils.spec_and_text(content_row1[0])
     # no styling applied to this row
     assert "italics" in spec.foreground
     assert text == b"1"
-    spec, text = spec_and_text(content_row1[3])
+    spec, text = utils.spec_and_text(content_row1[3])
     # no styling applied to this row
     assert "strikethrough" in spec.foreground
     assert text == b"22"
-    spec, text = spec_and_text(content_row1[5])
+    spec, text = utils.spec_and_text(content_row1[5])
     # no styling applied to this row
     assert "underline" in spec.foreground
     assert text == b"333"
@@ -149,7 +149,7 @@ def test_ignored_extra_column(mocker):
 
     # number of rows of output
     assert len(content) == 5
-    assert b"4" not in row_text(content[-2])
+    assert b"4" not in utils.row_text(content[-2])
 
-    assert b"4" not in row_text(content[-1])
-    assert b"5" not in row_text(content[-1])
+    assert b"4" not in utils.row_text(content[-1])
+    assert b"5" not in utils.row_text(content[-1])

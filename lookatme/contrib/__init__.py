@@ -1,17 +1,16 @@
 """
 This module handles loading and using lookatme_contriba modules
 
-Contrib modules are directly used 
+Contrib modules are directly used
 """
 
 
 import contextlib
+from typing import List
 
 import lookatme.ascii_art
 import lookatme.prompt
 from lookatme.exceptions import IgnoredByContrib
-
-from . import file_loader, terminal
 
 CONTRIB_MODULES = []
 
@@ -60,6 +59,10 @@ def load_contribs(contrib_names, safe_contribs, ignore_load_failure=False):
                     all_warnings.append((contrib_name, ext_warnings))
             CONTRIB_MODULES.append(mod)
 
+
+def _handle_load_errors_warnings(errors: List[str], all_warnings: List[str]):
+    """Handle all load errors and warnings from loading contrib modules
+    """
     if len(errors) > 0:
         raise Exception(
             "Error loading one or more extensions:\n\n" + "\n".join(errors),

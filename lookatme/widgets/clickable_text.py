@@ -6,9 +6,6 @@ This module contains code for ClickableText
 import urwid
 from urwid.util import is_mouse_press
 
-import lookatme.config as config
-from lookatme.utils import row_text, spec_from_style
-
 
 class LinkIndicatorSpec(urwid.AttrSpec):
     """Used to track a link within an urwid.Text instance
@@ -38,9 +35,6 @@ class ClickableText(urwid.Text):
         """
         if button != 1 or not is_mouse_press(event):
             return False
-
-        rendered = self.render(size).content()
-        total_text = b"\n".join(row_text(x) for x in rendered)
 
         total_offset = (y * size[0]) + x
 

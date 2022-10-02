@@ -3,7 +3,6 @@ Defines utilities for testing lookatme
 """
 
 
-import pytest
 import urwid
 
 import lookatme.tui

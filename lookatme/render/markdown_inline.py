@@ -6,12 +6,10 @@ interface
 
 import contextlib
 
-import urwid
-
 import lookatme.config as config
 import lookatme.render.pygments as pygments_render
+import lookatme.utils as utils
 from lookatme.contrib import contrib_first
-from lookatme.utils import *
 from lookatme.widgets.clickable_text import LinkIndicatorSpec
 
 options = {}
@@ -133,7 +131,8 @@ def link(link_uri, title, link_text):
             raw_link_text.append(x)
     raw_link_text = "".join(raw_link_text)
 
-    spec, text = styled_text(link_text, spec_from_style(config.STYLE["link"]))
+    spec, text = utils.styled_text(
+        link_text, utils.spec_from_style(config.STYLE["link"]))
     spec = LinkIndicatorSpec(raw_link_text, link_uri, spec)
     return [(spec, text)]
 
@@ -146,7 +145,7 @@ def double_emphasis(text, old_styles):
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    return [styled_text(text, "underline", old_styles)]
+    return [utils.styled_text(text, "underline", old_styles)]
 
 
 @expanded_styles
@@ -157,7 +156,7 @@ def emphasis(text, old_styles):
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    return [styled_text(text, "italics", old_styles)]
+    return [utils.styled_text(text, "italics", old_styles)]
 
 
 @expanded_styles
@@ -195,4 +194,4 @@ def strikethrough(text, old_styles):
     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
         tuples.
     """
-    return [styled_text(text, "strikethrough", old_styles)]
+    return [utils.styled_text(text, "strikethrough", old_styles)]

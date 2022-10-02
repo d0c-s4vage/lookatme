@@ -5,6 +5,7 @@ This module defines the parser for the markdown presentation file
 
 import re
 from collections import defaultdict
+from typing import Callable, Dict, List
 
 import mistune
 
@@ -54,6 +55,7 @@ class Parser(object):
         tokens = md.block.parse(input_data, state)
 
         num_hrules, hinfo = self._scan_for_smart_split(tokens)
+        keep_split_token = True
 
         if self._single_slide:
             def slide_split_check(token):
@@ -85,6 +87,21 @@ class Parser(object):
                 pass
             keep_split_token = False
 
+        slides = self._split_tokens_into_slides(
+            tokens, slide_split_check, heading_mod, keep_split_token)
+
+        return "", slides
+
+    def _split_tokens_into_slides(
+            self,
+            tokens: List[Dict],
+            slide_split_check: Callable,
+            heading_mod: Callable,
+            keep_split_token: bool
+    ) -> List[Slide]:
+        """Split the provided tokens into slides using the slide_split_check
+        and heading_mod arguments.
+        """
         slides = []
         curr_slide_tokens = []
         for token in tokens:
@@ -98,7 +115,7 @@ class Parser(object):
                     pass
                 else:
                     slides.extend(self._create_slides(
-                        curr_slide_tokens, md, len(slides)))
+                        curr_slide_tokens, len(slides)))
                 curr_slide_tokens = []
                 if keep_split_token:
                     curr_slide_tokens.append(token)
@@ -106,9 +123,9 @@ class Parser(object):
             else:
                 curr_slide_tokens.append(token)
 
-        slides.extend(self._create_slides(curr_slide_tokens, md, len(slides)))
+        slides.extend(self._create_slides(curr_slide_tokens, len(slides)))
 
-        return "", slides
+        return slides
 
     def _scan_for_smart_split(self, tokens):
         """Scan the provided tokens for the number of hrules, and the lowest
@@ -184,20 +201,19 @@ class Parser(object):
         data = MetaSchema().loads(yaml_data)
         return new_input, data
 
-    def _create_slides(self, tokens, md, number):
+    def _create_slides(self, tokens, number):
         """Iterate on tokens and create slides out of them. Can create multiple
         slides if the tokens contain progressive slide delimiters.
 
         :param list tokens: The tokens to create slides out of
-        :param mistune.Markdown md: The Markdown instance to pass to the Slide class
         :param int number: The starting slide number
         :returns: A list of Slides
         """
         slide_tokens = []
         for token in tokens:
             if is_progressive_slide_delimiter_token(token):
-                yield Slide(slide_tokens[:], md, number)
+                yield Slide(slide_tokens[:], number)
                 number += 1
             else:
                 slide_tokens.append(token)
-        yield Slide(slide_tokens, md, number)
+        yield Slide(slide_tokens, number)

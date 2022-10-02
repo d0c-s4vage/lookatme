@@ -39,7 +39,7 @@ def test_parse_metadata_empty():
     """Test that metadata can be correctly parsed out of a markdown
     presentation
     """
-    input_data = f"""
+    input_data = """
 ---
 ---
 remaining

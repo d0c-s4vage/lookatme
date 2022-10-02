@@ -4,10 +4,8 @@ within a slide.
 """
 
 
-import os
 import re
 import shlex
-import signal
 
 import urwid
 import yaml
@@ -70,7 +68,6 @@ def render_code(token, body, stack, loop):
         term_data = TerminalExSchema().loads(token["text"])
 
         if term_data["init_text"] is not None and term_data["init_wait"] is not None:
-            orig_command = term_data["command"]
             term_data["command"] = " ".join([shlex.quote(x) for x in [
                 "expect", "-c", ";".join([
                     'spawn -noecho {}'.format(term_data["command"]),

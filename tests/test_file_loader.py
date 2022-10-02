@@ -4,9 +4,8 @@ Test the file loader built-in extension
 
 
 import lookatme.config
-import lookatme.contrib.file_loader as file_loader
 import lookatme.render.pygments
-from tests.utils import assert_render, render_markdown, row_text, spec_and_text
+from tests.utils import assert_render, render_markdown
 
 TEST_STYLE = {
     "style": "monokai",
@@ -99,7 +98,7 @@ def test_file_loader_relative(tmpdir, mocker):
     tmppath = tmpdir.join("test.py")
     tmppath.write("print('hello')")
 
-    rendered = render_markdown(f"""
+    rendered = render_markdown("""
 ```file
 path: test.py
 relative: true
@@ -124,7 +123,7 @@ def test_file_loader_not_found(mocker):
     mocker.patch.object(lookatme.render.pygments, "config", fake_config)
     fake_config.STYLE = TEST_STYLE
 
-    rendered = render_markdown(f"""
+    rendered = render_markdown("""
 ```file
 path: does_not_exist.py
 ```
