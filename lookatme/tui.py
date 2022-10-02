@@ -3,18 +3,18 @@ This module defines the text user interface (TUI) for lookatme
 """
 
 
-from collections import defaultdict
 import copy
 import threading
 import time
+from collections import defaultdict
 from queue import Queue
-import urwid
 
+import urwid
 
 import lookatme.config
 import lookatme.config as config
-from lookatme.contrib import shutdown_contribs, contrib_first
 import lookatme.render.markdown_block as lam_md
+from lookatme.contrib import contrib_first
 from lookatme.utils import pile_or_listbox_add, spec_from_style
 
 
@@ -28,7 +28,7 @@ def text(style, data, align="left"):
 def root_urwid_widget(to_wrap):
     """This function is overridable by contrib extensions that need to specify
     the root urwid widget.
-    
+
     The return value *must* return either the ``to_wrap`` widget itself, or
     another widget that wraps the provided ``to_wrap`` widget.
     """
@@ -75,12 +75,6 @@ class SlideRenderer(threading.Thread):
             raise res
         return res
 
-    def get_slide(self, slide_number):
-        """Fetch the slide from the cache
-        """
-        self.locks[slide_number].wait()
-        return self.cache[slide.number]
-
     def _propagate_meta(self, item1, item2):
         """Copy the metadata from item1 to item2
         """
@@ -92,7 +86,7 @@ class SlideRenderer(threading.Thread):
 
     def stop(self):
         self.keep_running.clear()
-    
+
     def run(self):
         """Run the main render thread
         """
@@ -135,7 +129,7 @@ class SlideRenderer(threading.Thread):
             indentation.
           * ``loop`` - the ``urwid.MainLoop`` instance being used by lookatme.
             This won't usually be used, but is available if needed.
-        
+
         Main render functions (those defined in markdown_block.py) may have
         three types of return values:
 
@@ -161,7 +155,7 @@ class SlideRenderer(threading.Thread):
         self._log.debug(f"Rendered slide {slide_num} in {total}")
 
         return res
-    
+
     def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
         stack = [tmp_listbox]
@@ -171,7 +165,6 @@ class SlideRenderer(threading.Thread):
             last_stack = stack[-1]
             last_stack_len = len(stack)
 
-            #render_token = getattr(lam_md, f"render_{token['type']}", lambda *args: None)
             render_token = getattr(lam_md, f"render_{token['type']}")
             res = render_token(token, stack[-1], stack, self.loop)
             if len(stack) > last_stack_len:
@@ -187,8 +180,8 @@ class MarkdownTui(urwid.Frame):
     def __init__(self, pres, start_idx=0):
         """
         """
-        #self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
-        self.slide_body = urwid.ListBox(urwid.SimpleFocusListWalker([urwid.Text("test")]))
+        self.slide_body = urwid.ListBox(
+            urwid.SimpleFocusListWalker([urwid.Text("test")]))
         self.slide_title = text("", "", "center")
         self.top_spacing = urwid.Filler(self.slide_title, top=0, bottom=0)
         self.top_spacing_box = urwid.BoxAdapter(self.top_spacing, 1)
@@ -246,7 +239,6 @@ class MarkdownTui(urwid.Frame):
             self.curr_slide.number + 1,
             len(self.pres.slides),
         )
-        date = self.pres.meta.get('date', '')
         spec = spec_from_style(config.STYLE["slides"])
         self.slide_num.set_text([(spec, slide_text)])
 
@@ -295,7 +287,8 @@ class MarkdownTui(urwid.Frame):
 
         self.bottom_spacing.top = padding["bottom"]
         self.bottom_spacing.bottom = margin["bottom"]
-        self.bottom_spacing_box.height = margin["bottom"] + 1 + padding["bottom"]
+        self.bottom_spacing_box.height = margin["bottom"] + \
+            1 + padding["bottom"]
 
     def update(self):
         """
@@ -323,7 +316,7 @@ class MarkdownTui(urwid.Frame):
             key = urwid.Frame.keypress(self, size, key)
             if key is None:
                 return
-        except:
+        except Exception:
             pass
 
         slide_direction = 0
@@ -337,23 +330,23 @@ class MarkdownTui(urwid.Frame):
         elif key == "r":
             self.reload()
 
-        if slide_direction != 0:
-            new_slide_num = self.curr_slide.number + slide_direction
-            if new_slide_num < 0:
-                new_slide_num = 0
-            elif new_slide_num >= len(self.pres.slides):
-                new_slide_num = len(self.pres.slides) - 1
-
-            if new_slide_num == self.curr_slide.number:
-                return
-
-            self.curr_slide = self.pres.slides[new_slide_num]
-            self.update()
+        if slide_direction == 0:
             return
+
+        new_slide_num = self.curr_slide.number + slide_direction
+        if new_slide_num < 0:
+            new_slide_num = 0
+        elif new_slide_num >= len(self.pres.slides):
+            new_slide_num = len(self.pres.slides) - 1
+
+        if new_slide_num == self.curr_slide.number:
+            return
+
+        self.curr_slide = self.pres.slides[new_slide_num]
+        self.update()
 
     def run(self):
         self.loop.run()
-
 
 
 def create_tui(pres, start_slide=0):

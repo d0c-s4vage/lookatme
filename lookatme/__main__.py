@@ -5,18 +5,16 @@ This is the main CLI for lookatme
 """
 
 
-import click
-import logging
 import io
 import os
-import pygments.styles
-import sys
 import tempfile
 
+import click
+import pygments.styles
 
-import lookatme.tui
-import lookatme.log
 import lookatme.config
+import lookatme.log
+import lookatme.tui
 from lookatme.pres import Presentation
 from lookatme.schemas import StyleSchema
 
@@ -105,7 +103,7 @@ def main(debug, log_path, theme, code_style, dump_styles,
          input_files, live_reload, extensions, single_slide, safe, no_ext_warn,
          ignore_ext_failure):
     """lookatme - An interactive, terminal-based markdown presentation tool.
-    
+
     See https://lookatme.readthedocs.io/en/v{{VERSION}} for documentation
     """
     if debug:
@@ -142,7 +140,8 @@ def main(debug, log_path, theme, code_style, dump_styles,
         if not debug:
             click.echo("Rerun with --debug to view the full traceback in logs")
         else:
-            lookatme.config.LOG.exception(f"Error rendering slide {number}: {e}")
+            lookatme.config.LOG.exception(
+                f"Error rendering slide {number}: {e}")
             click.echo(f"See {log_path} for traceback")
         raise click.Abort()
 

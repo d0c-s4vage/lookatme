@@ -5,16 +5,12 @@ Test basic markdown renderings
 
 import urwid
 
-
 import lookatme.config
 import lookatme.render.markdown_block
 import lookatme.render.pygments
-from lookatme.parser import Parser
 import lookatme.tui
-
-
-from tests.utils import spec_and_text, row_text, render_markdown, assert_render
-
+from lookatme.parser import Parser
+from tests.utils import assert_render, render_markdown, row_text, spec_and_text
 
 TEST_STYLE = {
     "style": "monokai",
@@ -163,6 +159,7 @@ def test_lists_with_newline(mocker):
     ]
     assert_render(stripped_rows, rendered)
 
+
 def test_numbered_lists(mocker):
     """Test list rendering
     """
@@ -275,6 +272,7 @@ def test_block_quote(mocker):
         b'',
     ]
     assert_render(stripped_rows, rendered)
+
 
 def test_code(mocker):
     """Test code block rendering
@@ -403,4 +401,4 @@ def test_inline(mocker):
 #      assert len(rendered) == 1
 #      assert rendered[0][0][0].foreground == "default,underline"
 #      assert row_text(rendered[0]).rstrip() == b"link"
-#  
+#

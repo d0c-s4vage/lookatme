@@ -1,6 +1,6 @@
 """
 Slide info holder
-""" 
+"""
 
 
 import mistune

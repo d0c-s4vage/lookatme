@@ -6,10 +6,7 @@ Test the file loader built-in extension
 import lookatme.config
 import lookatme.contrib.file_loader as file_loader
 import lookatme.render.pygments
-
-
-from tests.utils import spec_and_text, row_text, render_markdown, assert_render
-
+from tests.utils import assert_render, render_markdown, row_text, spec_and_text
 
 TEST_STYLE = {
     "style": "monokai",

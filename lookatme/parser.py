@@ -3,12 +3,10 @@ This module defines the parser for the markdown presentation file
 """
 
 
-from collections import defaultdict
-from marshmallow import fields, Schema
-import mistune
 import re
-import yaml
+from collections import defaultdict
 
+import mistune
 
 from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
@@ -41,7 +39,7 @@ class Parser(object):
         input_data, meta = self.parse_meta(input_data)
         input_data, slides = self.parse_slides(meta, input_data)
         return meta, slides
-    
+
     def parse_slides(self, meta, input_data):
         """Parse the Slide out of the input data
 
@@ -60,16 +58,19 @@ class Parser(object):
         if self._single_slide:
             def slide_split_check(token):
                 False
+
             def heading_mod(token):
                 pass
         elif num_hrules == 0:
             if meta["title"] in ["", None]:
                 meta["title"] = hinfo["title"]
+
             def slide_split_check(token):
                 return (
                     token["type"] == "heading"
                     and token["level"] == hinfo["lowest_non_title"]
                 )
+
             def heading_mod(token):
                 token["level"] = max(
                     token["level"] - (hinfo["title_level"] or 0),
@@ -79,6 +80,7 @@ class Parser(object):
         else:
             def slide_split_check(token):
                 return token["type"] == "hrule"
+
             def heading_mod(token):
                 pass
             keep_split_token = False
@@ -95,7 +97,8 @@ class Parser(object):
                 if keep_split_token and len(slides) == 0 and len(curr_slide_tokens) == 0:
                     pass
                 else:
-                    slides.extend(self._create_slides(curr_slide_tokens, md, len(slides)))
+                    slides.extend(self._create_slides(
+                        curr_slide_tokens, md, len(slides)))
                 curr_slide_tokens = []
                 if keep_split_token:
                     curr_slide_tokens.append(token)
@@ -140,7 +143,7 @@ class Parser(object):
         hinfo["lowest_non_title"] = low_level
 
         return num_hrules, hinfo
-    
+
     def parse_meta(self, input_data):
         """Parse the PresentationMeta out of the input data
 
@@ -172,7 +175,7 @@ class Parser(object):
 
         if not found_first:
             return input_data, MetaSchema().load({})
-        
+
         new_input = input_data[skipped_chars:]
         if len(yaml_data) == 0:
             return new_input, MetaSchema().load({})
