@@ -6,11 +6,12 @@ source data in a terminal on the same slide.
 """
 
 
-from marshmallow import fields, Schema
 import os
 import subprocess
-import yaml
+from typing import Dict
 
+import yaml
+from marshmallow import Schema, fields
 
 import lookatme.config
 from lookatme.exceptions import IgnoredByContrib
@@ -30,8 +31,10 @@ def user_warnings():
 
 
 class YamlRender:
-    loads = lambda data: yaml.safe_load(data)
-    dumps = lambda data: yaml.safe_dump(data)
+    @staticmethod
+    def loads(data): return yaml.safe_load(data)
+    @staticmethod
+    def dumps(data): return yaml.safe_dump(data)
 
 
 class LineRange(Schema):
@@ -52,6 +55,18 @@ class FileSchema(Schema):
 
     class Meta:
         render_module = YamlRender
+
+    def loads(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).loads(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not loads")
+        return res
+
+    def load(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).load(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not load")
+        return res
 
 
 def transform_data(transform_shell_cmd, input_data):
@@ -91,7 +106,7 @@ def render_code(token, body, stack, loop):
         token["text"] = "File not found"
         token["lang"] = "text"
         raise IgnoredByContrib
-    
+
     with open(full_path, "rb") as f:
         file_data = f.read()
 

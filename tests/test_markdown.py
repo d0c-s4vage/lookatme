@@ -3,38 +3,23 @@ Test basic markdown renderings
 """
 
 
-import urwid
+from tests.utils import (assert_render, render_markdown, row_text,
+                         setup_lookatme)
 
 
-import lookatme.config
-import lookatme.render.markdown_block
-import lookatme.render.pygments
-from lookatme.parser import Parser
-import lookatme.tui
-
-
-from tests.utils import spec_and_text, row_text, render_markdown, assert_render
-
-
-TEST_STYLE = {
-    "style": "monokai",
-    "headings": {
-        "default": {
-            "fg": "bold",
-            "bg": "",
-            "prefix": "|",
-            "suffix": "|",
-        },
-    },
-}
-
-
-def test_headings(mocker):
+def test_headings(tmpdir, mocker):
     """Test basic header rendering
     """
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
-    fake_config.STYLE = TEST_STYLE
+    setup_lookatme(tmpdir, mocker, style={
+        "headings": {
+            "default": {
+                "fg": "bold",
+                "bg": "",
+                "prefix": "|",
+                "suffix": "|",
+            },
+        },
+    })
 
     rendered = render_markdown("""
 # H1
@@ -55,20 +40,15 @@ def test_headings(mocker):
     assert_render(stripped_rows, rendered)
 
 
-def test_table(mocker):
+def test_table(tmpdir, mocker):
     """Test basic table rendering
     """
-    import lookatme.widgets.table
-
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
-    mocker.patch.object(lookatme.widgets.table, "config", fake_config)
-    fake_config.STYLE = {
+    setup_lookatme(tmpdir, mocker, style={
         "table": {
             "column_spacing": 1,
             "header_divider": "-",
         },
-    }
+    })
 
     rendered = render_markdown("""
 | H1      |   H2   |     H3 |
@@ -86,22 +66,17 @@ def test_table(mocker):
     assert_render(stripped_rows, rendered, full_strip=True)
 
 
-def test_lists(mocker):
+def test_lists(tmpdir, mocker):
     """Test list rendering
     """
-    import lookatme.widgets.table
-
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
-    mocker.patch.object(lookatme.widgets.table, "config", fake_config)
-    fake_config.STYLE = {
+    setup_lookatme(tmpdir, mocker, style={
         "bullets": {
             "default": "*",
             "1": "-",
             "2": "=",
             "3": "^",
         },
-    }
+    })
 
     rendered = render_markdown("""
 * list 1
@@ -130,23 +105,18 @@ def test_lists(mocker):
     assert_render(stripped_rows, rendered)
 
 
-def test_lists_with_newline(mocker):
+def test_lists_with_newline(tmpdir, mocker):
     """Test list rendering with a newline between a new nested list and the
     previous list item
     """
-    import lookatme.widgets.table
-
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
-    mocker.patch.object(lookatme.widgets.table, "config", fake_config)
-    fake_config.STYLE = {
+    setup_lookatme(tmpdir, mocker, style={
         "bullets": {
             "default": "*",
             "1": "-",
             "2": "=",
             "3": "^",
         },
-    }
+    })
 
     rendered = render_markdown("""
 * list 1
@@ -163,15 +133,11 @@ def test_lists_with_newline(mocker):
     ]
     assert_render(stripped_rows, rendered)
 
-def test_numbered_lists(mocker):
+
+def test_numbered_lists(tmpdir, mocker):
     """Test list rendering
     """
-    import lookatme.widgets.table
-
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
-    mocker.patch.object(lookatme.widgets.table, "config", fake_config)
-    fake_config.STYLE = {
+    setup_lookatme(tmpdir, mocker, style={
         "bullets": {
             "default": "*",
             "1": "-",
@@ -184,7 +150,7 @@ def test_numbered_lists(mocker):
             "2": "alpha",
             "3": "roman",
         },
-    }
+    })
 
     rendered = render_markdown("""
 1. list 1
@@ -222,12 +188,10 @@ def test_numbered_lists(mocker):
     assert_render(stripped_rows, rendered)
 
 
-def test_hrule(mocker):
+def test_hrule(tmpdir, mocker):
     """Test that hrules render correctly
     """
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
-    fake_config.STYLE = {
+    setup_lookatme(tmpdir, mocker, style={
         "hrule": {
             "style": {
                 "fg": "",
@@ -235,7 +199,7 @@ def test_hrule(mocker):
             },
             "char": "=",
         },
-    }
+    })
 
     rendered = render_markdown("---", width=10, single_slide=True)
     stripped_rows = [
@@ -246,12 +210,10 @@ def test_hrule(mocker):
     assert_render(stripped_rows, rendered)
 
 
-def test_block_quote(mocker):
+def test_block_quote(tmpdir, mocker):
     """Test block quote rendering
     """
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.markdown_block, "config")
-    fake_config.STYLE = {
+    setup_lookatme(tmpdir, mocker, style={
         "quote": {
             "style": {
                 "fg": "",
@@ -261,7 +223,7 @@ def test_block_quote(mocker):
             "top_corner": "-",
             "bottom_corner": "=",
         },
-    }
+    })
 
     rendered = render_markdown("""
 > this is a quote
@@ -276,14 +238,13 @@ def test_block_quote(mocker):
     ]
     assert_render(stripped_rows, rendered)
 
-def test_code(mocker):
+
+def test_code(tmpdir, mocker):
     """Test code block rendering
     """
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.pygments, "config")
-    fake_config.STYLE = {
+    setup_lookatme(tmpdir, mocker, style={
         "style": "monokai",
-    }
+    })
 
     rendered = render_markdown("""
 ```python
@@ -300,29 +261,25 @@ def some_fn(*args, **kargs):
     assert_render(stripped_rows, rendered)
 
 
-def test_empty_codeblock(mocker):
+def test_empty_codeblock(tmpdir, mocker):
     """Test that empty code blocks render correctly
     """
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.pygments, "config")
-    fake_config.STYLE = {
+    setup_lookatme(tmpdir, mocker, style={
         "style": "monokai",
-    }
+    })
 
-    rendered = render_markdown("""
+    render_markdown("""
 ```python
 
 ```""")
 
 
-def test_code_yaml(mocker):
+def test_code_yaml(tmpdir, mocker):
     """Test code block rendering with yaml language
     """
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.pygments, "config")
-    fake_config.STYLE = {
+    setup_lookatme(tmpdir, mocker, style={
         "style": "monokai",
-    }
+    })
 
     rendered = render_markdown("""
 ```yaml
@@ -347,19 +304,16 @@ array:
     assert_render(stripped_rows, rendered)
 
 
-def test_inline(mocker):
+def test_inline(tmpdir, mocker):
     """Test inline markdown
     """
-    mocker.patch.object(lookatme.config, "LOG")
-    fake_config = mocker.patch.object(lookatme.render.pygments, "config")
-    mocker.patch.object(lookatme.render.markdown_inline, "config", fake_config)
-    fake_config.STYLE = {
+    setup_lookatme(tmpdir, mocker, style={
         "style": "monokai",
         "link": {
             "fg": "underline",
             "bg": "default",
         },
-    }
+    })
 
     rendered = render_markdown("*emphasis*")
     assert rendered[1][0][0].foreground == "default,italics"
@@ -395,12 +349,3 @@ def test_inline(mocker):
     rendered = render_markdown("![link](http://domain.tld)")
     assert rendered[1][0][0].foreground == "default,underline"
     assert row_text(rendered[1]).rstrip() == b"link"
-
-#      rendered = render_markdown("""
-#  test[^1]
-#  [^1]: This is a foot note
-#  """)
-#      assert len(rendered) == 1
-#      assert rendered[0][0][0].foreground == "default,underline"
-#      assert row_text(rendered[0]).rstrip() == b"link"
-#  

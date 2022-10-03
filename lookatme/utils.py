@@ -61,7 +61,7 @@ def get_fg_bg_styles(style):
         res = [x.strip() for x in data.split(",")]
         return list(filter(None, res))
 
-    # from lookatme.config.STYLE
+    # from lookatme.config.get_style()
     if isinstance(style, dict):
         return non_empty_split(style["fg"]), non_empty_split(style["bg"])
     # just a str will only set the foreground color
@@ -195,6 +195,7 @@ def listbox_add(listbox, widgets):
             continue
         listbox.body.append(w)
 
+
 def pile_add(pile, widgets):
     """
     """
@@ -209,56 +210,11 @@ def pile_add(pile, widgets):
         pile.contents.append((w, pile.options()))
 
 
-# Translate raw_text (ansi sequence) to something readable by urwid (attribut and text)
-# from https://github.com/Nanoseb/ncTelegram/blob/29f551ac0e83b1921a6ac697a33fe6eb76ca337a/ncTelegram/ui_msgwidget.py#L335
-def translate_color(raw_text):
-    formated_text = []
-    raw_text = raw_text.decode("utf-8")
-
-    for at in raw_text.split("\x1b["):
-        try:
-            attr, text = at.split("m",1)
-        except:
-            attr = '0'
-            text = at.split("m",1)
-
-        list_attr = [ int(i) for i in attr.split(';') ]
-        list_attr.sort()
-        fg = -1
-        bg = -1
-       
-        for elem in list_attr:
-            if elem <= 29:
-                pass
-            elif elem <= 37:
-                fg = elem - 30
-            elif elem <= 47:
-                bg = elem - 40
-            elif elem <= 94:
-                fg = fg + 8
-            elif elem >= 100 and elem <= 104:
-                bg = bg + 8
-            
-        fgcolor = color_list[fg]
-        bgcolor = color_list[bg]
-
-        if fg < 0:
-            fgcolor = ''
-        if bg < 0:
-            bgcolor = ''
-
-        if list_attr == [0]:
-            fgcolor = ''
-            bgcolor = ''
-
-        formated_text.append((urwid.AttrSpec(fgcolor, bgcolor), text))
-
-    return formated_text
-
 def int_to_roman(integer):
     integer = int(integer)
     ints = [1000, 900,  500, 400, 100,  90, 50,  40, 10,  9,   5,  4,   1]
-    nums = ["m",  "cm", "d", "cd","c", "xc","l","xl","x","ix","v","iv","i"]
+    nums = ["m",  "cm", "d", "cd", "c", "xc",
+            "l", "xl", "x", "ix", "v", "iv", "i"]
     result = []
     for i in range(len(ints)):
         count = integer // ints[i]

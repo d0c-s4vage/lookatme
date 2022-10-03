@@ -4,11 +4,12 @@ Defines a basic Table widget for urwid
 
 
 from collections import defaultdict
+from typing import List, Optional
+
 import urwid
 
-
-from lookatme.render.markdown_block import render_text
 import lookatme.config as config
+from lookatme.render.markdown_block import render_text
 from lookatme.utils import styled_text
 from lookatme.widgets.clickable_text import ClickableText
 
@@ -19,7 +20,7 @@ class Table(urwid.Pile):
 
     signals = ["change"]
 
-    def __init__(self, rows, headers=None, aligns=None):
+    def __init__(self, rows, headers=None, aligns: Optional[List[str]] = None):
         """Create a new table
 
         :param list columns: The rows to use for the table
@@ -28,7 +29,6 @@ class Table(urwid.Pile):
         """
         self.table_rows = rows
         self.table_headers = headers
-        self.table_aligns = aligns
 
         if headers is not None:
             self.num_columns = len(headers)
@@ -38,6 +38,10 @@ class Table(urwid.Pile):
             raise ValueError(
                 "Invalid table specification: could not determine # of columns"
             )
+
+        if aligns is None:
+            aligns = ["left"] * self.num_columns
+        self.table_aligns = aligns
 
         def header_modifier(cell):
             return ClickableText(styled_text(cell.text, "bold"), align=cell.align)
@@ -52,7 +56,7 @@ class Table(urwid.Pile):
 
         self.column_maxes = self.calc_column_maxes()
 
-        cell_spacing = config.STYLE["table"]["column_spacing"]
+        cell_spacing = config.get_style()["table"]["column_spacing"]
         self.total_width = sum(self.column_maxes.values()) + (
             cell_spacing * (self.num_columns - 1)
         )
@@ -67,21 +71,24 @@ class Table(urwid.Pile):
                 header = header[0]
                 header_with_div = urwid.Pile([
                     self.watch(header),
-                    urwid.Divider(config.STYLE["table"]["header_divider"]),
+                    urwid.Divider(config.get_style()[
+                                  "table"]["header_divider"]),
                 ])
-                header_columns.append((self.column_maxes[idx], header_with_div))
+                header_columns.append(
+                    (self.column_maxes[idx], header_with_div))
             final_rows.append(urwid.Columns(header_columns, cell_spacing))
 
-        for row_idx, rend_row in enumerate(self.rend_rows):
+        for rend_row in self.rend_rows:
             row_columns = []
             for cell_idx, rend_cell in enumerate(rend_row):
-                rend_widgets = [self.watch(rend_widget) for rend_widget in rend_cell]
+                rend_widgets = [self.watch(rend_widget)
+                                for rend_widget in rend_cell]
                 rend_pile = urwid.Pile(rend_widgets)
                 row_columns.append((self.column_maxes[cell_idx], rend_pile))
 
             column_row = urwid.Columns(row_columns, cell_spacing)
             final_rows.append(column_row)
-        
+
         urwid.Pile.__init__(self, final_rows)
 
     def render(self, *args, **kwargs):
@@ -89,20 +96,20 @@ class Table(urwid.Pile):
         """
         self.set_column_maxes()
         return urwid.Pile.render(self, *args, **kwargs)
-    
+
     def watch(self, w):
         """Watch the provided widget w for changes
         """
         if "change" not in getattr(w, "signals", []):
             return w
 
-        def wrapper(*args, **kwargs):
+        def wrapper(*_, **__):
             self._invalidate()
             self._emit("change")
 
         urwid.connect_signal(w, "change", wrapper)
         return w
-    
+
     def _invalidate(self):
         self.set_column_maxes()
         urwid.Pile._invalidate(self)
@@ -111,7 +118,7 @@ class Table(urwid.Pile):
         """Calculate and set the column maxes for this table
         """
         self.column_maxes = self.calc_column_maxes()
-        cell_spacing = config.STYLE["table"]["column_spacing"]
+        cell_spacing = config.get_style()["table"]["column_spacing"]
         self.total_width = sum(self.column_maxes.values()) + (
             cell_spacing * (self.num_columns - 1)
         )

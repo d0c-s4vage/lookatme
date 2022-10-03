@@ -5,7 +5,6 @@ This module tests that markdown presentations can be correctly parsed
 
 import datetime
 
-
 from lookatme.parser import Parser
 
 
@@ -40,7 +39,7 @@ def test_parse_metadata_empty():
     """Test that metadata can be correctly parsed out of a markdown
     presentation
     """
-    input_data = f"""
+    input_data = """
 ---
 ---
 remaining

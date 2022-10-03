@@ -4,21 +4,14 @@ representations
 """
 
 
-import pygments
-import pygments.formatters
-import pygments.lexers
-import pygments.styles
 import mistune
-import re
-import shlex
 import urwid
 
-
 import lookatme.config as config
-from lookatme.contrib import contrib_first
-import lookatme.render.pygments as pygments_render
 import lookatme.render.markdown_inline as markdown_inline_renderer
-from lookatme.utils import *
+import lookatme.render.pygments as pygments_render
+import lookatme.utils as utils
+from lookatme.contrib import contrib_first
 from lookatme.widgets.clickable_text import ClickableText
 
 
@@ -70,9 +63,9 @@ def render_hrule(token, body, stack, loop):
     See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
     value descriptions.
     """
-    hrule_conf = config.STYLE["hrule"]
+    hrule_conf = config.get_style()["hrule"]
     div = urwid.Divider(hrule_conf['char'], top=1, bottom=1)
-    return urwid.Pile([urwid.AttrMap(div, spec_from_style(hrule_conf['style']))])
+    return urwid.Pile([urwid.AttrMap(div, utils.spec_from_style(hrule_conf['style']))])
 
 
 @contrib_first
@@ -116,12 +109,12 @@ def render_heading(token, body, stack, loop):
 
     :returns: A list of urwid Widgets or a single urwid Widget
     """
-    headings = config.STYLE["headings"]
+    headings = config.get_style()["headings"]
     level = token["level"]
-    style = config.STYLE["headings"].get(str(level), headings["default"])
+    style = config.get_style()["headings"].get(str(level), headings["default"])
 
-    prefix = styled_text(style["prefix"], style)
-    suffix = styled_text(style["suffix"], style)
+    prefix = utils.styled_text(style["prefix"], style)
+    suffix = utils.styled_text(style["suffix"], style)
 
     rendered = render_text(text=token["text"])
     if len(rendered) > 0:
@@ -129,7 +122,8 @@ def render_heading(token, body, stack, loop):
 
     return [
         urwid.Divider(),
-        ClickableText([prefix] + styled_text(rendered, style) + [suffix]),
+        ClickableText(
+            [prefix] + utils.styled_text(rendered, style) + [suffix]),  # type: ignore
         urwid.Divider(),
     ]
 
@@ -237,16 +231,16 @@ def _list_item_start(token, body, stack, loop):
     meta = _meta(stack[-1])
 
     if meta["ordered"]:
-        numbering = config.STYLE["numbering"]
+        numbering = config.get_style()["numbering"]
         list_marker_type = numbering.get(str(list_level), numbering["default"])
         sequence = {
             "numeric": lambda x: str(x),
             "alpha": lambda x: chr(ord("a") + x - 1),
-            "roman": lambda x: int_to_roman(x),
+            "roman": lambda x: utils.int_to_roman(x),
         }[list_marker_type]
         list_marker = sequence(curr_count) + "."
     else:
-        bullets = config.STYLE["bullets"]
+        bullets = config.get_style()["bullets"]
         list_marker = bullets.get(str(list_level), bullets["default"])
 
     marker_text = list_marker + " "
@@ -324,7 +318,7 @@ def render_text(token=None, body=None, stack=None, loop=None, text=None):
     See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
     return value descriptions.
     """
-    if text is None:
+    if text is None and token is not None:
         text = token["text"]
 
     inline_lexer = mistune.InlineLexer(markdown_inline_renderer)
@@ -384,7 +378,7 @@ def render_block_quote_start(token, body, stack, loop):
     pile = urwid.Pile([])
     stack.append(pile)
 
-    styles = config.STYLE["quote"]
+    styles = config.get_style()["quote"]
 
     quote_side = styles["side"]
     quote_top_corner = styles["top_corner"]
@@ -396,7 +390,7 @@ def render_block_quote_start(token, body, stack, loop):
         urwid.LineBox(
             urwid.AttrMap(
                 urwid.Padding(pile, left=2),
-                spec_from_style(quote_style),
+                utils.spec_from_style(quote_style),
             ),
             lline=quote_side, rline="",
             tline=" ", trcorner="", tlcorner=quote_top_corner,

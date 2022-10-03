@@ -48,7 +48,7 @@ function box_indent {
 
 function run_boxed {
     log "Running command '$@'"
-    "$@" | log_box_indent
+    "$@" 2>&1 | log_box_indent
 }
 
 function run_with_summary {
