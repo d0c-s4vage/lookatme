@@ -4,7 +4,7 @@ interface
 """
 
 
-import contextlib
+import functools
 
 import lookatme.config as config
 import lookatme.render.pygments as pygments_render
@@ -16,7 +16,7 @@ options = {}
 
 
 def expanded_styles(fn):
-    @contextlib.wraps(fn)
+    @functools.wraps(fn)
     def inner(text):
         styles = dict(fg="", bg="")
         if isinstance(text, str):

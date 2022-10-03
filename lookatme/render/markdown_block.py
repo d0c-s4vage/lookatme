@@ -318,7 +318,7 @@ def render_text(token=None, body=None, stack=None, loop=None, text=None):
     See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
     return value descriptions.
     """
-    if text is None:
+    if text is None and token is not None:
         text = token["text"]
 
     inline_lexer = mistune.InlineLexer(markdown_inline_renderer)

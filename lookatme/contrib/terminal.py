@@ -6,13 +6,14 @@ within a slide.
 
 import re
 import shlex
+from typing import Dict
 
 import urwid
 import yaml
 from marshmallow import Schema, fields
 
 import lookatme.config
-import lookatme.render
+import lookatme.render.markdown_block
 from lookatme.exceptions import IgnoredByContrib
 
 
@@ -29,7 +30,9 @@ def user_warnings():
 
 
 class YamlRender:
+    @staticmethod
     def loads(data): return yaml.safe_load(data)
+    @staticmethod
     def dumps(data): return yaml.safe_dump(data)
 
 
@@ -45,6 +48,18 @@ class TerminalExSchema(Schema):
 
     class Meta:
         render_module = YamlRender
+
+    def loads(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).loads(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not loads")
+        return res
+
+    def load(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).load(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not load")
+        return res
 
 
 CREATED_TERMS = []

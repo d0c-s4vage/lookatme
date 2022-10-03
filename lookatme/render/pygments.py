@@ -6,6 +6,7 @@ import time
 
 import pygments
 import pygments.lexers
+import pygments.styles
 import pygments.util
 import urwid
 from pygments.formatter import Formatter
@@ -62,7 +63,8 @@ def render_text(text, lang="text", style_name=None, plain=False):
 
     start = time.time()
     code_tokens = lexer.get_tokens(text)
-    config.get_log().debug(f"Took {time.time()-start}s to render {len(text)} bytes")
+    config.get_log().debug(
+        f"Took {time.time()-start}s to render {len(text)} bytes")
 
     markup = []
     for x in formatter.formatgenerator(code_tokens):

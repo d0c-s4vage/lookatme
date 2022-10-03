@@ -5,10 +5,10 @@ Config module for lookatme
 
 import logging
 import os
-from typing import Dict
+from typing import Dict, Optional
 
 LOG = None
-STYLE: Dict = None
+STYLE: Optional[Dict] = None
 
 
 def get_log() -> logging.Logger:

@@ -5,7 +5,7 @@ This module defines the parser for the markdown presentation file
 
 import re
 from collections import defaultdict
-from typing import Callable, Dict, List
+from typing import AnyStr, Callable, Dict, List, Tuple
 
 import mistune
 
@@ -57,34 +57,29 @@ class Parser(object):
         num_hrules, hinfo = self._scan_for_smart_split(tokens)
         keep_split_token = True
 
-        if self._single_slide:
-            def slide_split_check(token):
-                False
+        def slide_split_check(_): return False
+        def heading_mod(_): return None
 
-            def heading_mod(token):
-                pass
+        if self._single_slide:
+            pass
         elif num_hrules == 0:
             if meta["title"] in ["", None]:
                 meta["title"] = hinfo["title"]
 
-            def slide_split_check(token):
-                return (
-                    token["type"] == "heading"
-                    and token["level"] == hinfo["lowest_non_title"]
-                )
+            def slide_split_check(token): return (
+                token["type"] == "heading"
+                and token["level"] == hinfo["lowest_non_title"]
+            )
 
-            def heading_mod(token):
-                token["level"] = max(
+            def heading_mod(token): return \
+                token.update({"level": max(
                     token["level"] - (hinfo["title_level"] or 0),
                     1,
-                )
+                )})
+
             keep_split_token = True
         else:
-            def slide_split_check(token):
-                return token["type"] == "hrule"
-
-            def heading_mod(token):
-                pass
+            def slide_split_check(token): return token["type"] == "hrule"
             keep_split_token = False
 
         slides = self._split_tokens_into_slides(
@@ -150,7 +145,11 @@ class Parser(object):
                     first_heading = token
 
         # started off with the lowest heading, make this title
-        if hinfo["counts"] and hinfo["counts"][first_heading["level"]] == 1:
+        if (
+            hinfo["counts"]
+            and first_heading
+            and hinfo["counts"][first_heading["level"]] == 1
+        ):
             hinfo["title"] = first_heading["text"]
             del hinfo["counts"][first_heading["level"]]
             hinfo["title_level"] = first_heading["level"]
@@ -161,7 +160,7 @@ class Parser(object):
 
         return num_hrules, hinfo
 
-    def parse_meta(self, input_data):
+    def parse_meta(self, input_data) -> Tuple[AnyStr, Dict]:
         """Parse the PresentationMeta out of the input data
 
         :param str input_data: The input data string

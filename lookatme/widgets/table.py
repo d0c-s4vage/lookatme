@@ -4,6 +4,7 @@ Defines a basic Table widget for urwid
 
 
 from collections import defaultdict
+from typing import List, Optional
 
 import urwid
 
@@ -19,7 +20,7 @@ class Table(urwid.Pile):
 
     signals = ["change"]
 
-    def __init__(self, rows, headers=None, aligns=None):
+    def __init__(self, rows, headers=None, aligns: Optional[List[str]] = None):
         """Create a new table
 
         :param list columns: The rows to use for the table
@@ -28,7 +29,6 @@ class Table(urwid.Pile):
         """
         self.table_rows = rows
         self.table_headers = headers
-        self.table_aligns = aligns
 
         if headers is not None:
             self.num_columns = len(headers)
@@ -38,6 +38,10 @@ class Table(urwid.Pile):
             raise ValueError(
                 "Invalid table specification: could not determine # of columns"
             )
+
+        if aligns is None:
+            aligns = ["left"] * self.num_columns
+        self.table_aligns = aligns
 
         def header_modifier(cell):
             return ClickableText(styled_text(cell.text, "bold"), align=cell.align)
@@ -74,7 +78,7 @@ class Table(urwid.Pile):
                     (self.column_maxes[idx], header_with_div))
             final_rows.append(urwid.Columns(header_columns, cell_spacing))
 
-        for row_idx, rend_row in enumerate(self.rend_rows):
+        for rend_row in self.rend_rows:
             row_columns = []
             for cell_idx, rend_cell in enumerate(rend_row):
                 rend_widgets = [self.watch(rend_widget)
@@ -99,7 +103,7 @@ class Table(urwid.Pile):
         if "change" not in getattr(w, "signals", []):
             return w
 
-        def wrapper(*args, **kwargs):
+        def wrapper(*_, **__):
             self._invalidate()
             self._emit("change")
 

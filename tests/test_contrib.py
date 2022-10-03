@@ -5,6 +5,7 @@ This module tests contrib-specific functionality
 import urwid
 from six.moves import StringIO, reload_module
 
+import lookatme.config
 import lookatme.contrib
 import lookatme.contrib.file_loader
 import lookatme.contrib.terminal

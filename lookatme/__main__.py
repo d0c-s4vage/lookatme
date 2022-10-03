@@ -12,6 +12,7 @@ import tempfile
 import click
 import pygments.styles
 
+import lookatme
 import lookatme.config
 import lookatme.log
 import lookatme.tui
@@ -135,7 +136,7 @@ def main(debug, log_path, theme, code_style, dump_styles,
     try:
         pres.run()
     except Exception as e:
-        number = pres.tui.curr_slide.number + 1
+        number = pres.get_tui().curr_slide.number + 1
         click.echo(f"Error rendering slide {number}: {e}")
         if not debug:
             click.echo("Rerun with --debug to view the full traceback in logs")

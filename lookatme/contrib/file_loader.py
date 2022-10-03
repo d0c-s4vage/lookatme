@@ -8,6 +8,7 @@ source data in a terminal on the same slide.
 
 import os
 import subprocess
+from typing import Dict
 
 import yaml
 from marshmallow import Schema, fields
@@ -30,7 +31,9 @@ def user_warnings():
 
 
 class YamlRender:
+    @staticmethod
     def loads(data): return yaml.safe_load(data)
+    @staticmethod
     def dumps(data): return yaml.safe_dump(data)
 
 
@@ -52,6 +55,18 @@ class FileSchema(Schema):
 
     class Meta:
         render_module = YamlRender
+
+    def loads(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).loads(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not loads")
+        return res
+
+    def load(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).load(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not load")
+        return res
 
 
 def transform_data(transform_shell_cmd, input_data):

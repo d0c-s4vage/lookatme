@@ -4,6 +4,7 @@ Defines all schemas used in lookatme
 
 
 import datetime
+from typing import Dict
 
 import pygments.styles
 import yaml
@@ -35,7 +36,9 @@ NoDatesSafeLoader.remove_implicit_resolver('tag:yaml.org,2002:timestamp')
 
 
 class YamlRender:
+    @staticmethod
     def loads(data): return yaml.load(data, Loader=NoDatesSafeLoader)
+    @staticmethod
     def dumps(data): return yaml.safe_dump(data, allow_unicode=True)
 
 
@@ -234,3 +237,21 @@ class MetaSchema(Schema):
         load_default=StyleSchema().dump(None),
     )
     extensions = fields.List(fields.Str(), dump_default=[], load_default=[])
+
+    def loads(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).loads(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not loads")
+        return res
+
+    def load(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).load(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not load")
+        return res
+
+    def dump(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).dump(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not dump")
+        return res

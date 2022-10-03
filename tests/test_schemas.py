@@ -41,7 +41,7 @@ def _validate_field_recursive(path, field, gend_value):
                 f"{path}.{field_name}", sub_field, gend_value[field_name])
     elif isinstance(field, fields.Nested):
         if field.dump_default is None:
-            nested_field = field.nested()
+            nested_field = field.nested()  # type: ignore
             _validate_field_recursive(path, nested_field, gend_value)
         else:
             for field_name, sub_field in field.dump_default.items():

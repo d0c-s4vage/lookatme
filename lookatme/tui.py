@@ -13,6 +13,7 @@ import urwid
 
 import lookatme.config
 import lookatme.config as config
+import lookatme.contrib
 import lookatme.render.markdown_block as lam_md
 from lookatme.contrib import contrib_first
 from lookatme.utils import pile_or_listbox_add, spec_from_style

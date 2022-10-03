@@ -1,11 +1,23 @@
 """
-This module handles loading and using lookatme_contriba modules
+This module handles loading and using lookatme_contrib modules
+
+    def loads(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).loads(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not loads")
+        return res
+
+    def load(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).load(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not load")
+        return res
 
 Contrib modules are directly used
 """
 
 
-import contextlib
+import functools
 from typing import List
 
 import lookatme.ascii_art
@@ -15,7 +27,7 @@ from lookatme.exceptions import IgnoredByContrib
 CONTRIB_MODULES = []
 
 
-def validate_extension_mod(ext_name, ext_mod):
+def validate_extension_mod(_ext_name, ext_mod):
     """Validate the extension, returns an array of warnings associated with the
     module
     """
@@ -59,6 +71,8 @@ def load_contribs(contrib_names, safe_contribs, ignore_load_failure=False):
                     all_warnings.append((contrib_name, ext_warnings))
             CONTRIB_MODULES.append(mod)
 
+    _handle_load_errors_warnings(errors, all_warnings)
+
 
 def _handle_load_errors_warnings(errors: List[str], all_warnings: List[str]):
     """Handle all load errors and warnings from loading contrib modules
@@ -93,7 +107,7 @@ def contrib_first(fn):
     """
     fn_name = fn.__name__
 
-    @contextlib.wraps(fn)
+    @functools.wraps(fn)
     def inner(*args, **kwargs):
         for mod in CONTRIB_MODULES:
             if not hasattr(mod, fn_name):
