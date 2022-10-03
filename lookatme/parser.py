@@ -57,29 +57,36 @@ class Parser(object):
         num_hrules, hinfo = self._scan_for_smart_split(tokens)
         keep_split_token = True
 
-        def slide_split_check(_): return False
-        def heading_mod(_): return None
-
         if self._single_slide:
-            pass
+            def slide_split_check(_):  # type: ignore
+                return False
+
+            def heading_mod(_):  # type: ignore
+                pass
         elif num_hrules == 0:
             if meta["title"] in ["", None]:
                 meta["title"] = hinfo["title"]
 
-            def slide_split_check(token): return (
-                token["type"] == "heading"
-                and token["level"] == hinfo["lowest_non_title"]
-            )
+            def slide_split_check(token):
+                nonlocal hinfo
+                return (
+                    token["type"] == "heading"
+                    and token["level"] == hinfo["lowest_non_title"]
+                )
 
-            def heading_mod(token): return \
-                token.update({"level": max(
+            def heading_mod(token):
+                nonlocal hinfo
+                token["level"] = max(
                     token["level"] - (hinfo["title_level"] or 0),
                     1,
-                )})
-
+                )
             keep_split_token = True
         else:
-            def slide_split_check(token): return token["type"] == "hrule"
+            def slide_split_check(token):
+                return token["type"] == "hrule"
+
+            def heading_mod(token):
+                pass
             keep_split_token = False
 
         slides = self._split_tokens_into_slides(

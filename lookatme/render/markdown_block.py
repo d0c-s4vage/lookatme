@@ -123,7 +123,7 @@ def render_heading(token, body, stack, loop):
     return [
         urwid.Divider(),
         ClickableText(
-            [prefix] + utils.styled_text(rendered, style) + [suffix]),
+            [prefix] + utils.styled_text(rendered, style) + [suffix]),  # type: ignore
         urwid.Divider(),
     ]
 
