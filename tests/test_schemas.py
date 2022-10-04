@@ -5,6 +5,7 @@ Test tha lookatme YAML schemas behave as expected
 
 import datetime
 
+import marshmallow.exceptions
 import pytest
 from marshmallow import Schema, fields
 
@@ -26,9 +27,57 @@ date: {date}
     schema = schemas.MetaSchema().loads(yaml_text)
     assert schema["title"] == title
     assert schema["author"] == author
-    assert schema["date"].year == 2019
-    assert schema["date"].month == 1
-    assert schema["date"].day == 1
+    assert schema["date"] == "2019-01-01"
+
+
+def test_meta_schema_allowed_extra_top_level():
+    """Test that extra top-level fields are allowed in the metadata. A separate
+    test will test that the style metadata is strictly validated.
+    """
+    """Test the meta schema
+    """
+    title = "TITLE"
+    author = "AUTHOR"
+    date = "2019-01-01"
+    yaml_text = f"""
+title: {title}
+author: {author}
+date: {date}
+tags: [t1, t2, t3]
+status: status_str
+    """
+
+    schema = schemas.MetaSchema().loads(yaml_text)
+    assert schema["title"] == title
+    assert schema["author"] == author
+    assert schema["date"] == "2019-01-01"
+    assert schema["tags"] == ["t1", "t2", "t3"]
+    assert schema["status"] == "status_str"
+
+
+def test_meta_schema_strict_style_validation():
+    """Test that the style schema is STRICTLY validated. Not having this will
+    make it hard to debug why mistakes in style names aren't having the desired
+    effect on lookatme. We want the user to know what fields they got wrong
+    in the style.
+    """
+    """Test the meta schema
+    """
+    title = "TITLE"
+    author = "AUTHOR"
+    date = "2019-01-01"
+    yaml_text = f"""
+title: {title}
+author: {author}
+date: {date}
+styles:
+  invalid: 100
+    """
+    with pytest.raises(marshmallow.exceptions.ValidationError) as exc_info:
+        schemas.MetaSchema().loads(yaml_text)
+
+    assert exc_info.value.messages_dict \
+        == {"styles": {"invalid": ["Unknown field."]}}
 
 
 def _validate_field_recursive(path, field, gend_value):
