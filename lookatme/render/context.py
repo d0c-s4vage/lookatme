@@ -110,9 +110,15 @@ class Context:
 
         self.in_new_block = True
 
-    def widget_add(self, w):
+    def widget_add(self, w: Union[List[urwid.Widget], urwid.Widget], wrap: Optional[bool] = False):
         """Add the provided widget to the current container.
         """
+        if wrap:
+            if isinstance(w, (list, tuple)):
+                w = [self.wrap_widget(x) for x in w]
+            else:
+                w = self.wrap_widget(w)
+
         self.in_new_block = False
         utils.pile_or_listbox_add(self.container, w)
 

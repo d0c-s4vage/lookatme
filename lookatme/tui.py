@@ -78,12 +78,6 @@ class SlideRenderer(threading.Thread):
             raise res
         return res
 
-    def get_slide(self, slide_number):
-        """Fetch the slide from the cache
-        """
-        self.locks[slide_number].wait()
-        return self.cache[slide.number]
-
     def stop(self):
         self.keep_running.clear()
 
@@ -244,14 +238,15 @@ class MarkdownTui(urwid.Frame):
         """Update the title
         """
         title = self.pres.meta.get("title", [])
-        spec = spec_from_style(config.STYLE["title"])
+        spec = spec_from_style(config.get_style()["title"])
 
         if not title:
             return
 
         ctx = Context(self.loop)
-        with ctx.use_spec(spec):
-            markdown_inline.render_all(title, ctx)
+        with ctx.use_tokens(title):
+            with ctx.use_spec(spec):
+                markdown_inline.render_all(ctx)
         self.slide_title.set_text(ctx.inline_markup_consumed)
 
     def update_creation(self):

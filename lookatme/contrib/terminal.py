@@ -13,8 +13,10 @@ import yaml
 from marshmallow import Schema, fields
 
 import lookatme.render
+import lookatme.config
 from lookatme.exceptions import IgnoredByContrib
 from lookatme.render.context import Context
+import lookatme.render.markdown_block
 
 
 def user_warnings():
@@ -65,7 +67,7 @@ class TerminalExSchema(Schema):
 CREATED_TERMS = []
 
 
-def render_block_code(token, ctx: Context):
+def render_fence(token, ctx: Context):
     info = token.get("info", "text")
     lang = info.split()[0]
 
@@ -75,20 +77,24 @@ def render_block_code(token, ctx: Context):
 
     if numbered_term_match is not None:
         term_data = TerminalExSchema().load({
-            "command": token["text"].strip(),
+            "command": token["content"].strip(),
             "rows": int(numbered_term_match.group(1)),
             "init_codeblock": False,
         })
 
     else:
-        term_data = TerminalExSchema().loads(token["text"])
+        term_data = TerminalExSchema().loads(token["content"])
 
         if term_data["init_text"] is not None and term_data["init_wait"] is not None:
+            init = term_data["init_text"]
+            if init.endswith("\n"):
+                init = init[:-1]
+
             term_data["command"] = " ".join([shlex.quote(x) for x in [
                 "expect", "-c", ";".join([
                     'spawn -noecho {}'.format(term_data["command"]),
                     'expect {{{}}}'.format(term_data["init_wait"]),
-                    'send {{{}}}'.format(term_data["init_text"]),
+                    'send {{{}}}'.format(init),
                     'interact',
                     'exit',
                 ])
@@ -108,18 +114,19 @@ def render_block_code(token, ctx: Context):
 
     if term_data["init_codeblock"] is True:
         fake_token = {
-            "text": term_data["init_text"],
-            "": term_data["init_codeblock_lang"],
+            "content": term_data["init_text"],
+            "info": term_data["init_codeblock_lang"],
         }
-        res += lookatme.render.markdown_block.render_code(
-            fake_token, ctx,
-        )
+        with ctx.use_tokens([fake_token]):
+            lookatme.render.markdown_block.render_fence(
+                fake_token, ctx,
+            )
 
-    res += [
+    ctx.widget_add([
         urwid.Divider(),
         line_box,
         urwid.Divider(),
-    ]
+    ], wrap=True)
 
     return res
 

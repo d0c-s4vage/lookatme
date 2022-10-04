@@ -268,7 +268,7 @@ def render_html_tag_li_close(_, tag: Tag, ctx: Context, style_spec: Union[None, 
 #
 #         {'type': 'link', 'link': 'https://google.com', 'children': [{'type': 'text', 'text': 'blah'}], 'title': None}
 #     """
-#     plain_spec = utils.spec_from_style(config.STYLE["link"])
+#     plain_spec = utils.spec_from_style(config.get_style()["link"])
 #     link_spec = LinkIndicatorSpec(token["link"], token["link"], plain_spec)
 #
 #     with ctx.use_spec(link_spec):

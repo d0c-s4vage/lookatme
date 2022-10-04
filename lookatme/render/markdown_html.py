@@ -48,7 +48,7 @@ SELECTOR_MATCHER = re.compile(r"""
 
 class Tag:
     @classmethod
-    def parse(cls, text: str) -> List[Self]:
+    def parse(cls, text: str) -> List[Tag]:
         """Return a new Tag instance or None after parsing the text
         """
         if text.startswith("</"):

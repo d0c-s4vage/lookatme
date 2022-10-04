@@ -69,7 +69,7 @@ class Table(urwid.Pile):
     # def create_final_rows(self, headers, body_rows):
 #        self.column_maxes = self.calc_column_maxes()
 #
-#        cell_spacing = config.STYLE["table"]["column_spacing"]
+#        cell_spacing = config.get_style()["table"]["column_spacing"]
 #        self.total_width = sum(self.column_maxes.values()) + (
 #            cell_spacing * (self.num_columns - 1)
 #        )
@@ -83,7 +83,7 @@ class Table(urwid.Pile):
 #            for idx, header in enumerate(self.rend_headers[0]):
 #                self.watch(header)
 #                get_meta(header)["col_idx"] = idx
-#                divider = urwid.Divider(config.STYLE["table"]["header_divider"])
+#                divider = urwid.Divider(config.get_style()["table"]["header_divider"])
 #                pile_or_listbox_add(header, divider)
 #                header_columns.append((self.column_maxes[idx], header))
 #            final_rows.append(urwid.Columns(header_columns, cell_spacing))
@@ -139,7 +139,7 @@ class Table(urwid.Pile):
 #         """Calculate and set the column maxes for this table
 #         """
 #         self.column_maxes = self.calc_column_maxes()
-#         cell_spacing = config.STYLE["table"]["column_spacing"]
+#         cell_spacing = config.get_style()["table"]["column_spacing"]
 #         self.total_width = sum(self.column_maxes.values()) + (
 #             cell_spacing * (self.num_columns - 1)
 #         )
@@ -191,7 +191,7 @@ class Table(urwid.Pile):
                         markdown_block.render_all(self.ctx)
                         if header:
                             divider = urwid.Divider(
-                                config.STYLE["table"]["header_divider"])
+                                config.get_style()["table"]["header_divider"])
                             self.ctx.inline_flush()
                             self.ctx.widget_add(divider)
 

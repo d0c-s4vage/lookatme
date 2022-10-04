@@ -209,9 +209,9 @@ def render_list_item_close(_, ctx: Context):
 def render_heading_open(token: Dict, ctx: Context):
     """
     """
-    headings = config.STYLE["headings"]
+    headings = config.get_style()["headings"]
     level = token["level"]
-    style = config.STYLE["headings"].get(str(level), headings["default"])
+    style = config.get_style()["headings"].get(str(level), headings["default"])
 
     ctx.ensure_new_block()
 
@@ -225,9 +225,9 @@ def render_heading_open(token: Dict, ctx: Context):
 def render_heading_close(token: Dict, ctx: Context):
     """
     """
-    headings = config.STYLE["headings"]
+    headings = config.get_style()["headings"]
     level = int(token["tag"].replace("h", ""))
-    style = config.STYLE["headings"].get(str(level), headings["default"])
+    style = config.get_style()["headings"].get(str(level), headings["default"])
 
     suffix_token = {"type": "text", "content": style["suffix"]}
     markdown_inline.render(suffix_token, ctx)
@@ -266,6 +266,26 @@ def render_blockquote_close(token: Dict, ctx: Context):
     """
     ctx.spec_pop()
     ctx.container_pop()
+
+
+@contrib_first
+def render_fence(token: Dict, ctx: Context):
+    """Renders a code block using the Pygments library.
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for additional argument and
+    return value descriptions.
+    """
+    info = token.get("info", None) or "text"
+    lang = info.split()[0]
+    # TODO support line highlighting, etc?
+    text = token["content"]
+    res = pygments_render.render_text(text, lang=lang)
+
+    ctx.widget_add([
+        urwid.Divider(),
+        res,
+        urwid.Divider()
+    ])
 
 
 def _extract_nested_table_tokens(tokens: List[Dict]) -> Tuple[Union[None, Dict], Union[None, Dict]]:
@@ -358,7 +378,7 @@ def render_table_open(token: Dict, ctx: Context):
 # #     See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
 # #     value descriptions.
 # #     """
-# #     hrule_conf = config.STYLE["hrule"]
+# #     hrule_conf = config.get_style()["hrule"]
 # #     div = urwid.Divider(hrule_conf['char'], top=1, bottom=1)
 # #     return urwid.Pile([urwid.AttrMap(div, spec_from_style(hrule_conf['style']))])
 #
@@ -404,9 +424,9 @@ def render_table_open(token: Dict, ctx: Context):
 #
 #     :returns: A list of urwid Widgets or a single urwid Widget
 #     """
-#     headings = config.STYLE["headings"]
+#     headings = config.get_style()["headings"]
 #     level = token["level"]
-#     style = config.STYLE["headings"].get(str(level), headings["default"])
+#     style = config.get_style()["headings"].get(str(level), headings["default"])
 #
 #     header_spec = spec_from_style(style)
 #     with ctx.use_spec(header_spec):
@@ -531,7 +551,7 @@ def render_table_open(token: Dict, ctx: Context):
 #     pile = urwid.Pile(urwid.SimpleFocusListWalker([]))
 #
 #     if meta["ordered"]:
-#         numbering = config.STYLE["numbering"]
+#         numbering = config.get_style()["numbering"]
 #         list_marker_type = numbering.get(str(list_level), numbering["default"])
 #         sequence = {
 #             "numeric": lambda x: str(x),
@@ -540,7 +560,7 @@ def render_table_open(token: Dict, ctx: Context):
 #         }[list_marker_type]
 #         list_marker = sequence(curr_count) + "."
 #     else:
-#         bullets = config.STYLE["bullets"]
+#         bullets = config.get_style()["bullets"]
 #         list_marker = bullets.get(str(list_level), bullets["default"])
 #
 #     marker_text = list_marker + " "
@@ -624,7 +644,7 @@ def render_table_open(token: Dict, ctx: Context):
 # #     """
 # #     pile = urwid.Pile([])
 # #
-# #     styles = config.STYLE["quote"]
+# #     styles = config.get_style()["quote"]
 # #
 # #     quote_side = styles["side"]
 # #     quote_top_corner = styles["top_corner"]
