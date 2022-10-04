@@ -12,29 +12,27 @@ from urwid.util import is_mouse_press
 import lookatme.config
 import lookatme.config as config
 from lookatme.utils import row_text, spec_from_style
+from lookatme.widgets.smart_attr_spec import SmartAttrSpec
 
 
-class LinkIndicatorSpec(urwid.AttrSpec):
+class LinkIndicatorSpec(SmartAttrSpec):
     """Used to track a link within an urwid.Text instance
     """
 
-    def __init__(self, link_label, link_target, orig_spec):
+    def __init__(self, link_target, orig_spec):
         """Create a new LinkIndicator spec from an existing urwid.AttrSpec
 
-        :param str link_label: The label for the link
         :param str link_target: The target url for the link
         """
-        self.link_label = link_label
         self.link_target = link_target
 
-        urwid.AttrSpec.__init__(
-            self, orig_spec.foreground, orig_spec.background)
+        super().__init__(orig_spec.foreground, orig_spec.background)
 
     def new_for_spec(self, new_spec):
         """Create a new LinkIndicatorSpec with the same link information but
         new AttrSpec
         """
-        return LinkIndicatorSpec(self.link_label, self.link_target, new_spec)
+        return LinkIndicatorSpec(self.link_target, new_spec)
 
 
 class ClickableText(urwid.Text):

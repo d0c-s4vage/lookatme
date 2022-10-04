@@ -29,7 +29,6 @@ def test_headings(tmpdir, mocker):
 """)
 
     stripped_rows = [
-        b"",
         b"|H1|",
         b"",
         b"|H2|",
@@ -316,36 +315,36 @@ def test_inline(tmpdir, mocker):
     })
 
     rendered = render_markdown("*emphasis*")
-    assert rendered[1][0][0].foreground == "default,italics"
-    assert row_text(rendered[1]).strip() == b"emphasis"
+    assert rendered[0][0][0].foreground == "default,italics"
+    assert row_text(rendered[0]).strip() == b"emphasis"
 
     rendered = render_markdown("**emphasis**")
-    assert rendered[1][0][0].foreground == "default,underline"
-    assert row_text(rendered[1]).strip() == b"emphasis"
+    assert rendered[0][0][0].foreground == "default,bold"
+    assert row_text(rendered[0]).strip() == b"emphasis"
 
     rendered = render_markdown("_emphasis_")
-    assert rendered[1][0][0].foreground == "default,italics"
-    assert row_text(rendered[1]).strip() == b"emphasis"
+    assert rendered[0][0][0].foreground == "default,italics"
+    assert row_text(rendered[0]).strip() == b"emphasis"
 
     rendered = render_markdown("__emphasis__")
-    assert rendered[1][0][0].foreground == "default,underline"
-    assert row_text(rendered[1]).strip() == b"emphasis"
+    assert rendered[0][0][0].foreground == "default,bold"
+    assert row_text(rendered[0]).strip() == b"emphasis"
 
     rendered = render_markdown("`inline code`")
-    assert row_text(rendered[1]).rstrip() == b" inline code"
+    assert row_text(rendered[0]).rstrip() == b" inline code"
 
     rendered = render_markdown("~~strikethrough~~")
-    assert rendered[1][0][0].foreground == "default,strikethrough"
-    assert row_text(rendered[1]).rstrip() == b"strikethrough"
+    assert rendered[0][0][0].foreground == "default,strikethrough"
+    assert row_text(rendered[0]).rstrip() == b"strikethrough"
 
     rendered = render_markdown("[link](http://domain.tld)")
-    assert rendered[1][0][0].foreground == "default,underline"
-    assert row_text(rendered[1]).rstrip() == b"link"
+    assert rendered[0][0][0].foreground == "default,underline"
+    assert row_text(rendered[0]).rstrip() == b"link"
 
     rendered = render_markdown("http://domain.tld")
-    assert rendered[1][0][0].foreground == "default,underline"
-    assert row_text(rendered[1]).rstrip() == b"http://domain.tld"
+    assert rendered[0][0][0].foreground == "default,underline"
+    assert row_text(rendered[0]).rstrip() == b"http://domain.tld"
 
     rendered = render_markdown("![link](http://domain.tld)")
-    assert rendered[1][0][0].foreground == "default,underline"
-    assert row_text(rendered[1]).rstrip() == b"link"
+    assert rendered[0][0][0].foreground == "default,underline"
+    assert row_text(rendered[0]).rstrip() == b"link"

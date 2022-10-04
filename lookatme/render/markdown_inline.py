@@ -70,6 +70,26 @@ def render_strong_close(_, ctx: Context):
     ctx.spec_pop()
 
 
+def render_s_open(_, ctx: Context):
+    ctx.spec_push(utils.spec_from_style("strikethrough"))
+
+
+def render_s_close(_, ctx: Context):
+    ctx.spec_pop()
+
+
+def render_link_open(token, ctx: Context):
+    attrs = dict(token["attrs"])
+    href = attrs.get("href", "")
+
+    plain_spec = utils.spec_from_style(config.get_style()["link"])
+    ctx.spec_push(LinkIndicatorSpec(href, plain_spec))
+
+
+def render_link_close(_, ctx: Context):
+    ctx.spec_pop()
+
+
 def render_softbreak(_, ctx: Context):
     ctx.inline_push((ctx.spec_text, "\n"))
 
