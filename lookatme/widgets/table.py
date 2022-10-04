@@ -32,7 +32,7 @@ class Table(urwid.Pile):
         self.header = header
         self.body = body
 
-        self._log = config.LOG.getChild("Table")
+        self._log = config.get_log().getChild("Table")
 
         if header is not None:
             self.num_columns = len(header["children"])

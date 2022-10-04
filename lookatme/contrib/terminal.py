@@ -12,11 +12,11 @@ import urwid
 import yaml
 from marshmallow import Schema, fields
 
-import lookatme.render
 import lookatme.config
+import lookatme.render
+import lookatme.render.markdown_block
 from lookatme.exceptions import IgnoredByContrib
 from lookatme.render.context import Context
-import lookatme.render.markdown_block
 
 
 def user_warnings():

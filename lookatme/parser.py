@@ -55,7 +55,7 @@ def debug_print_tokens(tokens, level=1):
     """
     def indent(x): return "  " * x
 
-    log = lookatme.config.LOG
+    log = lookatme.config.get_log()
     log.debug(indent(level) + "DEBUG TOKENS")
     level += 1
 

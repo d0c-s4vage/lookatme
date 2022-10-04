@@ -10,8 +10,6 @@ import urwid
 from urwid.util import is_mouse_press
 
 import lookatme.config
-import lookatme.config as config
-from lookatme.utils import row_text, spec_from_style
 from lookatme.widgets.smart_attr_spec import SmartAttrSpec
 
 
@@ -42,7 +40,7 @@ class ClickableText(urwid.Text):
     signals = ["click", "change"]
 
     def __init__(self, *args, **kwargs):
-        self._log = lookatme.config.LOG.getChild("ClickableText")
+        self._log = lookatme.config.get_log().getChild("ClickableText")
 
         super(ClickableText, self).__init__(*args, **kwargs)
 

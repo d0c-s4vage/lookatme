@@ -14,8 +14,8 @@ import yaml
 from marshmallow import Schema, fields
 
 import lookatme.config
-from lookatme.render.context import Context
 from lookatme.exceptions import IgnoredByContrib
+from lookatme.render.context import Context
 
 
 def user_warnings():

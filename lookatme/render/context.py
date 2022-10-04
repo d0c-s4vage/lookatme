@@ -64,7 +64,7 @@ class Context:
 
         self.token_stack: List[TokenIterator] = []
 
-        self._log = lookatme.config.LOG
+        self._log = lookatme.config.get_log()
 
     @property
     def tokens(self) -> TokenIterator:
