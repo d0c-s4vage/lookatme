@@ -74,7 +74,7 @@ A basic, optional YAML header may be included at the top of the slides:
   slides
   dark_theme
   light_theme
-  style_precendence
+  style_precedence
   contrib_extensions_auto
   smart_splitting
   builtin_extensions/index

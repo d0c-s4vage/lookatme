@@ -3,10 +3,6 @@ Defines the built-in styles for lookatme
 """
 
 
-from . import dark
-from . import light
-
-
 from lookatme.schemas import StyleSchema
 from lookatme.utils import dict_deep_update
 

@@ -4,9 +4,11 @@ Defines all schemas used in lookatme
 
 
 import datetime
-from marshmallow import Schema, fields, validate
+from typing import Dict
+
 import pygments.styles
 import yaml
+from marshmallow import INCLUDE, RAISE, Schema, fields, validate
 
 
 class NoDatesSafeLoader(yaml.SafeLoader):
@@ -21,19 +23,23 @@ class NoDatesSafeLoader(yaml.SafeLoader):
         go on to serialise as json which doesn't have the advanced types
         of yaml, and leads to incompatibilities down the track.
         """
-        if not 'yaml_implicit_resolvers' in cls.__dict__:
+        if 'yaml_implicit_resolvers' not in cls.__dict__:
             cls.yaml_implicit_resolvers = cls.yaml_implicit_resolvers.copy()
 
         for first_letter, mappings in cls.yaml_implicit_resolvers.items():
             cls.yaml_implicit_resolvers[first_letter] = [
                 (tag, regexp) for tag, regexp in mappings if tag != tag_to_remove
             ]
+
+
 NoDatesSafeLoader.remove_implicit_resolver('tag:yaml.org,2002:timestamp')
 
 
 class YamlRender:
-    loads = lambda data: yaml.load(data, Loader=NoDatesSafeLoader)
-    dumps = lambda data: yaml.safe_dump(data, allow_unicode=True)
+    @staticmethod
+    def loads(data): return yaml.load(data, Loader=NoDatesSafeLoader)
+    @staticmethod
+    def dumps(data): return yaml.safe_dump(data, allow_unicode=True)
 
 
 class BulletsSchema(Schema):
@@ -53,9 +59,13 @@ class BulletsSchema(Schema):
             "10": fields.Str(dump_default="•"),
         }
 
+
 _NUMBERING_VALIDATION = validate.OneOf(["numeric", "alpha", "roman"])
+
+
 class NumberingSchema(Schema):
-    default = fields.Str(dump_default="numeric", validate=_NUMBERING_VALIDATION)
+    default = fields.Str(dump_default="numeric",
+                         validate=_NUMBERING_VALIDATION)
 
     class Meta:
         include = {
@@ -158,6 +168,7 @@ class StyleSchema(Schema):
     """
     class Meta:
         render_module = YamlRender
+        unknown = RAISE
 
     style = fields.Str(
         dump_default="monokai",
@@ -193,11 +204,15 @@ class StyleSchema(Schema):
         "right": 10,
     })
 
-    headings = fields.Nested(HeadingsSchema, dump_default=HeadingsSchema().dump(None))
-    bullets = fields.Nested(BulletsSchema, dump_default=BulletsSchema().dump(None))
-    numbering = fields.Nested(NumberingSchema, dump_default=NumberingSchema().dump(None))
+    headings = fields.Nested(
+        HeadingsSchema, dump_default=HeadingsSchema().dump(None))
+    bullets = fields.Nested(
+        BulletsSchema, dump_default=BulletsSchema().dump(None))
+    numbering = fields.Nested(
+        NumberingSchema, dump_default=NumberingSchema().dump(None))
     table = fields.Nested(TableSchema, dump_default=TableSchema().dump(None))
-    quote = fields.Nested(BlockQuoteSchema, dump_default=BlockQuoteSchema().dump(None))
+    quote = fields.Nested(
+        BlockQuoteSchema, dump_default=BlockQuoteSchema().dump(None))
     hrule = fields.Nested(HruleSchema, dump_default=HruleSchema().dump(None))
     link = fields.Nested(StyleFieldSchema, dump_default={
         "fg": "#33c,underline",
@@ -210,11 +225,12 @@ class MetaSchema(Schema):
     """
     class Meta:
         render_module = YamlRender
+        unknown = INCLUDE
 
     title = fields.Str(dump_default="", load_default="")
-    date = fields.Date(
-        dump_default=datetime.datetime.now(),
-        load_default=datetime.datetime.now(),
+    date = fields.Str(
+        dump_default=datetime.datetime.now().strftime("%Y-%m-%d"),
+        load_default=datetime.datetime.now().strftime("%Y-%m-%d"),
     )
     author = fields.Str(dump_default="", load_default="")
     styles = fields.Nested(
@@ -223,3 +239,23 @@ class MetaSchema(Schema):
         load_default=StyleSchema().dump(None),
     )
     extensions = fields.List(fields.Str(), dump_default=[], load_default=[])
+
+    def loads(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).loads(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not loads")
+
+        return res
+
+    def load(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).load(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not load")
+
+        return res
+
+    def dump(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).dump(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not dump")
+        return res

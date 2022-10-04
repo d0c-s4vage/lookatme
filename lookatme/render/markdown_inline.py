@@ -4,7 +4,7 @@ interface
 """
 
 
-import contextlib
+import functools
 import re
 import sys
 import urwid
@@ -16,7 +16,8 @@ from lookatme.contrib import contrib_first
 import lookatme.parser
 from lookatme.render.context import Context
 import lookatme.render.pygments as pygments_render
-from lookatme.utils import *
+import lookatme.utils as utils
+from lookatme.contrib import contrib_first
 from lookatme.widgets.clickable_text import LinkIndicatorSpec
 from lookatme.render.markdown_html import Tag
 

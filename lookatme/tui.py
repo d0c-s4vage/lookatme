@@ -3,13 +3,13 @@ This module defines the text user interface (TUI) for lookatme
 """
 
 
-from collections import defaultdict
 import copy
 import threading
 import time
+from collections import defaultdict
 from queue import Queue
-import urwid
 
+import urwid
 
 import lookatme.config
 import lookatme.config as config
@@ -31,7 +31,7 @@ def text(style, data, align="left"):
 def root_urwid_widget(to_wrap):
     """This function is overridable by contrib extensions that need to specify
     the root urwid widget.
-    
+
     The return value *must* return either the ``to_wrap`` widget itself, or
     another widget that wraps the provided ``to_wrap`` widget.
     """
@@ -48,7 +48,7 @@ class SlideRenderer(threading.Thread):
         self.queue = Queue()
         self.loop = loop
         self.cache = {}
-        self._log = lookatme.config.LOG.getChild("RENDER")
+        self._log = lookatme.config.get_log().getChild("RENDER")
 
     def flush_cache(self):
         """Clea everything out of the queue and the cache.
@@ -86,7 +86,7 @@ class SlideRenderer(threading.Thread):
 
     def stop(self):
         self.keep_running.clear()
-    
+
     def run(self):
         """Run the main render thread
         """
@@ -129,7 +129,7 @@ class SlideRenderer(threading.Thread):
             indentation.
           * ``loop`` - the ``urwid.MainLoop`` instance being used by lookatme.
             This won't usually be used, but is available if needed.
-        
+
         Main render functions (those defined in markdown_block.py) may have
         three types of return values:
 
@@ -161,7 +161,7 @@ class SlideRenderer(threading.Thread):
         self._log.debug(f"Rendered slide {slide_num} in {total}")
 
         return res
-    
+
     def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
         ctx = Context(self.loop)
@@ -189,7 +189,7 @@ class MarkdownTui(urwid.Frame):
         self.bottom_spacing = urwid.Filler(self.slide_footer, top=0, bottom=0)
         self.bottom_spacing_box = urwid.BoxAdapter(self.bottom_spacing, 1)
 
-        self._log = lookatme.config.LOG
+        self._log = lookatme.config.get_log()
 
         urwid.set_encoding('utf8')
         screen = urwid.raw_display.Screen()
@@ -236,8 +236,7 @@ class MarkdownTui(urwid.Frame):
             self.curr_slide.number + 1,
             len(self.pres.slides),
         )
-        date = self.pres.meta.get('date', '')
-        spec = spec_from_style(config.STYLE["slides"])
+        spec = spec_from_style(config.get_style()["slides"])
         self.slide_num.set_text([(spec, slide_text)])
 
     def update_title(self):
@@ -258,10 +257,10 @@ class MarkdownTui(urwid.Frame):
         """Update the author and date
         """
         author = self.pres.meta.get('author', '')
-        author_spec = spec_from_style(config.STYLE["author"])
+        author_spec = spec_from_style(config.get_style()["author"])
 
         date = self.pres.meta.get('date', '')
-        date_spec = spec_from_style(config.STYLE["date"])
+        date_spec = spec_from_style(config.get_style()["date"])
 
         self.creation.set_text([
             (author_spec, f"  {author} "),
@@ -277,8 +276,8 @@ class MarkdownTui(urwid.Frame):
     def update_slide_settings(self):
         """Update the slide margins and paddings
         """
-        margin = config.STYLE["margin"]
-        padding = config.STYLE["padding"]
+        margin = config.get_style()["margin"]
+        padding = config.get_style()["padding"]
 
         self.root_margins.left = margin["left"]
         self.root_margins.right = margin["right"]
@@ -292,7 +291,8 @@ class MarkdownTui(urwid.Frame):
 
         self.bottom_spacing.top = padding["bottom"]
         self.bottom_spacing.bottom = margin["bottom"]
-        self.bottom_spacing_box.height = margin["bottom"] + 1 + padding["bottom"]
+        self.bottom_spacing_box.height = margin["bottom"] + \
+            1 + padding["bottom"]
 
     def update(self):
         """
@@ -316,12 +316,9 @@ class MarkdownTui(urwid.Frame):
         """Handle keypress events
         """
         self._log.debug(f"KEY: {key}")
-        try:
-            key = urwid.Frame.keypress(self, size, key)
-            if key is None:
-                return
-        except:
-            pass
+        key = self._get_key(size, key)
+        if key is None:
+            return
 
         slide_direction = 0
         if key in ["left", "backspace", "delete", "h", "k"]:
@@ -334,23 +331,34 @@ class MarkdownTui(urwid.Frame):
         elif key == "r":
             self.reload()
 
-        if slide_direction != 0:
-            new_slide_num = self.curr_slide.number + slide_direction
-            if new_slide_num < 0:
-                new_slide_num = 0
-            elif new_slide_num >= len(self.pres.slides):
-                new_slide_num = len(self.pres.slides) - 1
-
-            if new_slide_num == self.curr_slide.number:
-                return
-
-            self.curr_slide = self.pres.slides[new_slide_num]
-            self.update()
+        if slide_direction == 0:
             return
+
+        new_slide_num = self.curr_slide.number + slide_direction
+        if new_slide_num < 0:
+            new_slide_num = 0
+        elif new_slide_num >= len(self.pres.slides):
+            new_slide_num = len(self.pres.slides) - 1
+
+        if new_slide_num == self.curr_slide.number:
+            return
+
+        self.curr_slide = self.pres.slides[new_slide_num]
+        self.update()
+
+    def _get_key(self, size, key):
+        """Resolve the key that was pressed.
+        """
+        try:
+            key = urwid.Frame.keypress(self, size, key)
+            if key is None:
+                return
+        except Exception:
+            pass
+        return key
 
     def run(self):
         self.loop.run()
-
 
 
 def create_tui(pres, start_slide=0):

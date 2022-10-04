@@ -3,16 +3,16 @@ This module tests contrib-specific functionality
 """
 
 import urwid
-from six.moves import reload_module, StringIO
+from six.moves import StringIO, reload_module
 
-
-import lookatme.pres
+import lookatme.config
 import lookatme.contrib
-import lookatme.contrib.terminal
 import lookatme.contrib.file_loader
-import lookatme.tui
+import lookatme.contrib.terminal
+import lookatme.pres
 import lookatme.render.markdown_block
 import lookatme.render.markdown_inline
+import lookatme.tui
 
 
 def setup_contrib(fake_mod):
@@ -31,13 +31,14 @@ def test_overridable_root(mocker):
     """
     lookatme.config.LOG = mocker.Mock()
 
-    class Wrapper(urwid.WidgetWrap): pass
+    class Wrapper(urwid.WidgetWrap):
+        pass
 
     class FakeMod:
         @staticmethod
         def root_urwid_widget(to_wrap):
             return Wrapper(to_wrap)
-    
+
     setup_contrib(FakeMod)
     input_stream = StringIO("test")
     pres = lookatme.pres.Presentation(input_stream, "dark")

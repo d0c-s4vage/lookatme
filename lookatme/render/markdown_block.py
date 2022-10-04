@@ -15,7 +15,6 @@ import sys
 import urwid
 from typing import List, Dict, Tuple, Union
 
-
 import lookatme.config as config
 from lookatme.contrib import contrib_first
 import lookatme.render.pygments as pygments_render
@@ -177,16 +176,16 @@ def render_list_item_open(_, ctx: Context):
     pile = urwid.Pile(urwid.SimpleFocusListWalker([]))
 
     if meta["ordered"]:
-        numbering = config.STYLE["numbering"]
+        numbering = config.get_style()["numbering"]
         list_marker_type = numbering.get(str(list_level), numbering["default"])
         sequence = {
             "numeric": lambda x: str(x),
             "alpha": lambda x: chr(ord("a") + x - 1),
-            "roman": lambda x: int_to_roman(x),
+            "roman": lambda x: utils.int_to_roman(x),
         }[list_marker_type]
         list_marker = sequence(curr_count) + "."
     else:
-        bullets = config.STYLE["bullets"]
+        bullets = config.get_style()["bullets"]
         list_marker = bullets.get(str(list_level), bullets["default"])
 
     marker_text = list_marker + " "
@@ -246,7 +245,7 @@ def render_blockquote_open(token: Dict, ctx: Context):
     """
     pile = urwid.Pile([])
 
-    styles = config.STYLE["quote"]
+    styles = config.get_style()["quote"]
 
     quote_side = styles["side"]
     quote_top_corner = styles["top_corner"]

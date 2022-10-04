@@ -5,10 +5,9 @@ Test the main CLI
 
 from click.testing import CliRunner
 
-
 import lookatme
-from lookatme.__main__ import main
 import lookatme.tui
+from lookatme.__main__ import main
 
 
 def run_cmd(*args):

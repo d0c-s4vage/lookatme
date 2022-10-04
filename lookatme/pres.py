@@ -7,19 +7,20 @@ import os
 import threading
 import time
 
-
+import lookatme.ascii_art
 import lookatme.config
 import lookatme.contrib
-from lookatme.parser import Parser
 import lookatme.prompt
 import lookatme.themes
 import lookatme.tui
+from lookatme.parser import Parser
 from lookatme.utils import dict_deep_update
 
 
 class Presentation(object):
     """Defines a presentation
     """
+
     def __init__(self, input_stream, theme, style_override=None, live_reload=False,
                  single_slide=False, preload_extensions=None, safe=False,
                  no_ext_warn=False, ignore_ext_failure=False):
@@ -31,7 +32,8 @@ class Presentation(object):
         self.preload_extensions = preload_extensions or []
         self.input_filename = None
         if hasattr(input_stream, "name"):
-            lookatme.config.SLIDE_SOURCE_DIR = os.path.dirname(input_stream.name)
+            lookatme.config.SLIDE_SOURCE_DIR = os.path.dirname(
+                input_stream.name)
             self.input_filename = input_stream.name
 
         self.style_override = style_override
@@ -43,7 +45,8 @@ class Presentation(object):
         self.ignore_ext_failure = ignore_ext_failure
         self.initial_load_complete = False
 
-        self.theme_mod = __import__("lookatme.themes." + theme, fromlist=[theme])
+        self.theme_mod = __import__(
+            "lookatme.themes." + theme, fromlist=[theme])
 
         if self.live_reload:
             self.reload_thread = threading.Thread(target=self.reload_watcher)
@@ -59,14 +62,14 @@ class Presentation(object):
         """
         if self.input_filename is None:
             return
-        
+
         last_mod_time = os.path.getmtime(self.input_filename)
         while True:
             try:
                 curr_mod_time = os.path.getmtime(self.input_filename)
                 if curr_mod_time != last_mod_time:
-                    self.tui.reload()
-                    self.tui.loop.draw_screen()
+                    self.get_tui().reload()
+                    self.get_tui().loop.draw_screen()
                     last_mod_time = curr_mod_time
             except Exception:
                 pass
@@ -79,7 +82,7 @@ class Presentation(object):
         :param str data: The data to render for this slide deck (optional)
         """
         if data is None:
-            with open(self.input_filename, "r") as f:
+            with open(str(self.input_filename), "r") as f:
                 data = f.read()
 
         parser = Parser(single_slide=self.single_slide)
@@ -109,7 +112,7 @@ class Presentation(object):
 
         # now apply any command-line style overrides
         if self.style_override is not None:
-            self.styles["style"] = self.style_override
+            self.styles["style"] = self.style_override  # type: ignore
 
         lookatme.config.STYLE = self.styles
         self.initial_load_complete = True
@@ -139,3 +142,9 @@ class Presentation(object):
         """
         self.tui = lookatme.tui.create_tui(self, start_slide=start_slide)
         self.tui.run()
+
+    def get_tui(self) -> lookatme.tui.MarkdownTui:
+        if self.tui is None:
+            raise ValueError(
+                "Tui has not been set, has the presentation been run yet?")
+        return self.tui

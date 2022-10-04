@@ -4,8 +4,9 @@ Defines a basic Table widget for urwid
 
 
 from collections import defaultdict
-import urwid
+from typing import List, Optional
 
+import urwid
 
 from lookatme.render.context import Context
 import lookatme.config as config

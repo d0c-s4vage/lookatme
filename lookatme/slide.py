@@ -8,7 +8,7 @@ class Slide(object):
     tokens from the input markdown
     """
 
-    def __init__(self, tokens,number=0):
+    def __init__(self, tokens, number=0):
         """Create a new Slide instance with the provided tokens
 
         :param list tokens: A list of mistune tokens

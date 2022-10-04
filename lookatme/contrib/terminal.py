@@ -4,19 +4,17 @@ within a slide.
 """
 
 
-from marshmallow import fields, Schema
-import os
 import re
 import shlex
-import signal
+from typing import Dict
+
 import urwid
 import yaml
-
+from marshmallow import Schema, fields
 
 import lookatme.render
 from lookatme.exceptions import IgnoredByContrib
 from lookatme.render.context import Context
-import lookatme.config
 
 
 def user_warnings():
@@ -32,8 +30,10 @@ def user_warnings():
 
 
 class YamlRender:
-    loads = lambda data: yaml.safe_load(data)
-    dumps = lambda data: yaml.safe_dump(data)
+    @staticmethod
+    def loads(data): return yaml.safe_load(data)
+    @staticmethod
+    def dumps(data): return yaml.safe_dump(data)
 
 
 class TerminalExSchema(Schema):
@@ -48,6 +48,18 @@ class TerminalExSchema(Schema):
 
     class Meta:
         render_module = YamlRender
+
+    def loads(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).loads(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not loads")
+        return res
+
+    def load(self, *args, **kwargs) -> Dict:
+        res = super(self.__class__, self).load(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not load")
+        return res
 
 
 CREATED_TERMS = []
@@ -72,17 +84,15 @@ def render_block_code(token, ctx: Context):
         term_data = TerminalExSchema().loads(token["text"])
 
         if term_data["init_text"] is not None and term_data["init_wait"] is not None:
-            orig_command = term_data["command"]
             term_data["command"] = " ".join([shlex.quote(x) for x in [
                 "expect", "-c", ";".join([
-                   'spawn -noecho {}'.format(term_data["command"]),
+                    'spawn -noecho {}'.format(term_data["command"]),
                     'expect {{{}}}'.format(term_data["init_wait"]),
                     'send {{{}}}'.format(term_data["init_text"]),
                     'interact',
                     'exit',
                 ])
             ]])
-            
 
     term = urwid.Terminal(
         shlex.split(term_data["command"].strip()),
@@ -104,7 +114,7 @@ def render_block_code(token, ctx: Context):
         res += lookatme.render.markdown_block.render_code(
             fake_token, ctx,
         )
-    
+
     res += [
         urwid.Divider(),
         line_box,
@@ -116,6 +126,7 @@ def render_block_code(token, ctx: Context):
 
 def shutdown():
     for idx, term in enumerate(CREATED_TERMS):
-        lookatme.config.LOG.debug(f"Terminating terminal {idx+1}/{len(CREATED_TERMS)}")
+        lookatme.config.get_log().debug(
+            f"Terminating terminal {idx+1}/{len(CREATED_TERMS)}")
         if term.pid is not None:
             term.terminate()
