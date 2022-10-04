@@ -23,6 +23,9 @@ Slide metadata is contained within an optional YAML header:
     styles: {}
     ---
 
+Additional, unknown metadata fields are allowed at the top level. However, the
+``styles`` field and subfields are strictly validated.
+
 Extensions
 ^^^^^^^^^^
 
