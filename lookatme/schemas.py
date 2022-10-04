@@ -8,7 +8,7 @@ from typing import Dict
 
 import pygments.styles
 import yaml
-from marshmallow import Schema, fields, validate
+from marshmallow import INCLUDE, RAISE, Schema, fields, validate
 
 
 class NoDatesSafeLoader(yaml.SafeLoader):
@@ -168,6 +168,7 @@ class StyleSchema(Schema):
     """
     class Meta:
         render_module = YamlRender
+        unknown = RAISE
 
     style = fields.Str(
         dump_default="monokai",
@@ -224,11 +225,12 @@ class MetaSchema(Schema):
     """
     class Meta:
         render_module = YamlRender
+        unknown = INCLUDE
 
     title = fields.Str(dump_default="", load_default="")
-    date = fields.Date(
-        dump_default=datetime.datetime.now(),
-        load_default=datetime.datetime.now(),
+    date = fields.Str(
+        dump_default=datetime.datetime.now().strftime("%Y-%m-%d"),
+        load_default=datetime.datetime.now().strftime("%Y-%m-%d"),
     )
     author = fields.Str(dump_default="", load_default="")
     styles = fields.Nested(
@@ -242,12 +244,14 @@ class MetaSchema(Schema):
         res = super(self.__class__, self).loads(*args, **kwargs)
         if res is None:
             raise ValueError("Could not loads")
+
         return res
 
     def load(self, *args, **kwargs) -> Dict:
         res = super(self.__class__, self).load(*args, **kwargs)
         if res is None:
             raise ValueError("Could not load")
+
         return res
 
     def dump(self, *args, **kwargs) -> Dict:
