@@ -2,12 +2,12 @@
 """
 
 
-import copy
 import contextlib
+import copy
 from dataclasses import dataclass
-from typing import Union, Tuple, Optional, Dict, Any, List
-import urwid
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import urwid
 
 import lookatme.config
 import lookatme.utils as utils
@@ -41,7 +41,7 @@ class TokenIterator:
 
     def __iter__(self):
         return self
-    
+
     def __next__(self):
         token = self.next()
         if token is None:
@@ -79,7 +79,7 @@ class Context:
         """Return the next token in the token iterator, advancing the iterator
         """
         return self.tokens.next()
-    
+
     def tokens_push(self, tokens: List[Dict]):
         """
         """
@@ -104,7 +104,8 @@ class Context:
         """Ensure that we are in a new block
         """
         if not self.in_new_block:
-            utils.pile_or_listbox_add(self.container, self.inline_widgets_consumed)
+            utils.pile_or_listbox_add(
+                self.container, self.inline_widgets_consumed)
             self.widget_add(self.wrap_widget(urwid.Divider()))
 
         self.in_new_block = True
@@ -128,7 +129,6 @@ class Context:
     def log_debug(self, msg):
         indent = "  " * self.level
         self._log.debug(indent + msg)
-
 
     def inline_push(self, inline_result: Union[urwid.Widget, str, Tuple[urwid.AttrSpec, str]]):
         """Push a new inline render result onto the stack. Either a widget, or
@@ -180,7 +180,7 @@ class Context:
                 res.append(render_res)
             if (
                 isinstance(render_res, str) or
-                (isinstance(render_res, (tuple|list)) and len(render_res) == 2)
+                (isinstance(render_res, (tuple | list)) and len(render_res) == 2)
             ):
                 curr_text_markup.append(render_res)
 
@@ -190,7 +190,7 @@ class Context:
         res = [urwid.AttrMap(x, {None: self.spec_text}) for x in res]
 
         return res
-    
+
     def inline_flush(self):
         """Add all inline widgets to the current container
         """
@@ -198,7 +198,7 @@ class Context:
 
     def inline_convert_all_to_widgets(self):
         self.inline_render_results = self.inline_widgets_consumed
-    
+
     @property
     def inline_markup_consumed(self):
         """Return and clear the inline markup
@@ -207,7 +207,7 @@ class Context:
         self.log_debug(">>>> InlineMarkup: {!r}".format(res))
         self.inline_clear()
         return res
-    
+
     @property
     def inline_widgets_consumed(self):
         """Return and clear the inline widgets
@@ -236,7 +236,8 @@ class Context:
         """Pop the most recent tag off of the tag stack
         """
         if not self.tag_stack:
-            raise ValueError("Tried to pop off the tag stack one too many times")
+            raise ValueError(
+                "Tried to pop off the tag stack one too many times")
 
         popped_tag, had_spec = self.tag_stack.pop()
 
@@ -281,7 +282,8 @@ class Context:
                 utils.pile_or_listbox_add(self.container, custom_add)
 
         elif self.inline_render_results:
-            raise Exception("How do you have render results with no containers?")
+            raise Exception(
+                "How do you have render results with no containers?")
 
         new_info = ContainerInfo(container=new_item, meta=new_meta)
         self.container_stack.append(new_info)
@@ -291,7 +293,8 @@ class Context:
         """Pop the last element off the stack. Returns the popped widget
         """
         if not self.container_stack:
-            raise ValueError("Tried to pop off the widget stack one too many times")
+            raise ValueError(
+                "Tried to pop off the widget stack one too many times")
 
         self.inline_flush()
         return self.container_stack.pop()
@@ -308,13 +311,13 @@ class Context:
 #     def container_last(self):
 #         if self.container is None:
 #             return None
-# 
+#
 #         cont_children = []
 #         if hasattr(self.container, "body"):
 #             cont_children = self.container.body
 #         elif hasattr(self.container, "contents"):
 #             cont_children = self.container.contents
-# 
+#
 #         if len(cont_children) == 0:
 #             return None
 #         return cont_children[-1]
@@ -354,14 +357,15 @@ class Context:
         """Push a new AttrSpec onto the spec_stack
         """
         self.spec_stack.append((new_spec, text_only))
-    
+
     def spec_pop(self):
         """Push a new AttrSpec onto the spec_stack
         """
         if not self.spec_stack:
-            raise ValueError("Tried to pop off the spec stack one too many times")
+            raise ValueError(
+                "Tried to pop off the spec stack one too many times")
         return self.spec_stack.pop()
-    
+
     @property
     def spec_general(self):
         """Return the current fully resolved current AttrSpec
@@ -370,7 +374,7 @@ class Context:
             self.spec_stack,
             lambda s, text_only: not text_only,
         )
-    
+
     @property
     def spec_text(self):
         """
@@ -385,7 +389,7 @@ class Context:
         return utils.spec_from_stack(
             [(self.spec_text, True), (other_spec, True)],
         )
-    
+
     @contextlib.contextmanager
     def use_spec(self, new_spec, text_only=False):
         """Ensure that specs are pushed/popped correctly

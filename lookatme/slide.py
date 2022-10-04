@@ -1,6 +1,6 @@
 """
 Slide info holder
-""" 
+"""
 
 
 class Slide(object):

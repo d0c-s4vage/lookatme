@@ -8,11 +8,10 @@ from typing import List, Optional
 
 import urwid
 
-from lookatme.render.context import Context
 import lookatme.config as config
-import lookatme.utils as utils
-import lookatme.render.markdown_inline as markdown_inline
 import lookatme.render.markdown_block as markdown_block
+import lookatme.render.markdown_inline as markdown_inline
+import lookatme.utils as utils
 from lookatme.render.context import Context
 
 
@@ -38,7 +37,8 @@ class Table(urwid.Pile):
         if header is not None:
             self.num_columns = len(header["children"])
         elif body is not None:
-            self.num_columns = max(len(row["children"]) for row in body["children"])
+            self.num_columns = max(len(row["children"])
+                                   for row in body["children"])
         else:
             raise ValueError(
                 "Invalid table specification: could not determine # of columns"
@@ -47,7 +47,8 @@ class Table(urwid.Pile):
         self.header_rows = []
         if self.header is not None:
             if len(self.header["children"]) != 1:
-                raise ValueError("Token error: thead should only have one child!")
+                raise ValueError(
+                    "Token error: thead should only have one child!")
 
             self.header_rows = self.create_cells(
                 self.header["children"],
@@ -62,7 +63,7 @@ class Table(urwid.Pile):
 #        max_column_widths: Dict[int, int] = self.get_max_column_widths(
 #            self.header_rows + self.body_rows,
 #        )
-        
+
         super(self.__class__, self).__init__(self.header_rows + self.body_rows)
 
     # def create_final_rows(self, headers, body_rows):
@@ -96,21 +97,21 @@ class Table(urwid.Pile):
 #
 #            column_row = urwid.Columns(row_columns, cell_spacing)
 #            final_rows.append(column_row)
-        
+
 #         final_rows = [urwid.Columns(self.rend_headers[0], 10)]
 #         for row in self.rend_rows:
 #             final_rows.append(urwid.Columns(row, 10))
-# 
+#
 #         urwid.Pile.__init__(self, final_rows)
 
 #     def on_cell_change(self, *args, **kwargs):
 #         self._invalidate()
 #         self._emit("change")
-# 
+#
 #     def on_header_click(self, header_widget):
 #         self._log.debug("Header clicked: {!r}".format(header_widget.text))
 #         self._emit("click")
-# 
+#
 #     def render(self, size, focus=False):
 #         """Do whatever needs to be done to render the table
 #         """
@@ -120,7 +121,7 @@ class Table(urwid.Pile):
 #         self._log.debug("res: {!r}.rows(): {!r}".format(res, res.rows()))
 #         self._log.debug("self.rows(): {!r}".format(self.rows(size)))
 #         return res
-#     
+#
 #     def watch(self, w):
 #         """Watch the provided widget w for changes
 #         """
@@ -129,11 +130,11 @@ class Table(urwid.Pile):
 #             urwid.connect_signal(w, "change", self.on_cell_change)
 #         if "click" in signals:
 #             urwid.connect_signal(w, "click", self.on_header_click)
-#     
+#
 #     def _invalidate(self):
 #         self.set_column_maxes()
 #         urwid.Pile._invalidate(self)
-# 
+#
 #     def set_column_maxes(self):
 #         """Calculate and set the column maxes for this table
 #         """
@@ -142,7 +143,7 @@ class Table(urwid.Pile):
 #         self.total_width = sum(self.column_maxes.values()) + (
 #             cell_spacing * (self.num_columns - 1)
 #         )
-# 
+#
 #         for columns, info in self.contents:
 #             # row should be a Columns instance
 #             new_columns = []
@@ -153,7 +154,7 @@ class Table(urwid.Pile):
 #                     (column_info[0], self.column_maxes[idx], column_info[2]),
 #                 ))
 #             columns.contents = new_columns
-# 
+#
 #     def calc_column_maxes(self):
 #         column_maxes = defaultdict(int)
 #         for row in self.rend_headers + self.rend_rows:
@@ -182,14 +183,15 @@ class Table(urwid.Pile):
         for row in body_rows:
             rend_row = []
             for idx, cell in enumerate(row["children"]):
-                #if idx >= self.num_columns:
+                # if idx >= self.num_columns:
                 #    break
                 cell_container = urwid.Pile([])
                 with self.ctx.use_container_tmp(cell_container):
                     with self.ctx.use_tokens(cell["children"]):
                         markdown_block.render_all(self.ctx)
                         if header:
-                            divider = urwid.Divider(config.STYLE["table"]["header_divider"])
+                            divider = urwid.Divider(
+                                config.STYLE["table"]["header_divider"])
                             self.ctx.inline_flush()
                             self.ctx.widget_add(divider)
 

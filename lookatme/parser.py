@@ -3,21 +3,20 @@ This module defines the parser for the markdown presentation file
 """
 
 
-from collections import defaultdict
-from marshmallow import fields, Schema
-import markdown_it
-import markdown_it.token
 import re
 import time
+from collections import defaultdict
 from typing import AnyStr, Callable, Dict, List, Tuple
-import yaml
 
+import markdown_it
+import markdown_it.token
 import mistune
+import yaml
+from marshmallow import Schema, fields
 
+import lookatme.config
 from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
-import lookatme.config
-
 
 HTML_TAG_LT_REPLACE = "TAG:LT:" + str(time.time())
 
@@ -51,10 +50,10 @@ def is_hrule(token):
     return token["type"] == "hr"
 
 
-def debug_print_tokens(tokens, level = 1):
+def debug_print_tokens(tokens, level=1):
     """Print the tokens DFS
     """
-    indent = lambda x: "  " * x
+    def indent(x): return "  " * x
 
     log = lookatme.config.LOG
     log.debug(indent(level) + "DEBUG TOKENS")
@@ -145,6 +144,7 @@ class Parser(object):
         else:
             def slide_split_check(token):
                 return is_hrule(token)
+
             def heading_mod(token):
                 pass
             keep_split_token = False

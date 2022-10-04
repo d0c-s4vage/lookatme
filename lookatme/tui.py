@@ -13,10 +13,10 @@ import urwid
 
 import lookatme.config
 import lookatme.config as config
-from lookatme.contrib import shutdown_contribs, contrib_first
-from lookatme.render.context import Context
 import lookatme.render.markdown_block as markdown_block
 import lookatme.render.markdown_inline as markdown_inline
+from lookatme.contrib import contrib_first, shutdown_contribs
+from lookatme.render.context import Context
 from lookatme.utils import spec_from_style
 from lookatme.widgets.clickable_text import ClickableText
 
@@ -178,7 +178,8 @@ class MarkdownTui(urwid.Frame):
         """
         """
         #self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
-        self.slide_body = urwid.ListBox(urwid.SimpleFocusListWalker([urwid.Text("test")]))
+        self.slide_body = urwid.ListBox(
+            urwid.SimpleFocusListWalker([urwid.Text("test")]))
         self.slide_title = ClickableText([""], align="center")
         self.top_spacing = urwid.Filler(self.slide_title, top=0, bottom=0)
         self.top_spacing_box = urwid.BoxAdapter(self.top_spacing, 1)

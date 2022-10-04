@@ -4,7 +4,6 @@
 
 import urwid
 
-
 from lookatme.widgets.smart_attr_spec import SmartAttrSpec
 
 
@@ -182,12 +181,12 @@ def can_style_item(item):
     return isinstance(item, (urwid.Text, list, tuple))
 
 
-def spec_from_stack(spec_stack: list, filter_fn = None):
+def spec_from_stack(spec_stack: list, filter_fn=None):
     if len(spec_stack) == 0:
         return SmartAttrSpec("", "")
 
     if filter_fn is None:
-        filter_fn = lambda _x, _y: True
+        def filter_fn(_x, _y): return True
 
     res_spec = None
     for spec, text_only in spec_stack:
@@ -196,6 +195,7 @@ def spec_from_stack(spec_stack: list, filter_fn = None):
         res_spec = overwrite_spec(res_spec, spec)
 
     return res_spec
+
 
 def styled_text(text, new_styles, old_styles=None, supplement_style=False):
     """Return a styled text tuple that can be used within urwid.Text.
@@ -239,7 +239,8 @@ def pile_or_listbox_add(container, widgets):
     elif isinstance(container, urwid.Pile):
         return pile_add(container, widgets)
     else:
-        raise ValueError("Container was not listbox, nor pile: {!r}".format(container))
+        raise ValueError(
+            "Container was not listbox, nor pile: {!r}".format(container))
 
 
 def listbox_add(listbox, widgets):
