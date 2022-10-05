@@ -18,16 +18,6 @@ import lookatme.config
 from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
 
-HTML_TAG_LT_REPLACE = "TAG:LT:" + str(time.time())
-
-
-def obscure_html_tags(data: str) -> str:
-    return data.replace("<", HTML_TAG_LT_REPLACE)
-
-
-def unobscure_html_tags(data: str) -> str:
-    return data.replace(HTML_TAG_LT_REPLACE, "<")
-
 
 def md_to_tokens(md_text):
     md = markdown_it.MarkdownIt("gfm-like").disable("html_block")
@@ -43,7 +33,7 @@ def md_to_tokens(md_text):
 
 
 def is_heading(token):
-    return token["type"] == "heading"
+    return token["type"] == "heading_open"
 
 
 def is_hrule(token):
@@ -189,6 +179,20 @@ class Parser(object):
 
         return slides
 
+    def _get_heading_contents(self, tokens, start_idx):
+        num_heading_opens = 0
+        res = []
+        for token in tokens[start_idx:]:
+            if token["type"] == "heading_open":
+                num_heading_opens += 1
+            elif token["type"] == "heading_close":
+                num_heading_opens -= 1
+                if num_heading_opens == 0:
+                    break
+            else:
+                res.append(token)
+        return res
+    
     def _scan_for_smart_split(self, tokens):
         """Scan the provided tokens for the number of hrules, and the lowest
         (h1 < h2) header level.
@@ -203,13 +207,15 @@ class Parser(object):
         }
         num_hrules = 0
         first_heading = None
-        for token in tokens:
+        first_heading_contents = None
+        for idx, token in enumerate(tokens):
             if is_hrule(token):
                 num_hrules += 1
             elif is_heading(token):
                 hinfo["counts"][token["level"]] += 1
                 if first_heading is None:
                     first_heading = token
+                    first_heading_contents = self._get_heading_contents(tokens, idx)
 
         # started off with the lowest heading, make this title
         if (
@@ -217,7 +223,7 @@ class Parser(object):
             and first_heading
             and hinfo["counts"][first_heading["level"]] == 1
         ):
-            hinfo["title"] = first_heading["children"]
+            hinfo["title"] = first_heading_contents
             del hinfo["counts"][first_heading["level"]]
             hinfo["title_level"] = first_heading["level"]
 

@@ -19,6 +19,7 @@ from lookatme.contrib import contrib_first, shutdown_contribs
 from lookatme.render.context import Context
 from lookatme.utils import spec_from_style
 from lookatme.widgets.clickable_text import ClickableText
+import lookatme.parser
 
 
 def text(style, data, align="left"):
@@ -237,7 +238,16 @@ class MarkdownTui(urwid.Frame):
     def update_title(self):
         """Update the title
         """
-        title = self.pres.meta.get("title", [])
+        title = self.pres.meta.get("title", "")
+        tokens = lookatme.parser.md_to_tokens(title)
+        expected_types = ["paragraph_open", "inline", "paragraph_open"]
+        if (
+            tokens
+            and [x["type"] for x in tokens] != expected_types
+        ):
+            raise ValueError("Titles must only be inline markdown")
+
+        title = [] if not tokens else [tokens[1]] # the inline token
         spec = spec_from_style(config.get_style()["title"])
 
         if not title:
@@ -246,7 +256,7 @@ class MarkdownTui(urwid.Frame):
         ctx = Context(self.loop)
         with ctx.use_tokens(title):
             with ctx.use_spec(spec):
-                markdown_inline.render_all(ctx)
+                markdown_block.render_all(ctx)
         self.slide_title.set_text(ctx.inline_markup_consumed)
 
     def update_creation(self):

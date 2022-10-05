@@ -97,8 +97,7 @@ def render_softbreak(_, ctx: Context):
 def render_code_inline(token, ctx: Context):
     # TODO: add a style for the default programming language for inline text
     # blocks
-    spec, text = pygments_render.render_text(
-        " " + token["content"] + " ", plain=True)[0]
+    spec, text = pygments_render.render_text(token["content"], plain=True)[0]
     with ctx.use_spec(spec):
         ctx.inline_push((ctx.spec_text, text))
 
@@ -120,8 +119,16 @@ def render_html_inline(token, ctx: Context):
 
         style_spec = None
         if len(tag.style) > 0:
+            fg = [tag.style.get("color", "")]
+            if "underscore" in tag.style.get("text-decoration", ""):
+                fg.append("underline")
+            if "bold" in tag.style.get("font-weight", ""):
+                fg.append("bold")
+            if "italic" in tag.style.get("font-style", ""):
+                fg.append("italics")
+
             style_spec = utils.spec_from_style({
-                "fg": tag.style.get("color", ""),
+                "fg": ",".join(fg),
                 "bg": tag.style.get("background-color", ""),
             })
 

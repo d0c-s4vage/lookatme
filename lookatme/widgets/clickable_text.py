@@ -39,10 +39,10 @@ class ClickableText(urwid.Text):
 
     signals = ["click", "change"]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, markup, *args, **kwargs):
         self._log = lookatme.config.get_log().getChild("ClickableText")
 
-        super(ClickableText, self).__init__(*args, **kwargs)
+        super(ClickableText, self).__init__(markup, *args, **kwargs)
 
     def mouse_event(self, size, event, button, x, y, focus):
         """Handle mouse events!

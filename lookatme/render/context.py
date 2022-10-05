@@ -164,11 +164,13 @@ class Context:
         )
         return list(res)
 
-    def wrap_widget(self, w: urwid.Widget) -> urwid.Widget:
+    def wrap_widget(self, w: urwid.Widget, spec: Optional[urwid.AttrSpec] = None) -> urwid.Widget:
         """Wrap the provided widget with an AttrMap that will apply
         the current styling to the entire widget (using spec_general)
         """
-        return urwid.AttrMap(w, {None: self.spec_general})
+        if spec is None:
+            spec = self.spec_general
+        return urwid.AttrMap(w, {None: spec})
 
     def get_inline_widgets(self):
         """Return the results of any inline rendering that has occurred in
@@ -373,7 +375,7 @@ class Context:
         return self.spec_stack.pop()
 
     @property
-    def spec_general(self):
+    def spec_general(self) -> urwid.AttrSpec:
         """Return the current fully resolved current AttrSpec
         """
         return utils.spec_from_stack(

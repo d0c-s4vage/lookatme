@@ -155,10 +155,6 @@ def render_list_close(_, ctx: Context):
 
     ctx.container_pop()
 
-    if not ctx.meta.get("is_list", False):
-        ctx.ensure_new_block()
-
-
 @contrib_first
 def render_list_item_open(_, ctx: Context):
     """
@@ -350,8 +346,8 @@ def render_table_open(token: Dict, ctx: Context):
     thead, tbody = _extract_nested_table_tokens(table_children)
 
     table = Table(header=thead, body=tbody, ctx=ctx)
-    #padding = urwid.Padding(table, width=table.total_width + 2, align="center")
-    padding = urwid.Padding(table, align="center")
+    padding = urwid.Padding(table, width = table.total_width, align="center")
+    config.get_log().debug("table total width: {}".format(table.total_width))
 
     def table_changed(*args, **kwargs):
         padding.width = table.total_width + 2
