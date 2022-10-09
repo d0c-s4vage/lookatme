@@ -31,8 +31,7 @@ def assert_render(correct_render, rendered, full_strip=False):
 
 
 def render_markdown(markdown, height=50, width=200, single_slide=False):
-    """Returns the rendered canvas contents of the markdown
-    """
+    """Returns the rendered canvas contents of the markdown"""
     loop = urwid.MainLoop(urwid.ListBox([]))
     renderer = lookatme.tui.SlideRenderer(loop)
     renderer.start()
@@ -60,6 +59,5 @@ def spec_and_text(item):
 
 
 def row_text(rendered_row):
-    """Return all text joined together from the rendered row
-    """
+    """Return all text joined together from the rendered row"""
     return b"".join(x[-1] for x in rendered_row)

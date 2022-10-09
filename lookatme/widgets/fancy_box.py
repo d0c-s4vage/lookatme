@@ -1,4 +1,5 @@
 from typing import Optional
+
 import urwid
 
 from lookatme.widgets.line_fill import LineFill
@@ -71,7 +72,7 @@ class FancyBox(urwid.WidgetDecoration, urwid.WidgetWrap):
         urwid.WidgetWrap.__init__(self, final)
 
     def set(
-        self, 
+        self,
         tl_corner: Optional[str] = None,
         tr_corner: Optional[str] = None,
         bl_corner: Optional[str] = None,
@@ -149,7 +150,7 @@ class FancyBox(urwid.WidgetDecoration, urwid.WidgetWrap):
                     self.tl_corner_spec,
                     self.t_fill_spec,
                     self.tr_corner_spec,
-                    orientation=LineFill.HORIZONTAL
+                    orientation=LineFill.HORIZONTAL,
                 ),
                 w,
                 LineFill(
@@ -159,7 +160,7 @@ class FancyBox(urwid.WidgetDecoration, urwid.WidgetWrap):
                     self.bl_corner_spec,
                     self.b_fill_spec,
                     self.br_corner_spec,
-                    orientation=LineFill.HORIZONTAL
+                    orientation=LineFill.HORIZONTAL,
                 ),
             ]
         )
@@ -172,23 +173,29 @@ class FancyBox(urwid.WidgetDecoration, urwid.WidgetWrap):
 
         final = urwid.Columns(
             [
-                (1, LineFill(
-                    tl_ver,
-                    self.l_fill,
-                    bl_ver,
-                    self.tl_corner_spec,
-                    self.l_fill_spec,
-                    self.bl_corner_spec,
-                )),
+                (
+                    1,
+                    LineFill(
+                        tl_ver,
+                        self.l_fill,
+                        bl_ver,
+                        self.tl_corner_spec,
+                        self.l_fill_spec,
+                        self.bl_corner_spec,
+                    ),
+                ),
                 pile_col,
-                (1, LineFill(
-                    tr_ver,
-                    self.r_fill,
-                    br_ver,
-                    self.tr_corner_spec,
-                    self.r_fill_spec,
-                    self.br_corner_spec,
-                )),
+                (
+                    1,
+                    LineFill(
+                        tr_ver,
+                        self.r_fill,
+                        br_ver,
+                        self.tr_corner_spec,
+                        self.r_fill_spec,
+                        self.br_corner_spec,
+                    ),
+                ),
             ],
             box_columns=[0, 2],
             focus_column=1,

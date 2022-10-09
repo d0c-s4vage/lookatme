@@ -41,9 +41,10 @@ def is_hrule(token):
 
 
 def debug_print_tokens(tokens, level=1):
-    """Print the tokens DFS
-    """
-    def indent(x): return "  " * x
+    """Print the tokens DFS"""
+
+    def indent(x):
+        return "  " * x
 
     log = lookatme.config.get_log()
     log.debug(indent(level) + "DEBUG TOKENS")
@@ -73,16 +74,16 @@ def is_progressive_slide_delimiter_token(token):
     :param dict token: The markdown token
     :returns: True if the token is a progressive slide delimiter
     """
-    return token["type"] == "close_html" and re.match(r'<!--\s*stop\s*-->', token["text"])
+    return token["type"] == "close_html" and re.match(
+        r"<!--\s*stop\s*-->", token["text"]
+    )
 
 
 class Parser(object):
-    """A parser for markdown presentation files
-    """
+    """A parser for markdown presentation files"""
 
     def __init__(self, single_slide=False):
-        """Create a new Parser instance
-        """
+        """Create a new Parser instance"""
         self._single_slide = single_slide
 
     def parse(self, input_data):
@@ -108,21 +109,20 @@ class Parser(object):
         keep_split_token = True
 
         if self._single_slide:
+
             def slide_split_check(_):  # type: ignore
                 return False
 
             def heading_mod(_):  # type: ignore
                 pass
+
         elif num_hrules == 0:
             if meta["title"] in ("", None):
                 meta["title"] = hinfo["title"]
 
             def slide_split_check(token):
                 nonlocal hinfo
-                return (
-                    is_heading(token)
-                    and token["level"] == hinfo["lowest_non_title"]
-                )
+                return is_heading(token) and token["level"] == hinfo["lowest_non_title"]
 
             def heading_mod(token):
                 nonlocal hinfo
@@ -130,26 +130,30 @@ class Parser(object):
                     token["level"] - (hinfo["title_level"] or 0),
                     1,
                 )
+
             keep_split_token = True
         else:
+
             def slide_split_check(token):
                 return is_hrule(token)
 
             def heading_mod(token):
                 pass
+
             keep_split_token = False
 
         slides = self._split_tokens_into_slides(
-            tokens, slide_split_check, heading_mod, keep_split_token)
+            tokens, slide_split_check, heading_mod, keep_split_token
+        )
 
         return "", slides
 
     def _split_tokens_into_slides(
-            self,
-            tokens: List[Dict],
-            slide_split_check: Callable,
-            heading_mod: Callable,
-            keep_split_token: bool
+        self,
+        tokens: List[Dict],
+        slide_split_check: Callable,
+        heading_mod: Callable,
+        keep_split_token: bool,
     ) -> List[Slide]:
         """Split the provided tokens into slides using the slide_split_check
         and heading_mod arguments.
@@ -163,11 +167,14 @@ class Parser(object):
 
             # new slide!
             if should_split:
-                if keep_split_token and len(slides) == 0 and len(curr_slide_tokens) == 0:
+                if (
+                    keep_split_token
+                    and len(slides) == 0
+                    and len(curr_slide_tokens) == 0
+                ):
                     pass
                 else:
-                    slides.extend(self._create_slides(
-                        curr_slide_tokens, len(slides)))
+                    slides.extend(self._create_slides(curr_slide_tokens, len(slides)))
                 curr_slide_tokens = []
                 if keep_split_token:
                     curr_slide_tokens.append(token)
@@ -192,7 +199,7 @@ class Parser(object):
             else:
                 res.append(token)
         return res
-    
+
     def _scan_for_smart_split(self, tokens):
         """Scan the provided tokens for the number of hrules, and the lowest
         (h1 < h2) header level.
@@ -250,7 +257,7 @@ class Parser(object):
             skipped_chars += len(line) + 1
             stripped_line = line.strip()
 
-            is_marker = (re.match(r'----*', stripped_line) is not None)
+            is_marker = re.match(r"----*", stripped_line) is not None
             if is_marker:
                 if not found_first:
                     found_first = True

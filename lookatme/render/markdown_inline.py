@@ -25,6 +25,7 @@ THIS_MOD = sys.modules[__name__]
 
 def markdown_block():
     import lookatme.render.markdown_block as markdown_block
+
     return markdown_block
 
 
@@ -36,8 +37,7 @@ def render(token, ctx: Context):
         token_type = token["type"].lower()
         fn = getattr(THIS_MOD, "render_{}".format(token_type), None)
         if fn is None:
-            raise ValueError(
-                "Token type {!r} is not yet supported".format(token_type))
+            raise ValueError("Token type {!r} is not yet supported".format(token_type))
         return fn(token, ctx)
 
 
@@ -127,114 +127,125 @@ def render_html_inline(token, ctx: Context):
             if "italic" in tag.style.get("font-style", ""):
                 fg.append("italics")
 
-            style_spec = utils.spec_from_style({
-                "fg": ",".join(fg),
-                "bg": tag.style.get("background-color", ""),
-            })
+            style_spec = utils.spec_from_style(
+                {
+                    "fg": ",".join(fg),
+                    "bg": tag.style.get("background-color", ""),
+                }
+            )
 
         fn(token, tag, ctx, style_spec)
 
 
-def render_html_tag_default_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+def render_html_tag_default_open(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
     ctx.tag_push(tag.name, style_spec)
 
 
-def render_html_tag_default_close(_, _tag: Tag, ctx: Context, _style_spec: Union[None, urwid.AttrSpec]):
+def render_html_tag_default_close(
+    _, _tag: Tag, ctx: Context, _style_spec: Union[None, urwid.AttrSpec]
+):
     ctx.tag_pop()
 
 
-def render_html_tag_u_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
-    style_spec = utils.overwrite_spec(
-        style_spec, utils.spec_from_style("underline"))
+def render_html_tag_u_open(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
+    style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("underline"))
     ctx.tag_push(tag.name, style_spec, text_only_spec=True)
 
 
-def render_html_tag_i_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
-    style_spec = utils.overwrite_spec(
-        style_spec, utils.spec_from_style("italics"))
+def render_html_tag_i_open(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
+    style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("italics"))
     ctx.tag_push(tag.name, style_spec)
 
 
-def render_html_tag_b_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
-    style_spec = utils.overwrite_spec(
-        style_spec, utils.spec_from_style("bold"))
+def render_html_tag_b_open(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
+    style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("bold"))
     ctx.tag_push(tag.name, style_spec)
 
 
-def render_html_tag_em_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
-    style_spec = utils.overwrite_spec(
-        style_spec, utils.spec_from_style("standout"))
+def render_html_tag_em_open(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
+    style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("standout"))
     ctx.tag_push(tag.name, style_spec, text_only_spec=True)
 
 
-def render_html_tag_blink_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
-    style_spec = utils.overwrite_spec(
-        style_spec, utils.spec_from_style("blink"))
+def render_html_tag_blink_open(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
+    style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("blink"))
     ctx.tag_push(tag.name, style_spec)
 
 
-def render_html_tag_br_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+def render_html_tag_br_open(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
     ctx.tag_push(tag.name, style_spec)
     ctx.inline_push((ctx.spec_text, "\n"))
 
 
-def render_html_tag_div_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+def render_html_tag_div_open(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
     ctx.ensure_new_block()
     ctx.container_push(urwid.Pile([]), is_new_block=True)
     ctx.tag_push(tag.name, style_spec)
 
 
-def render_html_tag_div_close(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+def render_html_tag_div_close(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
     ctx.container_pop()
     ctx.tag_pop()
 
 
-def render_html_tag_ol_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+def render_html_tag_ol_open(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
     ctx.tag_push(tag.name, style_spec)
-    markdown_block().render_ordered_list_open(
-        {"type": "ordered_list_open"},
-        ctx
-    )
+    markdown_block().render_ordered_list_open({"type": "ordered_list_open"}, ctx)
 
 
-def render_html_tag_ol_close(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+def render_html_tag_ol_close(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
     ctx.tag_pop()
-    markdown_block().render_ordered_list_close(
-        {"type": "ordered_list_close"},
-        ctx
-    )
+    markdown_block().render_ordered_list_close({"type": "ordered_list_close"}, ctx)
 
 
-def render_html_tag_ul_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+def render_html_tag_ul_open(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
     ctx.tag_push(tag.name, style_spec)
-    markdown_block().render_bullet_list_open(
-        {"type": "bullet_list_open"},
-        ctx
-    )
+    markdown_block().render_bullet_list_open({"type": "bullet_list_open"}, ctx)
 
 
-def render_html_tag_ul_close(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+def render_html_tag_ul_close(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
     ctx.tag_pop()
-    markdown_block().render_bullet_list_close(
-        {"type": "bullet_list_close"},
-        ctx
-    )
+    markdown_block().render_bullet_list_close({"type": "bullet_list_close"}, ctx)
 
 
-def render_html_tag_li_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+def render_html_tag_li_open(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
     ctx.tag_push(tag.name, style_spec)
-    markdown_block().render_list_item_open(
-        {"type": "list_item_open"},
-        ctx
-    )
+    markdown_block().render_list_item_open({"type": "list_item_open"}, ctx)
 
 
-def render_html_tag_li_close(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+def render_html_tag_li_close(
+    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
     ctx.tag_pop()
-    markdown_block().render_list_item_close(
-        {"type": "list_item_close"},
-        ctx
-    )
+    markdown_block().render_list_item_close({"type": "list_item_close"}, ctx)
 
 
 # def render_no_change(text, ctx: Context):

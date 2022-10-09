@@ -53,8 +53,7 @@ remaining
 
 
 def test_parse_slides():
-    """Test that slide parsing works correctly
-    """
+    """Test that slide parsing works correctly"""
     input_data = r"""
 # Slide 1
 
@@ -81,8 +80,7 @@ More text
 
 
 def test_parse_smart_slides_one_h1():
-    """Test that slide smart splitting works correctly
-    """
+    """Test that slide smart splitting works correctly"""
     input_data = r"""
 # Heading Title
 
@@ -108,8 +106,7 @@ more text
 
 
 def test_parse_smart_slides_multiple_h2():
-    """Test that slide smart splitting works correctly
-    """
+    """Test that slide smart splitting works correctly"""
     input_data = r"""
 ## Heading 2
 

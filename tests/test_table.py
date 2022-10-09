@@ -23,8 +23,7 @@ def table_setup(tmpdir, mocker):
 
 
 def test_basic_render(tmpdir, mocker):
-    """Test that a Table widget renders correctly
-    """
+    """Test that a Table widget renders correctly"""
     headers = ["H1", "H2", "H3"]
     aligns = ["left", "center", "right"]
     rows = [
@@ -119,8 +118,7 @@ def test_table_no_headers(mocker):
 
 
 def test_ignored_extra_column(mocker):
-    """Test that extra columns beyond header values are ignored
-    """
+    """Test that extra columns beyond header values are ignored"""
     headers = ["H1", "H2", "H3"]
     aligns = ["left", "center", "right"]
     rows = [

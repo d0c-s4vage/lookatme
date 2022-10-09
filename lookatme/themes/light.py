@@ -1,4 +1,3 @@
-
 theme = {
     "style": "pastie",
     "title": {
@@ -34,15 +33,15 @@ theme = {
         "bg": "default",
     },
     "headings": {
-        '1': {
+        "1": {
             "fg": "#12c,bold",
             "bg": "default",
         },
-        '2': {
+        "2": {
             "fg": "#31c,bold",
             "bg": "default",
         },
-        '3': {
+        "3": {
             "fg": "#71c,bold",
             "bg": "default",
         },
@@ -54,5 +53,5 @@ theme = {
             "fg": "#91c,bold",
             "bg": "default",
         },
-    }
+    },
 }

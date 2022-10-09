@@ -1,10 +1,10 @@
 from typing import Optional, Tuple, Union
+
 import urwid
 
 
 class LineFill(urwid.Widget):
-    """Test
-    """
+    """Test"""
 
     VERTICAL = "vertical"
     HORIZONTAL = "horizontal"

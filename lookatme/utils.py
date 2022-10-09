@@ -3,14 +3,14 @@
 
 
 from typing import Union
+
 import urwid
 
 from lookatme.widgets.smart_attr_spec import SmartAttrSpec
 
 
 def core_widget(w) -> urwid.Widget:
-    """Resolve a wrapped widget to its core widget value
-    """
+    """Resolve a wrapped widget to its core widget value"""
     if isinstance(w, urwid.AttrMap):
         return w.base_widget
     return w
@@ -26,8 +26,7 @@ def get_meta(item):
 
 
 def row_text(rendered_row):
-    """Return all text joined together from the rendered row
-    """
+    """Return all text joined together from the rendered row"""
     return b"".join(x[-1] for x in rendered_row)
 
 
@@ -53,8 +52,7 @@ def resolve_bag_of_text_markup_or_widgets(items):
 
 
 def dict_deep_update(to_update, new_vals):
-    """Deeply update the to_update dict with the new_vals
-    """
+    """Deeply update the to_update dict with the new_vals"""
     for key, value in new_vals.items():
         if isinstance(value, dict):
             node = to_update.setdefault(key, {})
@@ -105,6 +103,7 @@ def overwrite_spec(orig_spec, new_spec):
         return orig_spec
 
     import lookatme.widgets.clickable_text
+
     LinkIndicatorSpec = lookatme.widgets.clickable_text.LinkIndicatorSpec
 
     if orig_spec is None:
@@ -168,7 +167,7 @@ def flatten_text(text, new_spec=None):
     res = []
     total_len = 0
     for spec, chunk_len in chunk_stylings:
-        split_text = text[total_len:total_len + chunk_len]
+        split_text = text[total_len : total_len + chunk_len]
         total_len += chunk_len
 
         split_text_spec = overwrite_spec(new_spec, spec)
@@ -181,8 +180,7 @@ def flatten_text(text, new_spec=None):
 
 
 def can_style_item(item):
-    """Return true/false if ``style_text`` can work with the given item
-    """
+    """Return true/false if ``style_text`` can work with the given item"""
     return isinstance(item, (urwid.Text, list, tuple))
 
 
@@ -191,7 +189,9 @@ def spec_from_stack(spec_stack: list, filter_fn=None) -> Union[None, urwid.AttrS
         return SmartAttrSpec("", "")
 
     if filter_fn is None:
-        def filter_fn(_x, _y): return True
+
+        def filter_fn(_x, _y):
+            return True
 
     res_spec = None
     for spec, text_only in spec_stack:
@@ -214,9 +214,11 @@ def styled_text(text, new_styles, old_styles=None, supplement_style=False):
     if isinstance(text, urwid.Text):
         new_spec = spec_from_style(new_styles)
         return flatten_text(text, new_spec)
-    elif (isinstance(text, tuple)
-            and isinstance(text[0], SmartAttrSpec)
-            and isinstance(text[1], urwid.Text)):
+    elif (
+        isinstance(text, tuple)
+        and isinstance(text[0], SmartAttrSpec)
+        and isinstance(text[1], urwid.Text)
+    ):
         text = text[1].text
         old_styles = text[0]
 
@@ -234,8 +236,7 @@ def styled_text(text, new_styles, old_styles=None, supplement_style=False):
 
 
 def pile_or_listbox_add(container, widgets):
-    """Add the widget/widgets to the container
-    """
+    """Add the widget/widgets to the container"""
     if isinstance(container, urwid.AttrMap):
         container = container.base_widget
 
@@ -244,8 +245,7 @@ def pile_or_listbox_add(container, widgets):
     elif isinstance(container, urwid.Pile):
         return pile_add(container, widgets)
     else:
-        raise ValueError(
-            "Container was not listbox, nor pile: {!r}".format(container))
+        raise ValueError("Container was not listbox, nor pile: {!r}".format(container))
 
 
 def listbox_add(listbox, widgets):
@@ -253,32 +253,34 @@ def listbox_add(listbox, widgets):
         widgets = [widgets]
 
     for w in widgets:
-        if len(listbox.body) > 0 \
-                and isinstance(w, urwid.Divider) \
-                and isinstance(listbox.body[-1], urwid.Divider):
+        if (
+            len(listbox.body) > 0
+            and isinstance(w, urwid.Divider)
+            and isinstance(listbox.body[-1], urwid.Divider)
+        ):
             continue
         listbox.body.append(w)
 
 
 def pile_add(pile, widgets):
-    """
-    """
+    """ """
     if not isinstance(widgets, list):
         widgets = [widgets]
 
     for w in widgets:
-        if len(pile.contents) > 0 \
-                and isinstance(w, urwid.Divider) \
-                and isinstance(pile.contents[-1][0], urwid.Divider):
+        if (
+            len(pile.contents) > 0
+            and isinstance(w, urwid.Divider)
+            and isinstance(pile.contents[-1][0], urwid.Divider)
+        ):
             continue
         pile.contents.append((w, pile.options()))
 
 
 def int_to_roman(integer):
     integer = int(integer)
-    ints = [1000, 900,  500, 400, 100,  90, 50,  40, 10,  9,   5,  4,   1]
-    nums = ["m",  "cm", "d", "cd", "c", "xc",
-            "l", "xl", "x", "ix", "v", "iv", "i"]
+    ints = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1]
+    nums = ["m", "cm", "d", "cd", "c", "xc", "l", "xl", "x", "ix", "v", "iv", "i"]
     result = []
     for i in range(len(ints)):
         count = integer // ints[i]

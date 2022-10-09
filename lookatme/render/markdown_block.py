@@ -18,11 +18,11 @@ import urwid
 import lookatme.config as config
 import lookatme.render.markdown_inline as markdown_inline
 import lookatme.render.pygments as pygments_render
-from lookatme.widgets.clickable_text import ClickableText
-from lookatme.widgets.fancy_box import FancyBox
 from lookatme.contrib import contrib_first
 from lookatme.render.context import Context
 from lookatme.utils import *
+from lookatme.widgets.clickable_text import ClickableText
+from lookatme.widgets.fancy_box import FancyBox
 
 THIS_MOD = sys.modules[__name__]
 
@@ -48,15 +48,14 @@ def _ctx_style_spec(style: Dict, ctx: Context) -> Union[None, urwid.AttrSpec]:
 
 
 def render(token, ctx: Context):
-    """Render a single token
-    """
+    """Render a single token"""
     with ctx.level_inc():
         token_type = token["type"].lower()
         render_fn = getattr(THIS_MOD, "render_{}".format(token_type), None)
         if render_fn is None:
-            raise NotImplementedError("Rendering {!r} tokens is not implemented".format(
-                token_type
-            ))
+            raise NotImplementedError(
+                "Rendering {!r} tokens is not implemented".format(token_type)
+            )
 
         render_fn(token, ctx)
 
@@ -69,8 +68,7 @@ def render_all(ctx: Context):
 
 @contrib_first
 def render_paragraph_open(token, ctx: Context):
-    """
-    """
+    """ """
     next_token = ctx.tokens.peek()
 
     # don't ensure a new block for paragraphs that contain a single
@@ -88,30 +86,26 @@ def render_paragraph_open(token, ctx: Context):
 
 @contrib_first
 def render_paragraph_close(token, ctx: Context):
-    """
-    """
+    """ """
     pass
 
 
 @contrib_first
 def render_inline(token, ctx: Context):
-    """
-    """
+    """ """
     with ctx.use_tokens(token.get("children", [])):
         markdown_inline.render_all(ctx)
 
 
 @contrib_first
 def render_ordered_list_open(token, ctx: Context):
-    """
-    """
+    """ """
     render_list_open(token, ctx, ordered=True)
 
 
 @contrib_first
 def render_bullet_list_open(token, ctx: Context):
-    """
-    """
+    """ """
     render_list_open(token, ctx, ordered=False)
 
 
@@ -140,31 +134,28 @@ def render_list_open(token, ctx: Context, ordered: bool):
 
 @contrib_first
 def render_ordered_list_close(token, ctx: Context):
-    """
-    """
+    """ """
     render_list_close(token, ctx)
 
 
 @contrib_first
 def render_bullet_list_close(token, ctx: Context):
-    """
-    """
+    """ """
     render_list_close(token, ctx)
 
 
 @contrib_first
 def render_list_close(_, ctx: Context):
-    """
-    """
+    """ """
     meta = ctx.meta
     meta["list_start_token"]["max_list_marker_width"] = meta["max_list_marker_width"]
 
     ctx.container_pop()
 
+
 @contrib_first
 def render_list_item_open(_, ctx: Context):
-    """
-    """
+    """ """
     meta = ctx.meta
     list_level = meta["level"]
 
@@ -191,26 +182,28 @@ def render_list_item_open(_, ctx: Context):
         meta["max_list_marker_width"] = len(marker_text)
     marker_col_width = meta["max_list_marker_width"]
 
-    res = urwid.Columns([
-        (marker_col_width, urwid.Text(
-            (ctx.spec_text_with(spec_from_style("bold")), marker_text))),
-        pile,
-    ])
+    res = urwid.Columns(
+        [
+            (
+                marker_col_width,
+                urwid.Text((ctx.spec_text_with(spec_from_style("bold")), marker_text)),
+            ),
+            pile,
+        ]
+    )
 
     ctx.container_push(pile, is_new_block=True, custom_add=res)
 
 
 @contrib_first
 def render_list_item_close(_, ctx: Context):
-    """
-    """
+    """ """
     ctx.container_pop()
 
 
 @contrib_first
 def render_heading_open(token: Dict, ctx: Context):
-    """
-    """
+    """ """
     headings = config.get_style()["headings"]
     level = token["level"]
     style = config.get_style()["headings"].get(str(level), headings["default"])
@@ -225,8 +218,7 @@ def render_heading_open(token: Dict, ctx: Context):
 
 @contrib_first
 def render_heading_close(token: Dict, ctx: Context):
-    """
-    """
+    """ """
     headings = config.get_style()["headings"]
     level = int(token["tag"].replace("h", ""))
     style = config.get_style()["headings"].get(str(level), headings["default"])
@@ -240,8 +232,7 @@ def render_heading_close(token: Dict, ctx: Context):
 
 @contrib_first
 def render_blockquote_open(token: Dict, ctx: Context):
-    """
-    """
+    """ """
     pile = urwid.Pile([])
 
     styles = config.get_style()["quote"]
@@ -251,12 +242,19 @@ def render_blockquote_open(token: Dict, ctx: Context):
     quote_bottom_corner = styles["bottom_corner"]
     quote_style = styles["style"]
 
-    line_box = ctx.wrap_widget(urwid.LineBox(
-        ctx.wrap_widget(urwid.Padding(pile, left=2)),
-        lline=quote_side, rline="",
-        tline=" ", trcorner="", tlcorner=quote_top_corner,
-        bline=" ", brcorner="", blcorner=quote_bottom_corner,
-    ))
+    line_box = ctx.wrap_widget(
+        urwid.LineBox(
+            ctx.wrap_widget(urwid.Padding(pile, left=2)),
+            lline=quote_side,
+            rline="",
+            tline=" ",
+            trcorner="",
+            tlcorner=quote_top_corner,
+            bline=" ",
+            brcorner="",
+            blcorner=quote_bottom_corner,
+        )
+    )
 
     ctx.container_push(pile, is_new_block=True, custom_add=line_box)
     ctx.spec_push(spec_from_style(quote_style))
@@ -264,8 +262,7 @@ def render_blockquote_open(token: Dict, ctx: Context):
 
 @contrib_first
 def render_blockquote_close(token: Dict, ctx: Context):
-    """
-    """
+    """ """
     ctx.spec_pop()
     ctx.container_pop()
 
@@ -283,14 +280,12 @@ def render_fence(token: Dict, ctx: Context):
     text = token["content"]
     res = pygments_render.render_text(text, lang=lang)
 
-    ctx.widget_add([
-        urwid.Divider(),
-        res,
-        urwid.Divider()
-    ])
+    ctx.widget_add([urwid.Divider(), res, urwid.Divider()])
 
 
-def _extract_nested_table_tokens(tokens: List[Dict]) -> Tuple[Union[None, Dict], Union[None, Dict]]:
+def _extract_nested_table_tokens(
+    tokens: List[Dict],
+) -> Tuple[Union[None, Dict], Union[None, Dict]]:
     idx = 0
 
     thead_token = None
@@ -301,7 +296,7 @@ def _extract_nested_table_tokens(tokens: List[Dict]) -> Tuple[Union[None, Dict],
         token = tokens[idx]
         idx += 1
 
-        if re.match(r'(thead|tbody|tr|th|td)_open', token["type"]):
+        if re.match(r"(thead|tbody|tr|th|td)_open", token["type"]):
             if parent_token_stack:
                 parent = parent_token_stack[-1]
                 parent["children"].append(token)
@@ -322,7 +317,7 @@ def _extract_nested_table_tokens(tokens: List[Dict]) -> Tuple[Union[None, Dict],
                 elif "text-align:right" in style:
                     align = "right"
                 token["align"] = align
-        elif re.match(r'(thead|tbody|tr|th|td)_close', token["type"]):
+        elif re.match(r"(thead|tbody|tr|th|td)_close", token["type"]):
             parent_token_stack.pop()
         else:
             parent = parent_token_stack[-1]
@@ -333,8 +328,7 @@ def _extract_nested_table_tokens(tokens: List[Dict]) -> Tuple[Union[None, Dict],
 
 @contrib_first
 def render_table_open(token: Dict, ctx: Context):
-    """
-    """
+    """ """
     ctx.ensure_new_block()
 
     from lookatme.widgets.table import Table
@@ -374,7 +368,7 @@ def render_table_open(token: Dict, ctx: Context):
         l_fill_spec=_ctx_style_spec(border_style["l_line"], ctx),
     )
 
-    padding = urwid.Padding(box, width = table.total_width + 2, align="center")
+    padding = urwid.Padding(box, width=table.total_width + 2, align="center")
     config.get_log().debug("table total width: {}".format(table.total_width))
 
     def table_changed(*args, **kwargs):

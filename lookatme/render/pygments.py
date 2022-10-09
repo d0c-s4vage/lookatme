@@ -23,8 +23,7 @@ def get_formatter(style_name):
 
     formatter, style_bg = FORMATTER_CACHE.get(style_name, (None, None))
     if formatter is None:
-        style_bg = UrwidFormatter.findclosest(
-            style.background_color.replace("#", ""))
+        style_bg = UrwidFormatter.findclosest(style.background_color.replace("#", ""))
         formatter = UrwidFormatter(
             style=style,
             usebg=(style_bg is not None),
@@ -53,8 +52,7 @@ def get_style(style_name):
 
 
 def render_text(text, lang="text", style_name=None, plain=False):
-    """Render the provided text with the pygments renderer
-    """
+    """Render the provided text with the pygments renderer"""
     if style_name is None:
         style_name = config.get_style()["style"]
 
@@ -63,8 +61,7 @@ def render_text(text, lang="text", style_name=None, plain=False):
 
     start = time.time()
     code_tokens = lexer.get_tokens(text)
-    config.get_log().debug(
-        f"Took {time.time()-start}s to render {len(text)} bytes")
+    config.get_log().debug(f"Took {time.time()-start}s to render {len(text)} bytes")
 
     markup = []
     for x in formatter.formatgenerator(code_tokens):
@@ -99,8 +96,8 @@ class UrwidFormatter(Formatter):
                 default: True
         colors: number of colors to use (16, 88, or 256)
                 default: 256"""
-        self.usebold = options.get('usebold', True)
-        self.usebg = options.get('usebg', True)
+        self.usebold = options.get("usebold", True)
+        self.usebg = options.get("usebg", True)
         self.style_attrs = {}
         Formatter.__init__(self, **options)
 
@@ -122,7 +119,7 @@ class UrwidFormatter(Formatter):
         gd = g1 - g2
         bd = b1 - b2
 
-        return rd*rd + gd*gd + bd*bd
+        return rd * rd + gd * gd + bd * bd
 
     @classmethod
     def findclosest(cls, colstr, colors=256):
@@ -131,15 +128,15 @@ class UrwidFormatter(Formatter):
         Returns a string urwid will recognize."""
 
         rgb = int(colstr, 16)
-        r = (rgb >> 16) & 0xff
-        g = (rgb >> 8) & 0xff
-        b = rgb & 0xff
+        r = (rgb >> 16) & 0xFF
+        g = (rgb >> 8) & 0xFF
+        b = rgb & 0xFF
 
         dist = 257 * 257 * 3
-        bestcol = urwid.AttrSpec('h0', 'default')
+        bestcol = urwid.AttrSpec("h0", "default")
 
         for i in range(colors):
-            curcol = urwid.AttrSpec('h%d' % i, 'default', colors=colors)
+            curcol = urwid.AttrSpec("h%d" % i, "default", colors=colors)
             currgb = curcol.get_rgb_values()[:3]
             curdist = cls._distance((r, g, b), currgb)
             if curdist < dist:
@@ -148,16 +145,18 @@ class UrwidFormatter(Formatter):
 
         return bestcol.foreground
 
-    def findclosestattr(self, fgcolstr=None, bgcolstr=None, othersettings='', colors=256):
+    def findclosestattr(
+        self, fgcolstr=None, bgcolstr=None, othersettings="", colors=256
+    ):
         """Takes two hex colstring (e.g. 'ff00dd') and returns the
         nearest urwid style."""
-        fg = bg = 'default'
+        fg = bg = "default"
         if fgcolstr:
             fg = self.findclosest(fgcolstr, colors)
         if bgcolstr:
             bg = self.findclosest(bgcolstr, colors)
         if othersettings:
-            fg = fg + ',' + othersettings
+            fg = fg + "," + othersettings
         return urwid.AttrSpec(fg, bg, colors)
 
     def _setup_styles(self, colors=256):
@@ -165,15 +164,16 @@ class UrwidFormatter(Formatter):
         corresponding to the closest equivalents to the given style."""
         for ttype, ndef in self.style:
             fgcolstr = bgcolstr = None
-            othersettings = ''
-            if ndef['color']:
-                fgcolstr = ndef['color']
-            if self.usebg and ndef['bgcolor']:
-                bgcolstr = ndef['bgcolor']
-            if self.usebold and ndef['bold']:
-                othersettings = 'bold'
+            othersettings = ""
+            if ndef["color"]:
+                fgcolstr = ndef["color"]
+            if self.usebg and ndef["bgcolor"]:
+                bgcolstr = ndef["bgcolor"]
+            if self.usebold and ndef["bold"]:
+                othersettings = "bold"
             self.style_attrs[str(ttype)] = self.findclosestattr(
-                fgcolstr, bgcolstr, othersettings, colors)
+                fgcolstr, bgcolstr, othersettings, colors
+            )
 
     def formatgenerator(self, tokensource):
         """Takes a token source, and generates

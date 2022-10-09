@@ -3,12 +3,12 @@ Defines a basic Table widget for urwid
 """
 
 
-from collections import defaultdict
-import dateutil.parser
-from distutils.version import StrictVersion
 import re
-from typing import Callable, List, Dict, Tuple
+from collections import defaultdict
+from distutils.version import StrictVersion
+from typing import Callable, Dict, List, Tuple
 
+import dateutil.parser
 import urwid
 
 import lookatme.config as config
@@ -290,8 +290,7 @@ class Table(urwid.Pile):
                 divider = urwid.Divider(self.style["header_divider"]["text"])
                 div_char = self.style["header_divider"]["text"]
                 div_spec = utils.overwrite_spec(
-                    row_spec_text,
-                    utils.spec_from_style(self.style["header_divider"])
+                    row_spec_text, utils.spec_from_style(self.style["header_divider"])
                 )
                 markup = div_char * self.column_maxes[idx]
                 markup = self.sort_setting.set_indicator(idx, markup)

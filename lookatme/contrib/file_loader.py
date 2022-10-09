@@ -33,9 +33,12 @@ def user_warnings():
 
 class YamlRender:
     @staticmethod
-    def loads(data): return yaml.safe_load(data)
+    def loads(data):
+        return yaml.safe_load(data)
+
     @staticmethod
-    def dumps(data): return yaml.safe_dump(data)
+    def dumps(data):
+        return yaml.safe_dump(data)
 
 
 class LineRange(Schema):
@@ -51,7 +54,7 @@ class FileSchema(Schema):
     lines = fields.Nested(
         LineRange,
         dump_default=LineRange().dump(None),
-        load_default=LineRange().dump(None)
+        load_default=LineRange().dump(None),
     )
 
     class Meta:
@@ -116,7 +119,7 @@ def render_fence(token: Dict, ctx: Context):
         file_data = transform_data(file_info["transform"], file_data)
 
     lines = file_data.split(b"\n")
-    lines = lines[file_info["lines"]["start"]:file_info["lines"]["end"]]
+    lines = lines[file_info["lines"]["start"] : file_info["lines"]["end"]]
     file_data = b"\n".join(lines)
     token["content"] = file_data
     token["info"] = file_info["lang"]
