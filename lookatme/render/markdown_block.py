@@ -18,6 +18,8 @@ import urwid
 import lookatme.config as config
 import lookatme.render.markdown_inline as markdown_inline
 import lookatme.render.pygments as pygments_render
+from lookatme.widgets.clickable_text import ClickableText
+from lookatme.widgets.fancy_box import FancyBox
 from lookatme.contrib import contrib_first
 from lookatme.render.context import Context
 from lookatme.utils import *
@@ -344,9 +346,31 @@ def render_table_open(token: Dict, ctx: Context):
         table_children.append(copy.deepcopy(token))
 
     thead, tbody = _extract_nested_table_tokens(table_children)
+    border_style = config.get_style()["table"]["border"]
 
     table = Table(header=thead, body=tbody, ctx=ctx)
-    padding = urwid.Padding(table, width = table.total_width, align="center")
+
+    box = FancyBox(
+        table,
+        tl_corner=border_style["tl_corner"]["text"],
+        tr_corner=border_style["tr_corner"]["text"],
+        br_corner=border_style["br_corner"]["text"],
+        bl_corner=border_style["bl_corner"]["text"],
+        tl_corner_spec=spec_from_style(border_style["tl_corner"]),
+        tr_corner_spec=spec_from_style(border_style["tr_corner"]),
+        br_corner_spec=spec_from_style(border_style["br_corner"]),
+        bl_corner_spec=spec_from_style(border_style["bl_corner"]),
+        t_fill=border_style["t_line"]["text"],
+        r_fill=border_style["r_line"]["text"],
+        b_fill=border_style["b_line"]["text"],
+        l_fill=border_style["l_line"]["text"],
+        t_fill_spec=spec_from_style(border_style["t_line"]),
+        r_fill_spec=spec_from_style(border_style["r_line"]),
+        b_fill_spec=spec_from_style(border_style["b_line"]),
+        l_fill_spec=spec_from_style(border_style["l_line"]),
+    )
+
+    padding = urwid.Padding(box, width = table.total_width + 2, align="center")
     config.get_log().debug("table total width: {}".format(table.total_width))
 
     def table_changed(*args, **kwargs):

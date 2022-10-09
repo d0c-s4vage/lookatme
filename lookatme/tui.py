@@ -239,13 +239,21 @@ class MarkdownTui(urwid.Frame):
         """Update the title
         """
         title = self.pres.meta.get("title", "")
-        tokens = lookatme.parser.md_to_tokens(title)
-        expected_types = ["paragraph_open", "inline", "paragraph_open"]
+        if isinstance(title, str):
+            tokens = lookatme.parser.md_to_tokens(title)
+        else:
+            tokens = title
+
+        expected_types = ["paragraph_open", "inline", "paragraph_close"]
         if (
             tokens
             and [x["type"] for x in tokens] != expected_types
         ):
-            raise ValueError("Titles must only be inline markdown")
+            raise ValueError(
+                "Titles must only be inline markdown, was {}".format(
+                    [x["type"] for x in tokens]
+                )
+            )
 
         title = [] if not tokens else [tokens[1]] # the inline token
         spec = spec_from_style(config.get_style()["title"])

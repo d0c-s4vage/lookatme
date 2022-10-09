@@ -223,7 +223,11 @@ class Parser(object):
             and first_heading
             and hinfo["counts"][first_heading["level"]] == 1
         ):
-            hinfo["title"] = first_heading_contents
+            hinfo["title"] = (
+                [{"type": "paragraph_open"}]
+                + first_heading_contents
+                + [{"type": "paragraph_close"}]
+            )
             del hinfo["counts"][first_heading["level"]]
             hinfo["title_level"] = first_heading["level"]
 

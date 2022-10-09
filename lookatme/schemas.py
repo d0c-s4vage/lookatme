@@ -87,6 +87,55 @@ class StyleFieldSchema(Schema):
     bg = fields.Str(dump_default="")
 
 
+class TextStyleFieldSchema(Schema):
+    text = fields.Str(dump_default=" ")
+    fg = fields.Str(dump_default="")
+    bg = fields.Str(dump_default="")
+
+
+class BorderBoxSchema(Schema):
+    tl_corner = fields.Nested(TextStyleFieldSchema, dump_default=TextStyleFieldSchema().dump({
+        "text": "┌",
+        "fg": "bold",
+        "bg": "",
+    }))
+    t_line = fields.Nested(TextStyleFieldSchema, dump_default=TextStyleFieldSchema().dump({
+        "text": "─",
+        "fg": "bold",
+        "bg": "",
+    }))
+    tr_corner = fields.Nested(TextStyleFieldSchema, dump_default=TextStyleFieldSchema().dump({
+        "text": "┐",
+        "fg": "bold",
+        "bg": "",
+    }))
+    r_line = fields.Nested(TextStyleFieldSchema, dump_default=TextStyleFieldSchema().dump({
+        "text": "│",
+        "fg": "bold",
+        "bg": "",
+    }))
+    br_corner = fields.Nested(TextStyleFieldSchema, dump_default=TextStyleFieldSchema().dump({
+        "text": "┘",
+        "fg": "bold",
+        "bg": "",
+    }))
+    b_line = fields.Nested(TextStyleFieldSchema, dump_default=TextStyleFieldSchema().dump({
+        "text": "─",
+        "fg": "bold",
+        "bg": "",
+    }))
+    bl_corner = fields.Nested(TextStyleFieldSchema, dump_default=TextStyleFieldSchema().dump({
+        "text": "└",
+        "fg": "bold",
+        "bg": "",
+    }))
+    l_line = fields.Nested(TextStyleFieldSchema, dump_default=TextStyleFieldSchema().dump({
+        "text": "│",
+        "fg": "bold",
+        "bg": "",
+    }))
+
+
 class SpacingSchema(Schema):
     top = fields.Int(dump_default=0)
     bottom = fields.Int(dump_default=0)
@@ -159,8 +208,30 @@ class HeadingsSchema(Schema):
 
 
 class TableSchema(Schema):
-    header_divider = fields.Str(dump_default="─")
     column_spacing = fields.Int(dump_default=3)
+    bg = fields.Str(dump_default="")
+    fg = fields.Str(dump_default="")
+    header_divider = fields.Nested(TextStyleFieldSchema, dump_default=TextStyleFieldSchema().dump({
+        "text": "─",
+        "fg": "bold",
+        "bg": "",
+    }))
+    header = fields.Nested(StyleFieldSchema, dump_default=StyleFieldSchema().dump({
+        "fg": "",
+        "bg": "#202020",
+    }))
+    even_rows = fields.Nested(StyleFieldSchema, dump_default=StyleFieldSchema().dump({
+        "fg": "",
+        "bg": "",
+    }))
+    odd_rows = fields.Nested(StyleFieldSchema, dump_default=StyleFieldSchema().dump({
+        "fg": "",
+        "bg": "#181818",
+    }))
+    border_type = fields.Str(
+        validate=lambda x: x in ("none", "custom", "line"),
+        default="none")
+    border = fields.Nested(BorderBoxSchema, dump_default=BorderBoxSchema().dump(None))
 
 
 class StyleSchema(Schema):

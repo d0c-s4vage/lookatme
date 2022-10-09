@@ -195,7 +195,7 @@ class Context:
         if len(curr_text_markup) > 0:
             res.append(ClickableText(curr_text_markup))
 
-        res = [urwid.AttrMap(x, {None: self.spec_text}) for x in res]
+        # res = [urwid.AttrMap(x, {None: self.spec_text}) for x in res]
 
         return res
 

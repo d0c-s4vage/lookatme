@@ -92,6 +92,99 @@ class SortSetting:
 
         return lambda x: x
 
+
+class TableRow(urwid.Widget):
+    def __init__(self, cell_tokens: List[Dict]):
+        self.cell_tokens = cell_tokens
+        self.cell_piles = [self.create_cell(x) for x in cell_tokens]
+        self.cell_widths = [self.get_max_width(x) for x in self.cell_piles]
+
+    def get_max_width(self, cell_pile: urwid.Pile) -> int:
+        max_width = 0
+        __import__("pdb").set_trace()
+        for widget in cell_pile.widget_list:
+            cols,rows = widget.pack()
+            max_width = max(max_width, cols)
+        return 15
+
+    def create_cell(self, cell_token: Dict) -> urwid.Pile:
+        return urwid.Pile([urwid.Text("cell")])
+
+    # -------------------------------------------------------------------------
+    # URWID REQUIRED FUNCTIONS ------------------------------------------------
+    # -------------------------------------------------------------------------
+
+    def rows(self, size: Tuple[int, int], focus: bool=False) -> int:
+        return 1
+
+    def render(self, size: Tuple[int, int], focus: bool=False) -> urwid.Canvas:
+        pass
+
+
+# http://urwid.org/manual/widgets.html#widgets-from-scratch
+# this will be a flow widget
+# http://urwid.org/reference/widget.html#urwid.Widget.sizing
+class TableNew(urwid.Widget):
+    def __init__(self, ctx: Context, header: Dict, body: Dict):
+        """Create a new table
+
+        :param list columns: The rows to use for the table
+        :param list headers: (optional) Headers for the table
+        :param list aligns: (optional) Alignment values for each column
+        """
+        self.header = header
+        self.validate_row_container(self.header)
+        self.header_rows = [self.create_row(x) for x in self.header["children"]]
+
+        self.body = body
+        self.validate_row_container(self.body)
+        self.body_rows = [self.create_row(x) for x in self.body["children"]]
+
+    def validate_row(self, row: Dict):
+        """Validate that the provided row is a tr_open, with th_open or td_open
+        children.
+        """
+        if not isinstance(row, dict):
+            raise ValueError("Table rows must be a dict")
+        
+        if row["type"] not in ("thead_open", "tr_open"):
+            raise ValueError("Rows must be of type thead_open or tr_open")
+
+        for child in row["children"]:
+            if child["type"] not in ("th_open", "td_open"):
+                raise ValueError("Row cells must be th_open or td_open")
+
+    def validate_row_container(self, container: Dict):
+        """Validate that the list of rows is valid. See ``validate_row`` for
+        more details.
+        """
+        if not isinstance(container, dict):
+            raise ValueError("Rows must be a contained in a thead or tbody token")
+
+        for row in container["children"]:
+            self.validate_row(row)
+
+    def create_row(self, row: Dict) -> TableRow:
+        """Create a new TableRow instance from the provided markdown tokens
+        """
+        if row["type"] != "tr_open":
+            raise ValueError("tr_open expected")
+
+        # row will be a tr_open token
+        return TableRow(row["children"])
+
+    # -------------------------------------------------------------------------
+    # URWID REQUIRED FUNCTIONS ------------------------------------------------
+    # -------------------------------------------------------------------------
+
+    def rows(self, size: Tuple[int, int], focus: bool = False) -> int:
+        return 1
+
+    def render(self, size: Tuple[int, int], focus: bool) -> urwid.Canvas:
+        """Render the contents!
+        """
+
+
 class Table(urwid.Pile):
     """Create a table from a list of headers, alignment values, and rows.
     """
@@ -117,8 +210,24 @@ class Table(urwid.Pile):
 
         self.num_columns = 0
         self.sort_setting = SortSetting()
+
+        self.style = config.get_style()["table"]
+        cell_spacing = self.style["column_spacing"]
+
         self.spec_general = self.ctx.spec_general
         self.spec_text = self.ctx.spec_text
+
+        self.header_spec = utils.spec_from_style(self.style["header"])
+        self.header_spec_text = utils.overwrite_spec(self.spec_text, self.header_spec)
+        self.header_spec_general = utils.overwrite_spec(self.spec_general, self.header_spec)
+
+        self.even_spec = utils.spec_from_style(self.style["even_rows"])
+        self.even_spec_text = utils.overwrite_spec(self.spec_text, self.even_spec)
+        self.even_spec_general = utils.overwrite_spec(self.spec_general, self.even_spec)
+
+        self.odd_spec = utils.spec_from_style(self.style["odd_rows"])
+        self.odd_spec_text = utils.overwrite_spec(self.spec_text, self.odd_spec)
+        self.odd_spec_general = utils.overwrite_spec(self.spec_general, self.odd_spec)
 
         self._log = config.get_log().getChild("Table")
 
@@ -141,7 +250,6 @@ class Table(urwid.Pile):
         if self.body is not None:
             self.body_rows = self.create_cells(self.body["children"])
 
-        cell_spacing = config.get_style()["table"]["column_spacing"]
         self.column_maxes = self.calc_column_maxes()
         self._log.debug("colum_maxes: {}".format(self.column_maxes))
 
@@ -153,6 +261,32 @@ class Table(urwid.Pile):
         super().__init__([urwid.Text("hello")])
 
         self.contents = self.gen_contents()
+        self._invalidate()
+
+    def validate_row(self, row: Dict):
+        """Validate that the provided row is a tr_open, with th_open or td_open
+        children.
+        """
+        if not isinstance(row, dict):
+            raise ValueError("Table rows must be a dict")
+        
+        if row["type"] not in ("thead_open", "tr_open"):
+            raise ValueError("Rows must be of type thead_open or tr_open")
+
+        for child in row["children"]:
+            if child["type"] not in ("th_open", "td_open"):
+                raise ValueError("Row cells must be th_open or td_open")
+
+    def validate_row_container(self, container: Dict):
+        """Validate that the list of rows is valid. See ``validate_row`` for
+        more details.
+        """
+        if not isinstance(container, dict):
+            raise ValueError("Rows must be a contained in a thead or tbody token")
+
+        for row in container["children"]:
+            self.validate_row(row)
+
 #
     def watch_header(self, idx: int, w: urwid.Widget):
         """Watch the provided widget w for changes
@@ -178,61 +312,89 @@ class Table(urwid.Pile):
         sort_data = []
         sort_header_idx = self.sort_setting.get_header_idx()
         for idx, row in enumerate(self.body_rows):
-            sort_cell_lines = row.widget_list[sort_header_idx].render((100,)).text
+            sort_cell_lines = row[sort_header_idx].render((100,)).text
             sort_cell_data = b"".join(x.strip() for x in sort_cell_lines)
             sort_data.append((idx, sort_cell_data))
 
         sorted_indices = self.sort_setting.sort_data(sort_data)
         self._log.debug("new sort indices: {!r}".format(sorted_indices))
 
+        body_tokens = []
         for idx in sorted_indices:
-            res.append(self.body_rows[idx])
+            body_tokens.append(self.body["children"][idx])
 
-        return res
+        if sorted_indices == list(range(len(self.body_rows))):
+            body_rows = self.body_rows
+        else:
+            body_rows = self.create_cells(body_tokens)
+
+        return res + body_rows
 
     def gen_contents(self):
         """Calculate and set the column maxes for this table
         """
-        cell_spacing = config.get_style()["table"]["column_spacing"]
+        table_style = config.get_style()["table"]
+        cell_spacing = table_style["column_spacing"]
+
         self.total_width = sum(self.column_maxes.values()) + (
             cell_spacing * (self.num_columns - 1)
         )
 
         new_contents = []
-        for row in self.get_table_rows():
+        for row_idx, row in enumerate(self.get_table_rows()):
+            row_spec_text, row_spec_general = self.row_specs(row_idx, row_idx==0)
+
             # row should be a Columns instance
             new_columns = []
-            for idx, column_items in enumerate(row.contents):
-                column_widget, _ = column_items
-                if column_widget.is_header:
-                    for w in column_widget.widget_list:
+            for idx, cell_pile in enumerate(row):
+                # add the pdading between columns if we're not the first column
+                if idx > 0:
+                    padding_text = " " * cell_spacing
+                    if cell_pile.is_header:
+                        padding_text += "\n" + (self.style["header_divider"]["text"] * cell_spacing) 
+                    padding_pile = urwid.Pile([urwid.Text(padding_text)])
+                    padding_pile = self.ctx.wrap_widget(padding_pile, spec=row_spec_general)
+                    new_columns.append(padding_pile)
+
+                if cell_pile.is_header:
+                    for w in cell_pile.widget_list:
                         self.watch_header(idx, utils.core_widget(w))
 
-                    divider = urwid.Divider(
-                        config.get_style()["table"]["header_divider"]
+                    divider = urwid.Divider(self.style["header_divider"]["text"])
+                    divider = self.ctx.wrap_widget(divider, spec=row_spec_text)
+                    cell_pile = urwid.Pile(
+                        cell_pile.widget_list + [divider]
                     )
-                    divider = self.ctx.wrap_widget(divider, spec=self.spec_text)
-                    column_widget = urwid.Pile(
-                        column_widget.widget_list + [divider]
-                    )
-                new_columns.append((self.column_maxes[idx], column_widget))
 
-            cell_spacing = config.get_style()["table"]["column_spacing"]
-            new_column_w = urwid.Columns(new_columns, cell_spacing)
+                #cell_pile = self.ctx.wrap_widget(cell_pile, spec=row_spec_general)
+                #padding = urwid.Padding(cell_pile, width=self.column_maxes[idx])
+                #padding = self.ctx.wrap_widget(padding, row_spec_general)
+                new_columns.append((self.column_maxes[idx], cell_pile))
+
+            new_column_w = urwid.Columns(new_columns)
+            new_column_w = self.ctx.wrap_widget(new_column_w, row_spec_general)
             new_contents.append((new_column_w, ('weight', 1)))
 
         return new_contents
 
     def calc_column_maxes(self):
         column_maxes = defaultdict(int)
+        # list of urwid.Columns
         for row in self.header_rows + self.body_rows:
-            for idx, cell in enumerate(row.widget_list):
+            # list of urwid.Piles
+            for idx, cell in enumerate(row):
                 rend = cell.render((200,))
                 curr_col_width = max(len(rend_row.strip()) for rend_row in rend.text)
                 column_maxes[idx] = max(column_maxes[idx], curr_col_width)
+
+        # reserve one more character for an up/down arrow to indicate the
+        # sort direction
+        for key in column_maxes.keys():
+            column_maxes[key] += 1
+
         return column_maxes
 
-    def create_cells(self, rows, base_spec=None, header=False):
+    def create_cells(self, rows, base_spec=None, header=False) -> List[List[urwid.Pile]]:
         """Create the rows for the body, optionally calling a modifier function
         on each created cell Text. The modifier must accept an urwid.Text object
         and must return an urwid.Text object.
@@ -243,8 +405,10 @@ class Table(urwid.Pile):
             self.ctx.spec_push(base_spec)
 
         # should be a list of [tr_open, ...]
-        for row in rows:
+        for row_idx, row in enumerate(rows):
+            row_spec_text, row_spec_general = self.row_specs(row_idx+1, header)
             rend_row = []
+
             # should be a list of [td_open, ...] or [th_open, ...]
             for idx, cell in enumerate(row["children"]):
                 if idx >= self.num_columns:
@@ -253,8 +417,10 @@ class Table(urwid.Pile):
                 cell_container.is_header = header
 
                 with self.ctx.use_container_tmp(cell_container):
-                    with self.ctx.use_tokens(cell["children"]):
-                        markdown_block.render_all(self.ctx)
+                    with self.ctx.use_spec(row_spec_general, text_only=False):
+                        with self.ctx.use_spec(row_spec_text, text_only=True):
+                            with self.ctx.use_tokens(cell["children"]):
+                                markdown_block.render_all(self.ctx)
 
                 # set alignment for all text widgets
                 for widget in cell_container.widget_list:
@@ -265,34 +431,24 @@ class Table(urwid.Pile):
                 rend_row.append(cell_container)
 
             # we'll adjust the spacing later!
-            column = urwid.Columns(rend_row, 1)
-            res.append(column)
+            res.append(rend_row)
 
         if base_spec is not None:
             self.ctx.spec_pop()
 
         return res
-
-    def validate_row(self, row: Dict):
-        """Validate that the provided row is a tr_open, with th_open or td_open
-        children.
+    
+    def row_specs(self, row_idx: int, is_header: bool) -> Tuple[urwid.AttrSpec, urwid.AttrSpec]:
+        """Return the row-specific specs (text and general) for the given row
         """
-        if not isinstance(row, dict):
-            raise ValueError("Table rows must be a dict")
-        
-        if row["type"] not in ("thead_open", "tr_open"):
-            raise ValueError("Rows must be of type thead_open or tr_open")
+        if is_header:
+            row_spec_text = self.header_spec_text
+            row_spec_general = self.header_spec_general
+        elif row_idx % 2 == 1:
+            row_spec_text = self.even_spec_text
+            row_spec_general = self.even_spec_general
+        else:
+            row_spec_text = self.odd_spec_text
+            row_spec_general = self.odd_spec_general
 
-        for child in row["children"]:
-            if child["type"] not in ("th_open", "td_open"):
-                raise ValueError("Row cells must be th_open or td_open")
-
-    def validate_row_container(self, container: Dict):
-        """Validate that the list of rows is valid. See ``validate_row`` for
-        more details.
-        """
-        if not isinstance(container, dict):
-            raise ValueError("Rows must be a contained in a thead or tbody token")
-
-        for row in container["children"]:
-            self.validate_row(row)
+        return (row_spec_text, row_spec_general)
