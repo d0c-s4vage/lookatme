@@ -228,9 +228,6 @@ class TableSchema(Schema):
         "fg": "",
         "bg": "#181818",
     }))
-    border_type = fields.Str(
-        validate=lambda x: x in ("none", "custom", "line"),
-        default="none")
     border = fields.Nested(BorderBoxSchema, dump_default=BorderBoxSchema().dump(None))
 
 

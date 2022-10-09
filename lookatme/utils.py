@@ -2,6 +2,7 @@
 """
 
 
+from typing import Union
 import urwid
 
 from lookatme.widgets.smart_attr_spec import SmartAttrSpec
@@ -69,7 +70,11 @@ def spec_from_style(styles):
     if isinstance(styles, str):
         return SmartAttrSpec(styles, "")
     else:
-        return SmartAttrSpec(styles.get("fg", ""), styles.get("bg", ""))
+        fg = styles.get("fg", "")
+        bg = styles.get("bg", "")
+        if fg + bg == "":
+            return None
+        return SmartAttrSpec(fg, bg)
 
 
 def non_empty_split(data):
@@ -181,7 +186,7 @@ def can_style_item(item):
     return isinstance(item, (urwid.Text, list, tuple))
 
 
-def spec_from_stack(spec_stack: list, filter_fn=None):
+def spec_from_stack(spec_stack: list, filter_fn=None) -> Union[None, urwid.AttrSpec]:
     if len(spec_stack) == 0:
         return SmartAttrSpec("", "")
 

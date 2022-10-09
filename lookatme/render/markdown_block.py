@@ -40,6 +40,10 @@ def _list_level(item):
     return get_meta(item).get("list_level", 1)
 
 
+def _ctx_style_spec(style: Dict, ctx: Context) -> Union[None, urwid.AttrSpec]:
+    return ctx.spec_text_with(spec_from_style(style))
+
+
 # =============================================================================
 
 
@@ -356,18 +360,18 @@ def render_table_open(token: Dict, ctx: Context):
         tr_corner=border_style["tr_corner"]["text"],
         br_corner=border_style["br_corner"]["text"],
         bl_corner=border_style["bl_corner"]["text"],
-        tl_corner_spec=spec_from_style(border_style["tl_corner"]),
-        tr_corner_spec=spec_from_style(border_style["tr_corner"]),
-        br_corner_spec=spec_from_style(border_style["br_corner"]),
-        bl_corner_spec=spec_from_style(border_style["bl_corner"]),
+        tl_corner_spec=_ctx_style_spec(border_style["tl_corner"], ctx),
+        tr_corner_spec=_ctx_style_spec(border_style["tr_corner"], ctx),
+        br_corner_spec=_ctx_style_spec(border_style["br_corner"], ctx),
+        bl_corner_spec=_ctx_style_spec(border_style["bl_corner"], ctx),
         t_fill=border_style["t_line"]["text"],
         r_fill=border_style["r_line"]["text"],
         b_fill=border_style["b_line"]["text"],
         l_fill=border_style["l_line"]["text"],
-        t_fill_spec=spec_from_style(border_style["t_line"]),
-        r_fill_spec=spec_from_style(border_style["r_line"]),
-        b_fill_spec=spec_from_style(border_style["b_line"]),
-        l_fill_spec=spec_from_style(border_style["l_line"]),
+        t_fill_spec=_ctx_style_spec(border_style["t_line"], ctx),
+        r_fill_spec=_ctx_style_spec(border_style["r_line"], ctx),
+        b_fill_spec=_ctx_style_spec(border_style["b_line"], ctx),
+        l_fill_spec=_ctx_style_spec(border_style["l_line"], ctx),
     )
 
     padding = urwid.Padding(box, width = table.total_width + 2, align="center")

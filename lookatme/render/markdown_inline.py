@@ -189,6 +189,22 @@ def render_html_tag_div_close(_, tag: Tag, ctx: Context, style_spec: Union[None,
     ctx.tag_pop()
 
 
+def render_html_tag_ol_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+    ctx.tag_push(tag.name, style_spec)
+    markdown_block().render_ordered_list_open(
+        {"type": "ordered_list_open"},
+        ctx
+    )
+
+
+def render_html_tag_ol_close(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+    ctx.tag_pop()
+    markdown_block().render_ordered_list_close(
+        {"type": "ordered_list_close"},
+        ctx
+    )
+
+
 def render_html_tag_ul_open(_, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
     ctx.tag_push(tag.name, style_spec)
     markdown_block().render_bullet_list_open(

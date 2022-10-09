@@ -375,7 +375,7 @@ class Context:
         return self.spec_stack.pop()
 
     @property
-    def spec_general(self) -> urwid.AttrSpec:
+    def spec_general(self) -> Union[None, urwid.AttrSpec]:
         """Return the current fully resolved current AttrSpec
         """
         return utils.spec_from_stack(
@@ -393,7 +393,10 @@ class Context:
             lambda s, text_only: True,
         )
 
-    def spec_text_with(self, other_spec: urwid.AttrSpec):
+    def spec_text_with(self, other_spec: Union[None, urwid.AttrSpec]) -> Union[None, urwid.AttrSpec]:
+        if other_spec is None:
+            return self.spec_text
+
         return utils.spec_from_stack(
             [(self.spec_text, True), (other_spec, True)],
         )
