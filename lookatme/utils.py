@@ -184,14 +184,16 @@ def can_style_item(item):
     return isinstance(item, (urwid.Text, list, tuple))
 
 
+def _default_filter_fn(_x, _y):
+    return True
+
+
 def spec_from_stack(spec_stack: list, filter_fn=None) -> Union[None, urwid.AttrSpec]:
     if len(spec_stack) == 0:
         return SmartAttrSpec("", "")
 
     if filter_fn is None:
-
-        def filter_fn(_x, _y):
-            return True
+        filter_fn = _default_filter_fn
 
     res_spec = None
     for spec, text_only in spec_stack:

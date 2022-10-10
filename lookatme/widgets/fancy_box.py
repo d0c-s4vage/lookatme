@@ -137,6 +137,9 @@ class FancyBox(urwid.WidgetDecoration, urwid.WidgetWrap):
             set_w = True
             w = self._original_widget
 
+        if w is None:
+            raise Exception("w must not be None!")
+
         tl_hor, tl_ver = self._get_corner_parts(self.tl_corner, 0, left=True)
         bl_hor, bl_ver = self._get_corner_parts(self.bl_corner, -1, left=True)
         tr_hor, tr_ver = self._get_corner_parts(self.tr_corner, 0)

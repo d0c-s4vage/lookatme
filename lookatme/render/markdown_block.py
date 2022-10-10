@@ -328,6 +328,9 @@ def render_table_open(token: Dict, ctx: Context):
         table_children.append(copy.deepcopy(token))
 
     thead, tbody = _extract_nested_table_tokens(table_children)
+    if thead is None or tbody is None:
+        raise Exception("thead and tbody must be defined!")
+
     border_style = config.get_style()["table"]["border"]
 
     table = Table(header=thead, body=tbody, ctx=ctx)

@@ -224,6 +224,7 @@ class Parser(object):
         if (
             hinfo["counts"]
             and first_heading
+            and isinstance(first_heading_contents, list)
             and hinfo["counts"][first_heading["level"]] == 1
         ):
             hinfo["title"] = (
