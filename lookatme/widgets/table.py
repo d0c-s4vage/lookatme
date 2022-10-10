@@ -13,7 +13,6 @@ import urwid
 
 import lookatme.config as config
 import lookatme.render.markdown_block as markdown_block
-import lookatme.render.markdown_inline as markdown_inline
 import lookatme.utils as utils
 from lookatme.render.context import Context
 
@@ -250,8 +249,6 @@ class Table(urwid.Pile):
 
     def gen_contents(self):
         """Calculate and set the column maxes for this table"""
-        table_style = config.get_style()["table"]
-
         self.total_width = sum(self.column_maxes.values()) + (
             self.cell_spacing * (self.num_columns - 1)
         )

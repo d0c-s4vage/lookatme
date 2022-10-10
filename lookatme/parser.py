@@ -4,15 +4,11 @@ This module defines the parser for the markdown presentation file
 
 
 import re
-import time
 from collections import defaultdict
 from typing import AnyStr, Callable, Dict, List, Tuple
 
 import markdown_it
 import markdown_it.token
-import mistune
-import yaml
-from marshmallow import Schema, fields
 
 import lookatme.config
 from lookatme.schemas import MetaSchema

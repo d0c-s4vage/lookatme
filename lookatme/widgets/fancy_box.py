@@ -71,6 +71,7 @@ class FancyBox(urwid.WidgetDecoration, urwid.WidgetWrap):
         urwid.WidgetDecoration.__init__(self, final)
         urwid.WidgetWrap.__init__(self, final)
 
+    # flake8: noqa: C901
     def set(
         self,
         tl_corner: Optional[str] = None,

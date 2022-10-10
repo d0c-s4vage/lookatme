@@ -3,7 +3,6 @@ This module defines the text user interface (TUI) for lookatme
 """
 
 
-import copy
 import threading
 import time
 from collections import defaultdict
@@ -15,7 +14,6 @@ import lookatme.config
 import lookatme.config as config
 import lookatme.parser
 import lookatme.render.markdown_block as markdown_block
-import lookatme.render.markdown_inline as markdown_inline
 from lookatme.contrib import contrib_first, shutdown_contribs
 from lookatme.render.context import Context
 from lookatme.utils import spec_from_style
@@ -326,7 +324,7 @@ class MarkdownTui(urwid.Frame):
         elif key in ["right", " ", "j", "l"]:
             slide_direction = 1
         elif key in ["q", "Q"]:
-            lookatme.contrib.shutdown_contribs()
+            shutdown_contribs()
             raise urwid.ExitMainLoop()
         elif key == "r":
             self.reload()

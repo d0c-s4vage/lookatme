@@ -9,10 +9,6 @@ import re
 import sys
 from typing import Dict, List, Tuple, Union
 
-import pygments
-import pygments.formatters
-import pygments.lexers
-import pygments.styles
 import urwid
 
 import lookatme.config as config
@@ -20,28 +16,14 @@ import lookatme.render.markdown_inline as markdown_inline
 import lookatme.render.pygments as pygments_render
 from lookatme.contrib import contrib_first
 from lookatme.render.context import Context
-from lookatme.utils import *
-from lookatme.widgets.clickable_text import ClickableText
 from lookatme.widgets.fancy_box import FancyBox
+import lookatme.utils as utils
 
 THIS_MOD = sys.modules[__name__]
 
 
-def _inc_item_count(item):
-    get_meta(item)["item_count"] += 1
-    return get_meta(item)["item_count"]
-
-
-def _is_list(item):
-    return get_meta(item).get("is_list", False)
-
-
-def _list_level(item):
-    return get_meta(item).get("list_level", 1)
-
-
 def _ctx_style_spec(style: Dict, ctx: Context) -> Union[None, urwid.AttrSpec]:
-    return ctx.spec_text_with(spec_from_style(style))
+    return ctx.spec_text_with(utils.spec_from_style(style))
 
 
 # =============================================================================
@@ -186,7 +168,9 @@ def render_list_item_open(_, ctx: Context):
         [
             (
                 marker_col_width,
-                urwid.Text((ctx.spec_text_with(spec_from_style("bold")), marker_text)),
+                urwid.Text(
+                    (ctx.spec_text_with(utils.spec_from_style("bold")), marker_text)
+                ),
             ),
             pile,
         ]
@@ -210,7 +194,7 @@ def render_heading_open(token: Dict, ctx: Context):
 
     ctx.ensure_new_block()
 
-    header_spec = spec_from_style(style)
+    header_spec = utils.spec_from_style(style)
     ctx.spec_push(header_spec)
     prefix_token = {"type": "text", "content": style["prefix"]}
     markdown_inline.render(prefix_token, ctx)
@@ -257,7 +241,7 @@ def render_blockquote_open(token: Dict, ctx: Context):
     )
 
     ctx.container_push(pile, is_new_block=True, custom_add=line_box)
-    ctx.spec_push(spec_from_style(quote_style))
+    ctx.spec_push(utils.spec_from_style(quote_style))
 
 
 @contrib_first
@@ -398,7 +382,7 @@ def render_table_open(token: Dict, ctx: Context):
 # #     """
 # #     hrule_conf = config.get_style()["hrule"]
 # #     div = urwid.Divider(hrule_conf['char'], top=1, bottom=1)
-# #     return urwid.Pile([urwid.AttrMap(div, spec_from_style(hrule_conf['style']))])
+# #     return urwid.Pile([urwid.AttrMap(div, utils.spec_from_style(hrule_conf['style']))])
 #
 #
 # @contrib_first
@@ -446,7 +430,7 @@ def render_table_open(token: Dict, ctx: Context):
 #     level = token["level"]
 #     style = config.get_style()["headings"].get(str(level), headings["default"])
 #
-#     header_spec = spec_from_style(style)
+#     header_spec = utils.spec_from_style(style)
 #     with ctx.use_spec(header_spec):
 #         prefix_token = {"type": "text", "text": style["prefix"]}
 #         suffix_token = {"type": "text", "text": style["suffix"]}
@@ -587,7 +571,7 @@ def render_table_open(token: Dict, ctx: Context):
 #     marker_col_width = meta["max_list_marker_width"]
 #
 #     res = urwid.Columns([
-#         (marker_col_width, urwid.Text((ctx.spec_text_with(spec_from_style("bold")), marker_text))),
+#         (marker_col_width, urwid.Text((ctx.spec_text_with(utils.spec_from_style("bold")), marker_text))),
 #         pile,
 #     ])
 #     res = ctx.wrap_widget(res)
@@ -670,7 +654,7 @@ def render_table_open(token: Dict, ctx: Context):
 # #     quote_style = styles["style"]
 # #
 # #     with ctx.use_container(pile):
-# #         with ctx.use_spec(spec_from_style(quote_style)):
+# #         with ctx.use_spec(utils.spec_from_style(quote_style)):
 # #             for child_token in token["children"]:
 # #                 render(child_token, ctx)
 # #
@@ -684,7 +668,7 @@ def render_table_open(token: Dict, ctx: Context):
 # #         urwid.LineBox(
 # #             urwid.AttrMap(
 # #                 urwid.Padding(pile, left=2),
-# #                 spec_from_style(quote_style),
+# #                 utils.spec_from_style(quote_style),
 # #             ),
 # #             lline=quote_side, rline="",
 # #             tline=" ", trcorner="", tlcorner=quote_top_corner,

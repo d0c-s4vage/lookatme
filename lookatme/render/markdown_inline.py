@@ -4,15 +4,12 @@ interface
 """
 
 
-import functools
-import re
 import sys
-from typing import Dict, List, Union
+from typing import Union
 
 import urwid
 
 import lookatme.config as config
-import lookatme.parser
 import lookatme.render.pygments as pygments_render
 import lookatme.utils as utils
 from lookatme.contrib import contrib_first
@@ -50,34 +47,42 @@ def render_all(ctx: Context):
 # -------------------------------------------------------------------------
 
 
+@contrib_first
 def render_text(token, ctx: Context):
     ctx.inline_push((ctx.spec_text, token.get("content", "")))
 
 
+@contrib_first
 def render_em_open(_, ctx: Context):
     ctx.spec_push(utils.spec_from_style("italics"))
 
 
+@contrib_first
 def render_em_close(_, ctx: Context):
     ctx.spec_pop()
 
 
+@contrib_first
 def render_strong_open(_, ctx: Context):
     ctx.spec_push(utils.spec_from_style("bold"))
 
 
+@contrib_first
 def render_strong_close(_, ctx: Context):
     ctx.spec_pop()
 
 
+@contrib_first
 def render_s_open(_, ctx: Context):
     ctx.spec_push(utils.spec_from_style("strikethrough"))
 
 
+@contrib_first
 def render_s_close(_, ctx: Context):
     ctx.spec_pop()
 
 
+@contrib_first
 def render_link_open(token, ctx: Context):
     attrs = dict(token["attrs"])
     href = attrs.get("href", "")
@@ -86,14 +91,17 @@ def render_link_open(token, ctx: Context):
     ctx.spec_push(LinkIndicatorSpec(href, plain_spec))
 
 
+@contrib_first
 def render_link_close(_, ctx: Context):
     ctx.spec_pop()
 
 
+@contrib_first
 def render_softbreak(_, ctx: Context):
     ctx.inline_push((ctx.spec_text, "\n"))
 
 
+@contrib_first
 def render_code_inline(token, ctx: Context):
     # TODO: add a style for the default programming language for inline text
     # blocks
@@ -102,6 +110,7 @@ def render_code_inline(token, ctx: Context):
         ctx.inline_push((ctx.spec_text, text))
 
 
+@contrib_first
 def render_html_inline(token, ctx: Context):
     tags = Tag.parse(token["content"])
 
@@ -137,18 +146,21 @@ def render_html_inline(token, ctx: Context):
         fn(token, tag, ctx, style_spec)
 
 
+@contrib_first
 def render_html_tag_default_open(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
     ctx.tag_push(tag.name, style_spec)
 
 
+@contrib_first
 def render_html_tag_default_close(
     _, _tag: Tag, ctx: Context, _style_spec: Union[None, urwid.AttrSpec]
 ):
     ctx.tag_pop()
 
 
+@contrib_first
 def render_html_tag_u_open(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -156,6 +168,7 @@ def render_html_tag_u_open(
     ctx.tag_push(tag.name, style_spec, text_only_spec=True)
 
 
+@contrib_first
 def render_html_tag_i_open(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -163,6 +176,7 @@ def render_html_tag_i_open(
     ctx.tag_push(tag.name, style_spec)
 
 
+@contrib_first
 def render_html_tag_b_open(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -170,6 +184,7 @@ def render_html_tag_b_open(
     ctx.tag_push(tag.name, style_spec)
 
 
+@contrib_first
 def render_html_tag_em_open(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -177,6 +192,7 @@ def render_html_tag_em_open(
     ctx.tag_push(tag.name, style_spec, text_only_spec=True)
 
 
+@contrib_first
 def render_html_tag_blink_open(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -184,6 +200,7 @@ def render_html_tag_blink_open(
     ctx.tag_push(tag.name, style_spec)
 
 
+@contrib_first
 def render_html_tag_br_open(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -191,6 +208,7 @@ def render_html_tag_br_open(
     ctx.inline_push((ctx.spec_text, "\n"))
 
 
+@contrib_first
 def render_html_tag_div_open(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -199,6 +217,7 @@ def render_html_tag_div_open(
     ctx.tag_push(tag.name, style_spec)
 
 
+@contrib_first
 def render_html_tag_div_close(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -206,6 +225,7 @@ def render_html_tag_div_close(
     ctx.tag_pop()
 
 
+@contrib_first
 def render_html_tag_ol_open(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -213,6 +233,7 @@ def render_html_tag_ol_open(
     markdown_block().render_ordered_list_open({"type": "ordered_list_open"}, ctx)
 
 
+@contrib_first
 def render_html_tag_ol_close(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -220,6 +241,7 @@ def render_html_tag_ol_close(
     markdown_block().render_ordered_list_close({"type": "ordered_list_close"}, ctx)
 
 
+@contrib_first
 def render_html_tag_ul_open(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -227,6 +249,7 @@ def render_html_tag_ul_open(
     markdown_block().render_bullet_list_open({"type": "bullet_list_open"}, ctx)
 
 
+@contrib_first
 def render_html_tag_ul_close(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -234,6 +257,7 @@ def render_html_tag_ul_close(
     markdown_block().render_bullet_list_close({"type": "bullet_list_close"}, ctx)
 
 
+@contrib_first
 def render_html_tag_li_open(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
@@ -241,6 +265,7 @@ def render_html_tag_li_open(
     markdown_block().render_list_item_open({"type": "list_item_open"}, ctx)
 
 
+@contrib_first
 def render_html_tag_li_close(
     _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
