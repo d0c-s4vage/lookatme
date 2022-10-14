@@ -3,272 +3,412 @@ Test basic markdown renderings
 """
 
 
-from tests.utils import assert_render, render_markdown, row_text, setup_lookatme
+from lookatme.schemas import StyleSchema
+import lookatme.utils as l_utils
 
 
-def test_headings(tmpdir, mocker):
+import tests.utils as utils
+from tests.utils import override_style
+
+
+@override_style({
+    "headings": {
+        "default": {
+            "fg": "bold",
+            "bg": "",
+            "prefix": "|",
+            "suffix": "|",
+        },
+    },
+}, complete=True)
+def test_heading_defaults(style):
     """Test basic header rendering"""
-    setup_lookatme(
-        tmpdir,
-        mocker,
-        style={
-            "headings": {
-                "default": {
-                    "fg": "bold",
-                    "bg": "",
-                    "prefix": "|",
-                    "suffix": "|",
-                },
-            },
+    utils.validate_render(
+        md_text=r"""
+            # H1
+            ## H2
+            ### H3
+        """,
+        text=[
+            "|H1|",
+            "    ",
+            "|H2|",
+            "    ",
+            "|H3|",
+            "    ",
+        ],
+        style_mask=[
+            "HHHH",
+            "////",
+            "hhhh",
+            "////",
+            "aaaa",
+            "////",
+        ],
+        styles={
+            "H": style["headings"]["default"],
+            "h": style["headings"]["default"],
+            "a": style["headings"]["default"],
+            "/": {},
+        }
+    )
+
+
+@override_style({
+    "headings": {
+        "default": {
+            "fg": "bold",
+            "bg": "",
+            "prefix": ".",
+            "suffix": ".",
         },
-    )
-
-    rendered = render_markdown(
-        """
-# H1
-## H2
-### H3
----
-"""
-    )
-
-    stripped_rows = [
-        b"|H1|",
-        b"",
-        b"|H2|",
-        b"",
-        b"|H3|",
-        b"",
-    ]
-    assert_render(stripped_rows, rendered)
-
-
-def test_table(tmpdir, mocker):
-    """Test basic table rendering"""
-    setup_lookatme(
-        tmpdir,
-        mocker,
-        style={
-            "table": {
-                "column_spacing": 1,
-                "header_divider": "-",
-            },
+        "1": {
+            "fg": "bold",
+            "bg": "",
+            "prefix": "|",
+            "suffix": "|",
         },
+        "2": {
+            "fg": "italics",
+            "bg": "",
+            "prefix": ">>",
+            "suffix": "<<",
+        },
+        "3": {
+            "fg": "underline",
+            "bg": "",
+            "prefix": "[[[",
+            "suffix": "]]]",
+        },
+    },
+})
+def test_heading_levels(style):
+    """Test basic header rendering"""
+    utils.validate_render(
+        md_text=r"""
+            # H1
+            ## H2
+            ### H3
+        """,
+        text=[
+            "|H1|    ",
+            "        ",
+            ">>H2<<  ",
+            "        ",
+            "[[[H3]]]",
+            "        ",
+        ],
+        style_mask=[
+            "HHHH////",
+            "////////",
+            "hhhhhh//",
+            "////////",
+            "aaaaaaaa",
+            "////////",
+        ],
+        styles={
+            "H": style["headings"]["1"],
+            "h": style["headings"]["2"],
+            "a": style["headings"]["3"],
+            "/": {},
+        }
     )
 
-    rendered = render_markdown(
-        """
-| H1      |   H2   |     H3 |
-|:--------|:------:|-------:|
-| 1value1 | value2 | value3 |
-| 1       | 2      | 3      |
-"""
+
+@override_style({
+    "table": {
+        "column_spacing": 1,
+        "header_divider": { "text": "-" },
+    }
+})
+def test_table(style):
+    """Test basic header rendering"""
+    utils.validate_render(
+        render_width=30,
+        md_text=r"""
+            | H1      |   H2   |     H3 |
+            |:--------|:------:|-------:|
+            | 1value1 | value2 | value3 |
+            | 1       | 2      | 3      |
+        """,
+        text=[
+            "   ┌─────────────────────┐    ",
+            "   │H1        H2       H3│    ",
+            "   │---------------------│    ",
+            "   │1value1 value2 value3│    ",
+            "   │1          2        3│    ",
+            "   └─────────────────────┘    ",
+        ],
+        style_mask=[
+            "   .......................    ",
+            "   .HHHHHHHHHHHHHHHHHHHHH.    ",
+            "   .DDDDDDDDDDDDDDDDDDDDD.    ",
+            "   .EEEEEEEEEEEEEEEEEEEEE.    ",
+            "   .OOOOOOOOOOOOOOOOOOOOO.    ",
+            "   .......................    ",
+        ],
+        styles={
+            "H": style["table"]["header"],
+            # the divider is part of the header and inherits its styles
+            "D": l_utils.overwrite_style(
+                style["table"]["header"],
+                style["table"]["header_divider"]
+            ),
+            "O": style["table"]["odd_rows"],
+            "E": style["table"]["even_rows"],
+            ".": style["table"]["border"]["tl_corner"],
+            " ": {},
+        }
     )
 
-    stripped_rows = [
-        b"H1        H2       H3",
-        b"------- ------ ------",
-        b"1value1 value2 value3",
-        b"1          2        3",
-    ]
-    assert_render(stripped_rows, rendered, full_strip=True)
 
-
-def test_lists(tmpdir, mocker):
+@override_style({
+    "bullets": {
+        "default": { "text": "*", "fg": "#505050" },
+        "1": { "text": "-", "fg": "#808080" },
+        "2": { "text": "=", "fg": "#707070" },
+        "3": { "text": "^", "fg": "#606060" },
+    },
+}, complete=True)
+def test_lists_basic(style):
     """Test list rendering"""
-    setup_lookatme(
-        tmpdir,
-        mocker,
-        style={
-            "bullets": {
-                "default": "*",
-                "1": "-",
-                "2": "=",
-                "3": "^",
-            },
-        },
+    utils.validate_render(
+        md_text=r"""
+            * list 1
+              * list 2
+                * list 3
+                  * list 4
+              * list 2
+                * list 3
+                * list 3
+
+            * list 2
+        """,
+        text=[
+            "- list 1      ",
+            "  = list 2    ",
+            "    ^ list 3  ",
+            "      * list 4",
+            "  = list 2    ",
+            "    ^ list 3  ",
+            "    ^ list 3  ",
+            "- list 2      ",
+        ],
+        style_mask=[
+            "1             ",
+            "  2           ",
+            "    3         ",
+            "      d       ",
+            "  2           ",
+            "    3         ",
+            "    3         ",
+            "1             ",
+        ],
+        styles={
+            "1": style["bullets"]["1"],
+            "2": style["bullets"]["2"],
+            "3": style["bullets"]["3"],
+            "d": style["bullets"]["default"],
+            " ": {},
+        }
     )
 
-    rendered = render_markdown(
-        """
-* list 1
-  * list 2
-    * list 3
-      * list 4
-  * list 2
-    * list 3
-    * list 3
 
-* list 2
-"""
-    )
-
-    stripped_rows = [
-        b"",
-        b"  - list 1",
-        b"    = list 2",
-        b"      ^ list 3",
-        b"        * list 4",
-        b"    = list 2",
-        b"      ^ list 3",
-        b"      ^ list 3",
-        b"  - list 2",
-        b"",
-    ]
-    assert_render(stripped_rows, rendered)
-
-
-def test_lists_with_newline(tmpdir, mocker):
+@override_style({
+    "bullets": {
+        "default": { "text": "*", "fg": "#505050" },
+        "1": { "text": "-", "fg": "#808080" },
+        "2": { "text": "=", "fg": "#707070" },
+        "3": { "text": "^", "fg": "#606060" },
+    },
+}, complete=True)
+def test_lists_with_newline(style):
     """Test list rendering with a newline between a new nested list and the
     previous list item
     """
-    setup_lookatme(
-        tmpdir,
-        mocker,
-        style={
-            "bullets": {
-                "default": "*",
-                "1": "-",
-                "2": "=",
-                "3": "^",
-            },
-        },
+    utils.validate_render(
+        md_text=r"""
+            * list 1
+
+              * list 2
+        """,
+        text=[
+            "- list 1  ",
+            "  = list 2",
+        ],
+        style_mask=[
+            "1         ",
+            "  2       ",
+        ],
+        styles={
+            "1": style["bullets"]["1"],
+            "2": style["bullets"]["2"],
+            " ": {},
+        }
     )
 
-    rendered = render_markdown(
-        """
-* list 1
 
-  * list 2
-"""
-    )
-
-    stripped_rows = [
-        b"",
-        b"  - list 1",
-        b"",
-        b"    = list 2",
-        b"",
-    ]
-    assert_render(stripped_rows, rendered)
-
-
-def test_numbered_lists(tmpdir, mocker):
+@override_style({
+    "numbering": {
+        "default": { "text": "numeric", "fg": "italics" },
+        "1": { "text": "numeric", "fg": "italics" },
+        "2": { "text": "alpha", "fg": "bold" },
+        "3": { "text": "roman", "fg": "underline" },
+    },
+    "bullets": {
+        "default": { "text": "*", "fg": "italics" },
+        "3": { "text": "^", "fg": "underline" },
+    },
+}, complete=True)
+def test_numbered_lists(style):
     """Test list rendering"""
-    setup_lookatme(
-        tmpdir,
-        mocker,
-        style={
-            "bullets": {
-                "default": "*",
-                "1": "-",
-                "2": "=",
-                "3": "^",
-            },
-            "numbering": {
-                "default": "numeric",
-                "1": "numeric",
-                "2": "alpha",
-                "3": "roman",
-            },
-        },
+    utils.validate_render(
+        md_text=r"""
+            1. list 1
+                1. alpha1
+                1. alpha2
+                1. alpha3
+            1. list 2
+                1. alpha1.1
+                    1. roman1
+                    1. roman2
+                    1. roman3
+                1. alpha1.2
+                    * test1
+                    * test2
+            1. list 3
+        """,
+        text=[
+            "1. list 1        ",
+            "   a. alpha1     ",
+            "   b. alpha2     ",
+            "   c. alpha3     ",
+            "2. list 2        ",
+            "   a. alpha1.1   ",
+            "      i. roman1  ",
+            "      ii. roman2 ",
+            "      iii. roman3",
+            "   b. alpha1.2   ",
+            "      ^ test1    ",
+            "      ^ test2    ",
+            "3. list 3        ",
+        ],
+        style_mask=[
+            "11 ______        ",
+            "   22 ______     ",
+            "   22 ______     ",
+            "   22 ______     ",
+            "11 ______        ",
+            "   22 ________   ",
+            "      33 ______  ",
+            "      333 ______ ",
+            "      3333 ______",
+            "   22 ________   ",
+            "      B _____    ",
+            "      B _____    ",
+            "11 ______        ",
+        ],
+        styles={
+            "1": style["numbering"]["1"],
+            "2": style["numbering"]["2"],
+            "3": style["numbering"]["3"],
+            "B": style["bullets"]["3"],
+            "_": {},
+            " ": {},
+        }
     )
 
-    rendered = render_markdown(
-        """
-1. list 1
-    1. alpha1
-    1. alpha2
-    1. alpha3
-1. list 2
-    1. alpha1.1
-        1. roman1
-        1. roman2
-        1. roman3
-    1. alpha1.2
-        * test1
-        * test2
-1. list 3
-"""
-    )
 
-    stripped_rows = [
-        b"",
-        b"  1. list 1",
-        b"     a. alpha1",
-        b"     b. alpha2",
-        b"     c. alpha3",
-        b"  2. list 2",
-        b"     a. alpha1.1",
-        b"        i.   roman1",
-        b"        ii.  roman2",
-        b"        iii. roman3",
-        b"     b. alpha1.2",
-        b"        ^ test1",
-        b"        ^ test2",
-        b"  3. list 3",
-        b"",
-    ]
-    assert_render(stripped_rows, rendered)
-
-
-def test_hrule(tmpdir, mocker):
+@override_style({
+    "hrule": {
+        "text": "=",
+        "fg": "italics",
+        "bg": "#004400",
+    },
+})
+def test_hrule(style):
     """Test that hrules render correctly"""
-    setup_lookatme(
-        tmpdir,
-        mocker,
-        style={
-            "hrule": {
-                "style": {
-                    "fg": "",
-                    "bg": "",
-                },
-                "char": "=",
-            },
-        },
+    utils.validate_render(
+        render_width=5,
+        md_text="""
+            ---
+        """,
+        text=[
+            "     ",
+            "=====",
+            "     ",
+        ],
+        style_mask=[
+            "     ",
+            "xxxxx",
+            "     ",
+        ],
+        styles={
+            "x": style["hrule"],
+            " ": {},
+        }
     )
 
-    rendered = render_markdown("---", width=10, single_slide=True)
-    stripped_rows = [
-        b"",
-        b"==========",
-        b"",
-    ]
-    assert_render(stripped_rows, rendered)
 
-
-def test_block_quote(tmpdir, mocker):
+@override_style({
+    "quote": {
+        "style": {
+            "fg": "italics",
+            "bg": "#202020",
+        },
+        "border": {
+            "tl_corner": {
+                "text": "██━━──",
+                "fg": "#ff0000",
+            },
+            "l_line": {
+                "text": "┃",
+                "fg": "#00ff00",
+            },
+            "bl_corner": {
+                "text": "██━━──",
+                "fg": "#0000ff",
+            },
+        },
+    }
+})
+def test_block_quote(style):
     """Test block quote rendering"""
-    setup_lookatme(
-        tmpdir,
-        mocker,
-        style={
-            "quote": {
-                "style": {
-                    "fg": "",
-                    "bg": "",
-                },
-                "side": ">",
-                "top_corner": "-",
-                "bottom_corner": "=",
-            },
-        },
+    utils.validate_render(
+        md_text="""
+            > Quote text
+            > Quote italic text
+            > Quote italic text
+            > Quote italic text
+            > Quote text
+        """,
+        text=[
+            "██━━──               ",
+            "┃  Quote text        ",
+            "┃  Quote italic text ",
+            "┃  Quote italic text ",
+            "┃  Quote italic text ",
+            "┃  Quote text        ",
+            "██━━──               ",
+        ],
+        style_mask=[
+            "TTTTTT_______________",
+            "Liiiiiiiiiiiiiiiiiii_",
+            "Liiiiiiiiiiiiiiiiiii_",
+            "Liiiiiiiiiiiiiiiiiii_",
+            "Liiiiiiiiiiiiiiiiiii_",
+            "Liiiiiiiiiiiiiiiiiii_",
+            "BBBBBB_______________",
+        ],
+        styles={
+            "T": style["quote"]["border"]["tl_corner"],
+            "L": style["quote"]["border"]["l_line"],
+            "B": style["quote"]["border"]["bl_corner"],
+            "i": style["quote"]["style"],
+            "_": {},
+            " ": {},
+        }
     )
-
-    rendered = render_markdown(
-        """
-> this is a quote
-"""
-    )
-
-    stripped_rows = [
-        b"",
-        b"-",
-        b">  this is a quote",
-        b"=",
-        b"",
-    ]
-    assert_render(stripped_rows, rendered)
 
 
 def test_code(tmpdir, mocker):

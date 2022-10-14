@@ -148,20 +148,22 @@ def render_list_item_open(_, ctx: Context):
 
     if meta["ordered"]:
         numbering = config.get_style()["numbering"]
-        list_marker_type = numbering.get(str(list_level), numbering["default"])
+        marker_style = numbering.get(str(list_level), numbering["default"])
+        marker_type = marker_style["text"]
         sequence = {
             "numeric": lambda x: str(x),
             "alpha": lambda x: chr(ord("a") + x - 1),
             "roman": lambda x: utils.int_to_roman(x),
-        }[list_marker_type]
-        list_marker = sequence(curr_count) + "."
+        }[marker_type]
+        marker_text = sequence(curr_count) + "."
     else:
         bullets = config.get_style()["bullets"]
-        list_marker = bullets.get(str(list_level), bullets["default"])
+        marker_style = bullets.get(str(list_level), bullets["default"])
+        marker_text = marker_style["text"]
 
-    marker_text = list_marker + " "
-    if len(marker_text) > meta["max_list_marker_width"]:
-        meta["max_list_marker_width"] = len(marker_text)
+    marker_spec = utils.spec_from_style(marker_style)
+    if len(marker_text) + 1 > meta["max_list_marker_width"]:
+        meta["max_list_marker_width"] = len(marker_text) + 1
     marker_col_width = meta["max_list_marker_width"]
 
     res = urwid.Columns(
@@ -169,7 +171,7 @@ def render_list_item_open(_, ctx: Context):
             (
                 marker_col_width,
                 urwid.Text(
-                    (ctx.spec_text_with(utils.spec_from_style("bold")), marker_text)
+                    (ctx.spec_text_with(marker_spec), marker_text),
                 ),
             ),
             pile,
@@ -217,31 +219,37 @@ def render_heading_close(token: Dict, ctx: Context):
 @contrib_first
 def render_blockquote_open(token: Dict, ctx: Context):
     """ """
+    ctx.ensure_new_block()
+
     pile = urwid.Pile([])
 
-    styles = config.get_style()["quote"]
+    quote_style = config.get_style()["quote"]
+    border_style =  quote_style["border"]
 
-    quote_side = styles["side"]
-    quote_top_corner = styles["top_corner"]
-    quote_bottom_corner = styles["bottom_corner"]
-    quote_style = styles["style"]
+    inner_spec = ctx.spec_text_with(utils.spec_from_style(quote_style["style"]))
 
-    line_box = ctx.wrap_widget(
-        urwid.LineBox(
-            ctx.wrap_widget(urwid.Padding(pile, left=2)),
-            lline=quote_side,
-            rline="",
-            tline=" ",
-            trcorner="",
-            tlcorner=quote_top_corner,
-            bline=" ",
-            brcorner="",
-            blcorner=quote_bottom_corner,
-        )
+    box = FancyBox(
+        ctx.wrap_widget(urwid.Padding(pile, left=2), spec=inner_spec),
+        tl_corner=border_style["tl_corner"]["text"],
+        tr_corner=border_style["tr_corner"]["text"],
+        br_corner=border_style["br_corner"]["text"],
+        bl_corner=border_style["bl_corner"]["text"],
+        tl_corner_spec=_ctx_style_spec(border_style["tl_corner"], ctx),
+        tr_corner_spec=_ctx_style_spec(border_style["tr_corner"], ctx),
+        br_corner_spec=_ctx_style_spec(border_style["br_corner"], ctx),
+        bl_corner_spec=_ctx_style_spec(border_style["bl_corner"], ctx),
+        t_fill=border_style["t_line"]["text"],
+        r_fill=border_style["r_line"]["text"],
+        b_fill=border_style["b_line"]["text"],
+        l_fill=border_style["l_line"]["text"],
+        t_fill_spec=_ctx_style_spec(border_style["t_line"], ctx),
+        r_fill_spec=_ctx_style_spec(border_style["r_line"], ctx),
+        b_fill_spec=_ctx_style_spec(border_style["b_line"], ctx),
+        l_fill_spec=_ctx_style_spec(border_style["l_line"], ctx),
     )
 
-    ctx.container_push(pile, is_new_block=True, custom_add=line_box)
-    ctx.spec_push(utils.spec_from_style(quote_style))
+    ctx.container_push(pile, is_new_block=True, custom_add=box)
+    ctx.spec_push(utils.spec_from_style(quote_style["style"]))
 
 
 @contrib_first
@@ -269,7 +277,7 @@ def render_fence(token: Dict, ctx: Context):
 
 def _extract_nested_table_tokens(
     tokens: List[Dict],
-) -> Tuple[Union[None, Dict], Union[None, Dict]]:
+) -> Tuple[Dict, Dict]:
     idx = 0
 
     thead_token = None
@@ -306,6 +314,11 @@ def _extract_nested_table_tokens(
         else:
             parent = parent_token_stack[-1]
             parent["children"].append(token)
+
+    if thead_token is None:
+        raise ValueError("thead must be present!")
+    if tbody_token is None:
+        raise ValueError("thead must be present!")
 
     return (thead_token, tbody_token)
 
@@ -364,6 +377,23 @@ def render_table_open(token: Dict, ctx: Context):
     urwid.connect_signal(table, "change", table_changed)
 
     ctx.widget_add(padding)
+
+
+@contrib_first
+def render_hr(token, ctx: Context):
+    """Render a newline
+
+    See :any:`lookatme.tui.SlideRenderer.do_render` for argument and return
+    value descriptions.
+    """
+    hrule_style = config.get_style()["hrule"]
+    hrule_spec = ctx.spec_text_with(utils.spec_from_style(hrule_style))
+    div = urwid.Divider(hrule_style["text"])
+
+    with ctx.use_container(urwid.Pile([]), is_new_block=True):
+        ctx.widget_add(urwid.Text(" "))
+        ctx.widget_add(urwid.AttrMap(div, hrule_spec))
+        ctx.widget_add(urwid.Text(" "))
 
 
 # @contrib_first

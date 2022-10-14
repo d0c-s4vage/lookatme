@@ -45,45 +45,6 @@ class YamlRender:
         return yaml.safe_dump(data, allow_unicode=True)
 
 
-class BulletsSchema(Schema):
-    default = fields.Str(dump_default="•")
-
-    class Meta:
-        include = {
-            "1": fields.Str(dump_default="•"),
-            "2": fields.Str(dump_default="⁃"),
-            "3": fields.Str(dump_default="◦"),
-            "4": fields.Str(dump_default="•"),
-            "5": fields.Str(dump_default="⁃"),
-            "6": fields.Str(dump_default="◦"),
-            "7": fields.Str(dump_default="•"),
-            "8": fields.Str(dump_default="⁃"),
-            "9": fields.Str(dump_default="◦"),
-            "10": fields.Str(dump_default="•"),
-        }
-
-
-_NUMBERING_VALIDATION = validate.OneOf(["numeric", "alpha", "roman"])
-
-
-class NumberingSchema(Schema):
-    default = fields.Str(dump_default="numeric", validate=_NUMBERING_VALIDATION)
-
-    class Meta:
-        include = {
-            "1": fields.Str(dump_default="numeric", validate=_NUMBERING_VALIDATION),
-            "2": fields.Str(dump_default="alpha", validate=_NUMBERING_VALIDATION),
-            "3": fields.Str(dump_default="roman", validate=_NUMBERING_VALIDATION),
-            "4": fields.Str(dump_default="numeric", validate=_NUMBERING_VALIDATION),
-            "5": fields.Str(dump_default="alpha", validate=_NUMBERING_VALIDATION),
-            "6": fields.Str(dump_default="roman", validate=_NUMBERING_VALIDATION),
-            "7": fields.Str(dump_default="numeric", validate=_NUMBERING_VALIDATION),
-            "8": fields.Str(dump_default="alpha", validate=_NUMBERING_VALIDATION),
-            "9": fields.Str(dump_default="roman", validate=_NUMBERING_VALIDATION),
-            "10": fields.Str(dump_default="numeric", validate=_NUMBERING_VALIDATION),
-        }
-
-
 class StyleFieldSchema(Schema):
     fg = fields.Str(dump_default="")
     bg = fields.Str(dump_default="")
@@ -95,12 +56,99 @@ class TextStyleFieldSchema(Schema):
     bg = fields.Str(dump_default="")
 
 
+class BulletsSchema(Schema):
+    default = fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+        "text": "•",
+        "fg": "bold",
+        "bg": "",
+    }))
+
+    class Meta:
+        include = {
+            "1": fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+                "text": "•",
+                "fg": "bold",
+                "bg": "",
+            })),
+            "2": fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+                "text": "⁃",
+                "fg": "bold",
+                "bg": "",
+            })),
+            "3": fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+                "text": "◦",
+                "fg": "bold",
+                "bg": "",
+            })),
+            "4": fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+                "text": "•",
+                "fg": "bold",
+                "bg": "",
+            })),
+            "5": fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+                "text": "⁃",
+                "fg": "bold",
+                "bg": "",
+            })),
+            "6": fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+                "text": "◦",
+                "fg": "bold",
+                "bg": "",
+            })),
+        }
+
+
+_NUMBERING_VALIDATION = validate.OneOf(["numeric", "alpha", "roman"])
+
+
+class NumberingSchema(Schema):
+    default = fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+        "text": "numeric",
+        "fg": "bold",
+        "bg": "",
+    }))
+
+    class Meta:
+        include = {
+            "1": fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+                "text": "numeric",
+                "fg": "bold",
+                "bg": "",
+            })),
+            "2": fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+                "text": "alpha",
+                "fg": "bold",
+                "bg": "",
+            })),
+            "3": fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+                "text": "roman",
+                "fg": "bold",
+                "bg": "",
+            })),
+            "4": fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+                "text": "numeric",
+                "fg": "bold",
+                "bg": "",
+            })),
+            "5": fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+                "text": "alpha",
+                "fg": "bold",
+                "bg": "",
+            })),
+            "6": fields.Nested(TextStyleFieldSchema(), dump_default=TextStyleFieldSchema().dump({
+                "text": "roman",
+                "fg": "bold",
+                "bg": "",
+            })),
+        }
+
+
 class BorderBoxSchema(Schema):
     tl_corner = fields.Nested(
         TextStyleFieldSchema,
         dump_default=TextStyleFieldSchema().dump(
             {
-                "text": "┌",
+                "text": "╭",
                 "fg": "bold",
                 "bg": "",
             }
@@ -192,23 +240,11 @@ class HeadingStyleSchema(Schema):
     bg = fields.Str(dump_default="")
 
 
-class HruleSchema(Schema):
-    char = fields.Str(dump_default="─")
-    style = fields.Nested(
-        StyleFieldSchema,
-        dump_default=StyleFieldSchema().dump(
-            {
-                "fg": "#777",
-                "bg": "default",
-            }
-        ),
-    )
+class HruleSchema(TextStyleFieldSchema):
+    text = fields.Str(dump_default="─")
 
 
 class BlockQuoteSchema(Schema):
-    side = fields.Str(dump_default="│")
-    top_corner = fields.Str(dump_default="╭")
-    bottom_corner = fields.Str(dump_default="╰")
     style = fields.Nested(
         StyleFieldSchema,
         dump_default=StyleFieldSchema().dump(
@@ -218,6 +254,16 @@ class BlockQuoteSchema(Schema):
             }
         ),
     )
+    border = fields.Nested(BorderBoxSchema, dump_default=BorderBoxSchema().dump({
+        "tl_corner":  { "text": "╭── ", "fg": "#808080" },
+        "l_line": { "text": "│", "fg": "#808080" },
+        "bl_corner":  { "text": "╰── ", "fg": "#808080"},
+        "b_line": { "text": " ", "fg": "", "bg": "" },
+        "r_line": { "text": " ", "fg": "", "bg": "" },
+        "t_line": { "text": " ", "fg": "", "bg": "" },
+        "br_corner": { "text": " ", "fg": "", "bg": "" },
+        "tr_corner": { "text": " ", "fg": "", "bg": "" },
+    }))
 
 
 class HeadingsSchema(Schema):

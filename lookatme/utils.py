@@ -2,7 +2,7 @@
 """
 
 
-from typing import Union
+from typing import Dict, Union
 
 import urwid
 
@@ -94,6 +94,18 @@ def get_fg_bg_styles(style):
         return non_empty_split(style.foreground), non_empty_split(style.background)
     else:
         raise ValueError("Unsupported style value {!r}".format(style))
+
+
+def overwrite_style(orig_style: Dict[str, str], new_style: Dict[str, str]) -> Dict[str, str]:
+    orig_spec = spec_from_style(orig_style)
+    new_spec = spec_from_style(new_style)
+    res_spec = overwrite_spec(orig_spec, new_spec)
+
+    return {
+        "fg": res_spec.foreground,
+        "bg": res_spec.background,
+    }
+    
 
 
 def overwrite_spec(orig_spec, new_spec):

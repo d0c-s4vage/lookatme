@@ -105,16 +105,10 @@ class SortSetting:
 
 
 class Table(urwid.Pile):
-    """Create a table from a list of headers, alignment values, and rows."""
-
     signals = ["change"]
 
     def __init__(self, ctx: Context, header: Dict, body: Dict):
         """Create a new table
-
-        :param list columns: The rows to use for the table
-        :param list headers: (optional) Headers for the table
-        :param list aligns: (optional) Alignment values for each column
         """
         self.ctx = ctx
 
@@ -162,7 +156,7 @@ class Table(urwid.Pile):
 
             self.header_rows = self.create_cells(
                 self.header["children"],
-                base_spec=ctx.spec_text_with(utils.spec_from_style("bold")),
+                base_spec=ctx.spec_text_with(utils.spec_from_style(self.style["header"])),
                 header=True,
             )
 
@@ -193,7 +187,9 @@ class Table(urwid.Pile):
 
         for child in row["children"]:
             if child["type"] not in ("th_open", "td_open"):
-                raise ValueError("Row cells must be th_open or td_open")
+                raise ValueError("Row cells must be th_open or td_open, was {!r}".format(
+                    child["type"]
+                ))
 
     def validate_row_container(self, container: Dict):
         """Validate that the list of rows is valid. See ``validate_row`` for
@@ -205,7 +201,6 @@ class Table(urwid.Pile):
         for row in container["children"]:
             self.validate_row(row)
 
-    #
     def watch_header(self, idx: int, w: urwid.Widget):
         """Watch the provided widget w for changes"""
         signals = getattr(w, "signals", [])
@@ -272,13 +267,23 @@ class Table(urwid.Pile):
             # add the pdading between columns if we're not the first column
             if idx > 0:
                 padding_text = " " * self.cell_spacing
+                padding_w = urwid.Text((row_spec_general, padding_text))
                 if cell_pile.is_header:
-                    padding_text += "\n" + (
-                        self.style["header_divider"]["text"] * self.cell_spacing
+                    div_text = self.style["header_divider"]["text"] * len(padding_text)
+                    # in case the divider text is more than one char, we'll
+                    # truncate it
+                    div_text = div_text[:len(padding_text)]
+                    div_spec = utils.overwrite_spec(
+                        row_spec_text,
+                        utils.spec_from_style(self.style["header_divider"])
                     )
-                padding_pile = urwid.Pile([urwid.Text(padding_text)])
-                padding_pile = self.ctx.wrap_widget(padding_pile, spec=row_spec_general)
-                res.append(padding_pile)
+                    padding_w = urwid.Pile([
+                        padding_w,
+                        urwid.Text((div_spec, div_text)),
+                    ])
+
+                padding_w = self.ctx.wrap_widget(padding_w, spec=row_spec_general)
+                res.append(padding_w)
 
             if cell_pile.is_header:
                 for w in cell_pile.widget_list:
@@ -310,11 +315,6 @@ class Table(urwid.Pile):
                 rend = cell.render((200,))
                 curr_col_width = max(len(rend_row.strip()) for rend_row in rend.text)
                 column_maxes[idx] = max(column_maxes[idx], curr_col_width)
-
-        # reserve one more character for an up/down arrow to indicate the
-        # sort direction
-        for key in column_maxes.keys():
-            column_maxes[key] += 1
 
         return column_maxes
 

@@ -3,11 +3,157 @@ Defines utilities for testing lookatme
 """
 
 
+import inspect
+import pytest
+from typing import Any, Dict, List, Optional, Tuple, Union
 import urwid
 
+from lookatme.render.context import Context
 import lookatme.config
+import lookatme.schemas
+import lookatme.parser
+import lookatme.render.markdown_block as markdown_block
 import lookatme.tui
-from lookatme.parser import Parser
+
+
+def to_vtext(fg_bg: Tuple[str, str], texts: List[str]) -> str:
+    text = "".join(texts)
+    if text == "":
+        return ""
+
+    fg, bg = fg_bg
+
+    fg = ",".join(sorted(filter(lambda x: x != "default", fg.split(","))))
+    bg = ",".join(sorted(filter(lambda x: x != "default", bg.split(","))))
+
+    parts = []
+    if fg != "":
+        parts.append("fg:" + fg)
+
+    if bg != "":
+        parts.append("bg:" + bg)
+
+    return "<{}>{}</>".format(" ".join(parts), text)
+
+
+def _markups_to_vtext(
+    items: List[Tuple[Union[None, urwid.AttrSpec], Any, bytes]]
+) -> str:
+    res = []
+    tag_stack: List[Tuple[Tuple[str, str], List[str]]] = [(("default", "default"), [])]
+    for item in items:
+        spec, text = spec_and_text(item)
+        text = text.decode()
+
+        if spec is None:
+            fg = ""
+            bg = ""
+        else:
+            fg = spec.foreground
+            bg = spec.background
+
+        if tag_stack[-1][0] == (fg, bg):
+            tag_stack[-1][1].append(text)
+            continue
+
+        res.append(tag_stack.pop())
+        tag_stack.append(((fg, bg), [text]))
+
+    res.append(tag_stack.pop())
+    res_text = []
+    for vtext_info in res:
+        res_text.append(to_vtext(*vtext_info))
+
+    return "".join(res_text)
+
+
+def validate_row(markup_row, v_expected):
+    v_actual = _markups_to_vtext(markup_row)
+    print(v_actual)
+    print(v_expected)
+    assert v_actual == v_expected
+
+
+def _vtext_from_text_and_style(text: str, style: Dict[str, str]) -> str:
+    fg = style.get("fg", "")
+    bg = style.get("bg", "")
+    return to_vtext((fg, bg), [text])
+
+
+def _vtext_from_text_and_style_mask(
+    text: str, style_mask: str, styles: Dict[str, Dict[str, str]]
+) -> str:
+    curr_text = ""
+    curr_style = {}
+    res = []
+    for idx in range(len(text)):
+        mask = style_mask[idx]
+        style = styles[mask]
+        char = text[idx]
+        if style != curr_style and curr_text != "":
+            res.append(_vtext_from_text_and_style(curr_text, curr_style))
+            curr_text = ""
+        curr_style = style
+        curr_text += char
+
+    res.append(_vtext_from_text_and_style(curr_text, curr_style))
+    return "".join(res)
+
+
+def render_md(
+    md_text: str, width: Optional[int] = None
+) -> List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]:
+    tokens = lookatme.parser.md_to_tokens(md_text)
+
+    root = urwid.Pile([])
+    ctx = Context(None)
+    with ctx.use_tokens(tokens):
+        with ctx.use_container(root, is_new_block=True):
+            markdown_block.render_all(ctx)
+
+    if width is None:
+        min_width = 300
+        _, orig_rows = root.pack((min_width,))
+        curr_rows = orig_rows
+        while min_width > 0 and curr_rows == orig_rows:
+            min_width -= 1
+            _, curr_rows = root.pack((min_width,))
+        width = min_width + 1
+
+    return list(root.render((width,), False).content())
+
+
+def validate_render(
+    text: List[str],
+    style_mask: List[str],
+    styles: Dict[str, Dict[str, str]],
+    md_text: Optional[str] = None,
+    rendered: Optional[List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]] = None,
+    render_width: Optional[int] = None,
+):
+    if md_text is not None:
+        md_text = inspect.cleandoc(md_text)
+        rendered = render_md(md_text, width=render_width)
+
+    if rendered is None:
+        raise Exception("Rendered should not be none here")
+
+    # should have the same number of rows
+    assert len(rendered) == len(
+        text
+    ), "Rendered and expected don't have same # rows: {} rendered, {} expected".format(
+        len(rendered), len(text)
+    )
+
+    assert len(text) == len(style_mask)
+    for idx in range(len(text)):
+        assert len(text[idx]) == len(
+            style_mask[idx]
+        ), "Text length doesn't match style mask length"
+
+        row_vtext = _vtext_from_text_and_style_mask(text[idx], style_mask[idx], styles)
+        rendered_vtext = _markups_to_vtext(rendered[idx])
+        assert row_vtext == rendered_vtext
 
 
 def setup_lookatme(tmpdir, mocker, style=None):
@@ -16,6 +162,40 @@ def setup_lookatme(tmpdir, mocker, style=None):
 
     if style is not None:
         mocker.patch("lookatme.config.STYLE", new=style)
+
+
+def precise_update(full_style, new_style):
+    for k, v in new_style.items():
+        if isinstance(v, dict):
+            if k in full_style and isinstance(full_style[k], dict):
+                precise_update(full_style[k], v)
+        else:
+            full_style[k] = v
+
+
+def override_style(new_style: Dict, complete=False):
+    """Override the style settings for lookatme. By default a precise update
+    will be performed where nested subkeys will be specifically updated if
+    they exist in the original style dict.
+
+    If ``complete`` is ``True``, then a normal dict.update() is used which
+    overrides entire trees in the style dict.
+    """
+    def outer(fn):
+        full_style = lookatme.schemas.StyleSchema().dump(None)
+        if complete:
+            full_style.update(new_style)
+        else:
+            precise_update(full_style, new_style)
+        fn.style = full_style
+
+        def inner(tmpdir, mocker):
+            setup_lookatme(tmpdir, mocker, style=full_style)
+            return fn(full_style)
+
+        return inner
+
+    return outer
 
 
 def assert_render(correct_render, rendered, full_strip=False):

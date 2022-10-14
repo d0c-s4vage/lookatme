@@ -212,7 +212,7 @@ class FancyBox(urwid.WidgetDecoration, urwid.WidgetWrap):
 
     def _get_corner_parts(self, corner_str: str, hor_idx, left=False):
         if corner_str.strip().count("\n") == 0:
-            return "", corner_str
+            return corner_str[1:], corner_str[0]
 
         lines = corner_str.split("\n")
         corner_pos = 0 if left else -1
