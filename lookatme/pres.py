@@ -18,12 +18,20 @@ from lookatme.utils import dict_deep_update
 
 
 class Presentation(object):
-    """Defines a presentation
-    """
+    """Defines a presentation"""
 
-    def __init__(self, input_stream, theme, style_override=None, live_reload=False,
-                 single_slide=False, preload_extensions=None, safe=False,
-                 no_ext_warn=False, ignore_ext_failure=False):
+    def __init__(
+        self,
+        input_stream,
+        theme,
+        style_override=None,
+        live_reload=False,
+        single_slide=False,
+        preload_extensions=None,
+        safe=False,
+        no_ext_warn=False,
+        ignore_ext_failure=False,
+    ):
         """Creates a new Presentation
 
         :param stream input_stream: An input stream from which to read the
@@ -32,8 +40,7 @@ class Presentation(object):
         self.preload_extensions = preload_extensions or []
         self.input_filename = None
         if hasattr(input_stream, "name"):
-            lookatme.config.SLIDE_SOURCE_DIR = os.path.dirname(
-                input_stream.name)
+            lookatme.config.SLIDE_SOURCE_DIR = os.path.dirname(input_stream.name)
             self.input_filename = input_stream.name
 
         self.style_override = style_override
@@ -45,8 +52,7 @@ class Presentation(object):
         self.ignore_ext_failure = ignore_ext_failure
         self.initial_load_complete = False
 
-        self.theme_mod = __import__(
-            "lookatme.themes." + theme, fromlist=[theme])
+        self.theme_mod = __import__("lookatme.themes." + theme, fromlist=[theme])
 
         if self.live_reload:
             self.reload_thread = threading.Thread(target=self.reload_watcher)
@@ -118,17 +124,18 @@ class Presentation(object):
         self.initial_load_complete = True
 
     def warn_exts(self, exts):
-        """Warn about source-provided extensions that are to-be-loaded
-        """
+        """Warn about source-provided extensions that are to-be-loaded"""
         if len(exts) == 0 or self.no_ext_warn:
             return
 
         warning = lookatme.ascii_art.WARNING
         print("\n".join(["    " + x for x in warning.split("\n")]))
 
-        print("New extensions required by {!r} are about to be loaded:\n".format(
-            self.input_filename
-        ))
+        print(
+            "New extensions required by {!r} are about to be loaded:\n".format(
+                self.input_filename
+            )
+        )
         for ext in exts:
             print("  - {!r}".format("lookatme.contrib." + ext))
         print("")
@@ -138,13 +145,11 @@ class Presentation(object):
             exit(1)
 
     def run(self, start_slide=0):
-        """Run the presentation!
-        """
+        """Run the presentation!"""
         self.tui = lookatme.tui.create_tui(self, start_slide=start_slide)
         self.tui.run()
 
     def get_tui(self) -> lookatme.tui.MarkdownTui:
         if self.tui is None:
-            raise ValueError(
-                "Tui has not been set, has the presentation been run yet?")
+            raise ValueError("Tui has not been set, has the presentation been run yet?")
         return self.tui

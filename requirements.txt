@@ -1,6 +1,8 @@
 marshmallow>=3.17.0,<4
 Click>=7,<9
 PyYAML>=5,<6
-mistune>=0.8,<1
+markdown-it-py[linkify,plugins]
+python-dateutil>=2.0,<3.0
+mistune
 urwid>=2,<3
 Pygments>=2,<3

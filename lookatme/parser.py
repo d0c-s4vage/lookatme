@@ -7,10 +7,61 @@ import re
 from collections import defaultdict
 from typing import AnyStr, Callable, Dict, List, Tuple
 
-import mistune
+import markdown_it
+import markdown_it.token
 
+import lookatme.config
 from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
+
+
+def md_to_tokens(md_text):
+    md = markdown_it.MarkdownIt("gfm-like").disable("html_block")
+    tokens = md.parse(md_text)
+    res = []
+    for token in tokens:
+        token = token.as_dict()
+        if token["type"] in ("heading_open", "heading_close"):
+            token["level"] = int(token["tag"].replace("h", ""))
+        res.append(token)
+
+    return res
+
+
+def is_heading(token):
+    return token["type"] == "heading_open"
+
+
+def is_hrule(token):
+    return token["type"] == "hr"
+
+
+def debug_print_tokens(tokens, level=1):
+    """Print the tokens DFS"""
+
+    def indent(x):
+        return "  " * x
+
+    log = lookatme.config.get_log()
+    log.debug(indent(level) + "DEBUG TOKENS")
+    level += 1
+
+    stack = list(reversed(tokens))
+    while len(stack) > 0:
+        token = stack.pop()
+        if "close" in token["type"]:
+            level -= 1
+
+        log.debug(indent(level) + repr(token))
+
+        if "open" in token["type"]:
+            level += 1
+
+        token_children = token.get("children", None)
+        if isinstance(token_children, list):
+            stack.append({"type": "children_close"})
+            stack += list(reversed(token_children))
+            stack.append({"type": "children_open"})
 
 
 def is_progressive_slide_delimiter_token(token):
@@ -19,16 +70,16 @@ def is_progressive_slide_delimiter_token(token):
     :param dict token: The markdown token
     :returns: True if the token is a progressive slide delimiter
     """
-    return token["type"] == "close_html" and re.match(r'<!--\s*stop\s*-->', token["text"])
+    return token["type"] == "close_html" and re.match(
+        r"<!--\s*stop\s*-->", token["text"]
+    )
 
 
 class Parser(object):
-    """A parser for markdown presentation files
-    """
+    """A parser for markdown presentation files"""
 
     def __init__(self, single_slide=False):
-        """Create a new Parser instance
-        """
+        """Create a new Parser instance"""
         self._single_slide = single_slide
 
     def parse(self, input_data):
@@ -48,31 +99,26 @@ class Parser(object):
         :param str input_data: The input data string
         :returns: tuple of (remaining_data, slide)
         """
-        # slides are delimited by ---
-        md = mistune.Markdown()
-
-        state = {}
-        tokens = md.block.parse(input_data, state)
-
+        tokens = md_to_tokens(input_data)
+        debug_print_tokens(tokens)
         num_hrules, hinfo = self._scan_for_smart_split(tokens)
         keep_split_token = True
 
         if self._single_slide:
+
             def slide_split_check(_):  # type: ignore
                 return False
 
             def heading_mod(_):  # type: ignore
                 pass
+
         elif num_hrules == 0:
-            if meta["title"] in ["", None]:
+            if meta["title"] in ("", None):
                 meta["title"] = hinfo["title"]
 
             def slide_split_check(token):
                 nonlocal hinfo
-                return (
-                    token["type"] == "heading"
-                    and token["level"] == hinfo["lowest_non_title"]
-                )
+                return is_heading(token) and token["level"] == hinfo["lowest_non_title"]
 
             def heading_mod(token):
                 nonlocal hinfo
@@ -80,26 +126,30 @@ class Parser(object):
                     token["level"] - (hinfo["title_level"] or 0),
                     1,
                 )
+
             keep_split_token = True
         else:
+
             def slide_split_check(token):
-                return token["type"] == "hrule"
+                return is_hrule(token)
 
             def heading_mod(token):
                 pass
+
             keep_split_token = False
 
         slides = self._split_tokens_into_slides(
-            tokens, slide_split_check, heading_mod, keep_split_token)
+            tokens, slide_split_check, heading_mod, keep_split_token
+        )
 
         return "", slides
 
     def _split_tokens_into_slides(
-            self,
-            tokens: List[Dict],
-            slide_split_check: Callable,
-            heading_mod: Callable,
-            keep_split_token: bool
+        self,
+        tokens: List[Dict],
+        slide_split_check: Callable,
+        heading_mod: Callable,
+        keep_split_token: bool,
     ) -> List[Slide]:
         """Split the provided tokens into slides using the slide_split_check
         and heading_mod arguments.
@@ -108,16 +158,19 @@ class Parser(object):
         curr_slide_tokens = []
         for token in tokens:
             should_split = slide_split_check(token)
-            if token["type"] == "heading":
+            if is_heading(token):
                 heading_mod(token)
 
             # new slide!
             if should_split:
-                if keep_split_token and len(slides) == 0 and len(curr_slide_tokens) == 0:
+                if (
+                    keep_split_token
+                    and len(slides) == 0
+                    and len(curr_slide_tokens) == 0
+                ):
                     pass
                 else:
-                    slides.extend(self._create_slides(
-                        curr_slide_tokens, len(slides)))
+                    slides.extend(self._create_slides(curr_slide_tokens, len(slides)))
                 curr_slide_tokens = []
                 if keep_split_token:
                     curr_slide_tokens.append(token)
@@ -128,6 +181,20 @@ class Parser(object):
         slides.extend(self._create_slides(curr_slide_tokens, len(slides)))
 
         return slides
+
+    def _get_heading_contents(self, tokens, start_idx):
+        num_heading_opens = 0
+        res = []
+        for token in tokens[start_idx:]:
+            if token["type"] == "heading_open":
+                num_heading_opens += 1
+            elif token["type"] == "heading_close":
+                num_heading_opens -= 1
+                if num_heading_opens == 0:
+                    break
+            else:
+                res.append(token)
+        return res
 
     def _scan_for_smart_split(self, tokens):
         """Scan the provided tokens for the number of hrules, and the lowest
@@ -143,21 +210,28 @@ class Parser(object):
         }
         num_hrules = 0
         first_heading = None
-        for token in tokens:
-            if token["type"] == "hrule":
+        first_heading_contents = None
+        for idx, token in enumerate(tokens):
+            if is_hrule(token):
                 num_hrules += 1
-            elif token["type"] == "heading":
+            elif is_heading(token):
                 hinfo["counts"][token["level"]] += 1
                 if first_heading is None:
                     first_heading = token
+                    first_heading_contents = self._get_heading_contents(tokens, idx)
 
         # started off with the lowest heading, make this title
         if (
             hinfo["counts"]
             and first_heading
+            and isinstance(first_heading_contents, list)
             and hinfo["counts"][first_heading["level"]] == 1
         ):
-            hinfo["title"] = first_heading["text"]
+            hinfo["title"] = (
+                [{"type": "paragraph_open"}]
+                + first_heading_contents
+                + [{"type": "paragraph_close"}]
+            )
             del hinfo["counts"][first_heading["level"]]
             hinfo["title_level"] = first_heading["level"]
 
@@ -180,7 +254,7 @@ class Parser(object):
             skipped_chars += len(line) + 1
             stripped_line = line.strip()
 
-            is_marker = (re.match(r'----*', stripped_line) is not None)
+            is_marker = re.match(r"----*", stripped_line) is not None
             if is_marker:
                 if not found_first:
                     found_first = True

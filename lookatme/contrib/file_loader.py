@@ -15,6 +15,7 @@ from marshmallow import Schema, fields
 
 import lookatme.config
 from lookatme.exceptions import IgnoredByContrib
+from lookatme.render.context import Context
 
 
 def user_warnings():
@@ -32,9 +33,12 @@ def user_warnings():
 
 class YamlRender:
     @staticmethod
-    def loads(data): return yaml.safe_load(data)
+    def loads(data):
+        return yaml.safe_load(data)
+
     @staticmethod
-    def dumps(data): return yaml.safe_dump(data)
+    def dumps(data):
+        return yaml.safe_dump(data)
 
 
 class LineRange(Schema):
@@ -50,7 +54,7 @@ class FileSchema(Schema):
     lines = fields.Nested(
         LineRange,
         dump_default=LineRange().dump(None),
-        load_default=LineRange().dump(None)
+        load_default=LineRange().dump(None),
     )
 
     class Meta:
@@ -84,15 +88,16 @@ def transform_data(transform_shell_cmd, input_data):
     return stdout
 
 
-def render_code(token, body, stack, loop):
+def render_fence(token: Dict, ctx: Context):
     """Render the code, ignoring all code blocks except ones with the language
     set to ``file``.
     """
-    lang = token["lang"] or ""
+    info = token.get("info", None) or "text"
+    lang = info.split()[0]
     if lang != "file":
         raise IgnoredByContrib
 
-    file_info_data = token["text"]
+    file_info_data = token["content"]
     file_info = FileSchema().loads(file_info_data)
 
     # relative to the slide source
@@ -103,8 +108,8 @@ def render_code(token, body, stack, loop):
 
     full_path = os.path.join(base_dir, file_info["path"])
     if not os.path.exists(full_path):
-        token["text"] = "File not found"
-        token["lang"] = "text"
+        token["content"] = "File not found"
+        token["info"] = "text"
         raise IgnoredByContrib
 
     with open(full_path, "rb") as f:
@@ -114,8 +119,8 @@ def render_code(token, body, stack, loop):
         file_data = transform_data(file_info["transform"], file_data)
 
     lines = file_data.split(b"\n")
-    lines = lines[file_info["lines"]["start"]:file_info["lines"]["end"]]
+    lines = lines[file_info["lines"]["start"] : file_info["lines"]["end"]]
     file_data = b"\n".join(lines)
-    token["text"] = file_data
-    token["lang"] = file_info["lang"]
+    token["content"] = file_data
+    token["info"] = file_info["lang"]
     raise IgnoredByContrib
