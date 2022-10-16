@@ -28,6 +28,7 @@ jobs:
           grep -rl '{{VERSION}}' . | xargs sed -i "s/{{VERSION}}/$version_num/g"
           echo "Files with {{VERSION}} after replacing:"
           grep -rl '{{VERSION}}' .
+          true
       - name: Install pypa/build
         run: python -m pip install build --user
       - name: Build binary wheel + tarball
