@@ -41,8 +41,8 @@ Bug fixes, new features, new CI, getting ready for v3.0.
 |     bug | [!133](https://github.com/d0c-s4vage/lookatme/pull/133)   | [@AMDmi3](https://github.com/AMDmi3)         | Excludes tests dir from packages                                 |
 |     bug | [#126](https://github.com/d0c-s4vage/lookatme/issues/126) | [@d0c-s4vage](https://github.com/d0c-s4vage) | Fix unit test failues                                            |
 |     bug | [!141](https://github.com/d0c-s4vage/lookatme/pull/141)   | [@corydodt](https://github.com/corydodt)     | Fix click requirements range                                     |
-| feature | [!150](https://github.com/d0c-s4vage/pull/150             | [@d0c-s4vage](https://github.com/d0c-s4vage) | New CI that uses GitHub actions                                  |
-|     bug | [!151](https://github.com/d0c-s4vage/pull/151             | [@d0c-s4vage](https://github.com/d0c-s4vage) | Fix linter errors                                                |
+| feature | [!150](https://github.com/d0c-s4vage/pull/150)            | [@d0c-s4vage](https://github.com/d0c-s4vage) | New CI that uses GitHub actions                                  |
+|     bug | [!151](https://github.com/d0c-s4vage/pull/151)            | [@d0c-s4vage](https://github.com/d0c-s4vage) | Fix linter errors                                                |
 
 
 ## v2.3.2
