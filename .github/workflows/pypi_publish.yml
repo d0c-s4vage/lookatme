@@ -16,7 +16,8 @@ jobs:
           if [[ "${{github.ref}}" =~ ^refs/tags/.* ]] ; then
             version_num="${{github.ref_name}}"
           else
-            version_num="v0.0.0-${{github.ref_name}}"
+            local_version_label=$(sed 's/[^a-zA-Z0-9\.]/./g' <<<"${{github.ref_name}}")
+            version_num="v0.0.0+${local_version_label}"
             # amusingly, the lookatme name is taken by someone else on test.pypi!
             sed -i 's/name="lookatme"/name="lookatme-test"/' setup.py
           fi
