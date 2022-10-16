@@ -1,5 +1,8 @@
 name: Publish to PyPI
-on: push
+on:
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   build-and-publish:
@@ -13,14 +16,7 @@ jobs:
           python-version: "3.10"
       - name: Set VERSION number
         run: |
-          if [[ "${{github.ref}}" =~ ^refs/tags/.* ]] ; then
-            version_num="${{github.ref_name}}"
-          else
-            local_version_label=$(sed 's/[^a-zA-Z0-9\.]/./g' <<<"${{github.ref_name}}")
-            version_num="v0.0.0+${local_version_label}"
-            # amusingly, the lookatme name is taken by someone else on test.pypi!
-            sed -i 's/name="lookatme"/name="lookatme-test"/' setup.py
-          fi
+          version_num="${{github.ref_name}}"
           # strip the leading v
           version_num=${version_num#v}
           echo "Replacing {{VERSION}} with '$version_num'"
@@ -39,7 +35,6 @@ jobs:
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
       - name: Publish distribution to PyPI
-        if: startsWith(github.ref, 'refs/tags')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
