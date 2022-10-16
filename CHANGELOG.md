@@ -1,5 +1,9 @@
 # Changelog
 
+- [v2.4.1](#v241)
+- [v2.4.0](#v240)
+- [v2.3.2](#v232)
+- [v2.3.1](#v231)
 - [v2.3.0](#v230)
 - [v2.2.0](#v220)
 - [v2.1.0](#v210)
@@ -17,6 +21,15 @@
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
 
+## v2.4.1
+
+Bug fix - theme and style override precedence issues. The CLI params `--theme`
+and `--style` and other general style precedence issues are fixed.
+
+| type | PR/ticket                                               | author                                       | description                                                       |
+|-----:|---------------------------------------------------------|----------------------------------------------|-------------------------------------------------------------------|
+|  bug | [#123](https://github.com/d0c-s4vage/lookatme/pull/123) | [@d0c-s4vage](https://github.com/d0c-s4vage) | Fixes CLI `--theme`, `--style`, and general style override issues |
+
 ## v2.4.0
 
 Bug fixes, new features, new CI, getting ready for v3.0.
@@ -28,8 +41,8 @@ Bug fixes, new features, new CI, getting ready for v3.0.
 |     bug | [!133](https://github.com/d0c-s4vage/lookatme/pull/133)   | [@AMDmi3](https://github.com/AMDmi3)         | Excludes tests dir from packages                                 |
 |     bug | [#126](https://github.com/d0c-s4vage/lookatme/issues/126) | [@d0c-s4vage](https://github.com/d0c-s4vage) | Fix unit test failues                                            |
 |     bug | [!141](https://github.com/d0c-s4vage/lookatme/pull/141)   | [@corydodt](https://github.com/corydodt)     | Fix click requirements range                                     |
-| feature | [!150](https://github.com/d0c-s4vage/pull/150             | [@d0c-s4vage](https://github.com/d0c-s4vage) | New CI that uses GitHub actions                                  |
-|     bug | [!151](https://github.com/d0c-s4vage/pull/151             | [@d0c-s4vage](https://github.com/d0c-s4vage) | Fix linter errors                                                |
+| feature | [!150](https://github.com/d0c-s4vage/pull/150)            | [@d0c-s4vage](https://github.com/d0c-s4vage) | New CI that uses GitHub actions                                  |
+|     bug | [!151](https://github.com/d0c-s4vage/pull/151)            | [@d0c-s4vage](https://github.com/d0c-s4vage) | Fix linter errors                                                |
 
 
 ## v2.3.2
