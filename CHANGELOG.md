@@ -1,5 +1,9 @@
 # Changelog
 
+- [v2.4.1](#v241)
+- [v2.4.0](#v240)
+- [v2.3.2](#v232)
+- [v2.3.1](#v231)
 - [v2.3.0](#v230)
 - [v2.2.0](#v220)
 - [v2.1.0](#v210)
@@ -16,6 +20,15 @@
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+## v2.4.1
+
+Bug fix - theme and style override precedence issues. The CLI params `--theme`
+and `--style` and other general style precedence issues are fixed.
+
+| type | PR/ticket                                               | author                                       | description                                                       |
+|-----:|---------------------------------------------------------|----------------------------------------------|-------------------------------------------------------------------|
+|  bug | [#123](https://github.com/d0c-s4vage/lookatme/pull/123) | [@d0c-s4vage](https://github.com/d0c-s4vage) | Fixes CLI `--theme`, `--style`, and general style override issues |
 
 ## v2.4.0
 
