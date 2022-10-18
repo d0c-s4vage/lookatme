@@ -4,16 +4,41 @@ This module tests the Table widget in lookatme/widgets/table.py
 
 
 import pytest
+from typing import Any, Dict, List, Tuple, Union
+import urwid
 
-import lookatme.widgets.table
+import lookatme.parser
+import lookatme.render.markdown_block as markdown_block
+from lookatme.render.context import Context
+import lookatme.schemas as schemas
+from lookatme.widgets.table import Table
 import tests.utils as utils
+
 
 TEST_STYLE = {
     "style": "monokai",
     "table": {
-        "column_spacing": 3,
-        "header_divider": "&",
-    },
+        "bg": "",
+        "fg": "",
+        "column_spacing": 1,
+        "even_rows": {
+            "bg": "",
+            "fg": ""
+        },
+        "header": {
+            "bg": "#202020",
+            "fg": "bold"
+        },
+        "header_divider": {
+            "bg": "",
+            "fg": "bold",
+            "text": "─"
+        },
+        "odd_rows": {
+            "bg": "#181818",
+            "fg": ""
+        }
+    }
 }
 
 
@@ -22,120 +47,212 @@ def table_setup(tmpdir, mocker):
     utils.setup_lookatme(tmpdir, mocker, style=TEST_STYLE)
 
 
-def test_basic_render(tmpdir, mocker):
-    """Test that a Table widget renders correctly
-    """
-    headers = ["H1", "H2", "H3"]
-    aligns = ["left", "center", "right"]
-    rows = [
-        ["1", "22", "333"],
-        ["*1*", "~~22~~", "**333**"],
-    ]
+def _md_to_table_tokens(md_text: str) -> Tuple[Dict, Dict]:
+    tokens = lookatme.parser.md_to_tokens(md_text)
+    # skip the table_open token and the table_close tokens
+    thead, tbody = markdown_block._extract_nested_table_tokens(tokens[1:-1])
+    return (thead, tbody)
 
-    table = lookatme.widgets.table.Table(rows, headers=headers, aligns=aligns)
-    canvas = table.render((20,))
-    content = list(canvas.content())
 
-    # four rows:
-    #  1 headers
-    #  2 DIVIDER
-    #  3 row1
-    #  4 row2
+def _render_table(md_text: str) -> Tuple[Table, List[List[Tuple[None|urwid.AttrSpec, Any, bytes]]]]:
+    thead, tbody = _md_to_table_tokens(md_text)
+
+    ctx = Context(None)
+    root = urwid.Pile([])
+    table = Table(ctx, thead, tbody)
+    padding = urwid.Padding(root, width=table.total_width)
+    with ctx.use_container(root, is_new_block=True):
+        ctx.widget_add(table)
+
+    content = list(padding.render((table.total_width,), False).content())
+    return table, content
+
+
+def test_basic_render(table_setup):
+    """Test that a Table widget renders correctly"""
+    table, content = _render_table(r"""
+| H1 | H2 | H3  |
+|----|:--:|----:|
+| 1  | 22 | 333 |
+| 1  | 22 | 333 |
+    """)
+    spacing = TEST_STYLE["table"]["column_spacing"]
+
+    # four rows: headers, divider, row1, row2
     assert len(content) == 4
+    assert dict(table.column_maxes) == {0:2, 1:2, 2:3}
+    assert table.cell_spacing == spacing
+    assert table.total_width == len("H1H2333") + 2 * spacing
 
-    header_row = content[0]
-    spec, text = utils.spec_and_text(header_row[0])
-    assert "bold" in spec.foreground
-    assert text == b"H1"
-    spec, text = utils.spec_and_text(header_row[2])
-    assert "bold" in spec.foreground
-    assert text == b"H2"
-    spec, text = utils.spec_and_text(header_row[5])
-    assert "bold" in spec.foreground
-    assert text == b"H3"
-
-    divider_row = content[1]
-    spec, text = utils.spec_and_text(divider_row[0])
-    # no styling applied to the divider
-    assert spec is None
-    assert text == b"&&"
-    spec, text = utils.spec_and_text(divider_row[2])
-    # no styling applied to the divider
-    assert spec is None
-    assert text == b"&&"
-    spec, text = utils.spec_and_text(divider_row[4])
-    # no styling applied to the divider
-    assert spec is None
-    assert text == b"&&&"
-
-    content_row1 = content[2]
-    spec, text = utils.spec_and_text(content_row1[0])
-    # no styling applied to this row
-    assert spec is None
-    assert text == b"1 "
-    spec, text = utils.spec_and_text(content_row1[2])
-    # no styling applied to this row
-    assert spec is None
-    assert text == b"22"
-    spec, text = utils.spec_and_text(content_row1[4])
-    # no styling applied to this row
-    assert spec is None
-    assert text == b"333"
-
-    content_row1 = content[3]
-    spec, text = utils.spec_and_text(content_row1[0])
-    # no styling applied to this row
-    assert "italics" in spec.foreground
-    assert text == b"1"
-    spec, text = utils.spec_and_text(content_row1[3])
-    # no styling applied to this row
-    assert "strikethrough" in spec.foreground
-    assert text == b"22"
-    spec, text = utils.spec_and_text(content_row1[5])
-    # no styling applied to this row
-    assert "underline" in spec.foreground
-    assert text == b"333"
+    utils.validate_render(
+        rendered=content,
+        text=[
+            "H1 H2  H3",
+            "─────────",
+            "1  22 333",
+            "1  22 333",
+        ],
+        style_mask=[
+            "HHHHHHHHH",
+            "HHHHHHHHH",
+            "EEEEEEEEE", # even row
+            "OOOOOOOOO", # odd row
+        ],
+        styles={
+            "H": TEST_STYLE["table"]["header"],
+            "O": TEST_STYLE["table"]["odd_rows"],
+            "E": TEST_STYLE["table"]["even_rows"],
+        }
+    )
 
 
-def test_table_no_headers(mocker):
-    """This situation could never happen as parsed from Markdown. See
-    https://stackoverflow.com/a/17543474.
+def test_ignore_extra_columns_render(table_setup):
+    """Test that a Table widget renders correctly"""
+    table, content = _render_table(r"""
+| H1 | H2 | H3  |
+|----|:--:|----:|
+| 1  | 22 | 333 | 444 |
+| 1  | 22 | 333 | 555 | 666666 |
+    """)
+    spacing = TEST_STYLE["table"]["column_spacing"]
 
-    However this situation could happen manually when using the Table() class
-    directly.
-    """
-    headers = None
-    aligns = ["left", "center", "right"]
-    rows = [
-        ["1", "22", "333"],
-        ["*1*", "~~22~~", "**333**"],
-    ]
+    # four rows: headers, divider, row1, row2
+    assert len(content) == 4
+    assert dict(table.column_maxes) == {0:2, 1:2, 2:3}
+    assert table.cell_spacing == spacing
+    assert table.total_width == len("H1H2333") + 2 * spacing
 
-    table = lookatme.widgets.table.Table(rows, headers=headers, aligns=aligns)
-    canvas = table.render((20,))
-    content = list(canvas.content())
+    utils.validate_render(
+        rendered=content,
+        text=[
+            "H1 H2  H3",
+            "─────────",
+            "1  22 333",
+            "1  22 333",
+        ],
+        style_mask=[
+            "HHHHHHHHH",
+            "HHHHHHHHH",
+            "EEEEEEEEE", # even row
+            "OOOOOOOOO", # odd row
+        ],
+        styles={
+            "H": TEST_STYLE["table"]["header"],
+            "O": TEST_STYLE["table"]["odd_rows"],
+            "E": TEST_STYLE["table"]["even_rows"],
+        }
+    )
 
-    assert len(content) == 2
+
+def test_default_left_align(table_setup):
+    """Test that default (left) align works"""
+    table, content = _render_table(r"""
+| H1 | H2 | H3  |
+|----|----|-----|
+| 1  | 22 | 333 |
+| 1  | 22 | 333 |
+    """)
+    spacing = TEST_STYLE["table"]["column_spacing"]
+
+    # four rows: headers, divider, row1, row2
+    assert len(content) == 4
+    assert dict(table.column_maxes) == {0:2, 1:2, 2:3}
+    assert table.cell_spacing == spacing
+    assert table.total_width == len("H1H2333") + 2 * spacing
+
+    utils.validate_render(
+        rendered=content,
+        text=[
+            "H1 H2 H3 ",
+            "─────────",
+            "1  22 333",
+            "1  22 333",
+        ],
+        style_mask=[
+            "HHHHHHHHH",
+            "HHHHHHHHH",
+            "EEEEEEEEE", # even row
+            "OOOOOOOOO", # odd row
+        ],
+        styles={
+            "H": TEST_STYLE["table"]["header"],
+            "O": TEST_STYLE["table"]["odd_rows"],
+            "E": TEST_STYLE["table"]["even_rows"],
+        }
+    )
 
 
-def test_ignored_extra_column(mocker):
-    """Test that extra columns beyond header values are ignored
-    """
-    headers = ["H1", "H2", "H3"]
-    aligns = ["left", "center", "right"]
-    rows = [
-        ["1", "2", "3"],
-        ["1", "2", "3", "4"],
-        ["1", "2", "3", "4", "5"],
-    ]
+def test_left_align(table_setup):
+    """Test that default (left) align works"""
+    table, content = _render_table(r"""
+| H1 | H2 | H3  |
+|:---|:---|:----|
+| 1  | 22 | 333 |
+| 1  | 22 | 333 |
+    """)
+    spacing = TEST_STYLE["table"]["column_spacing"]
 
-    table = lookatme.widgets.table.Table(rows, headers=headers, aligns=aligns)
-    canvas = table.render((20,))
-    content = list(canvas.content())
+    # four rows: headers, divider, row1, row2
+    assert len(content) == 4
+    assert dict(table.column_maxes) == {0:2, 1:2, 2:3}
+    assert table.cell_spacing == spacing
+    assert table.total_width == len("H1H2333") + 2 * spacing
 
-    # number of rows of output
-    assert len(content) == 5
-    assert b"4" not in utils.row_text(content[-2])
+    utils.validate_render(
+        rendered=content,
+        text=[
+            "H1 H2 H3 ",
+            "─────────",
+            "1  22 333",
+            "1  22 333",
+        ],
+        style_mask=[
+            "HHHHHHHHH",
+            "HHHHHHHHH",
+            "EEEEEEEEE", # even row
+            "OOOOOOOOO", # odd row
+        ],
+        styles={
+            "H": TEST_STYLE["table"]["header"],
+            "O": TEST_STYLE["table"]["odd_rows"],
+            "E": TEST_STYLE["table"]["even_rows"],
+        }
+    )
 
-    assert b"4" not in utils.row_text(content[-1])
-    assert b"5" not in utils.row_text(content[-1])
+
+def test_center_align(table_setup):
+    """Test that default (left) align works"""
+    table, content = _render_table(r"""
+| H1     | H2   | H3  |
+|:------:|:----:|:---:|
+| 1      | 22   | 333 |
+| 11111  | 2233 | 333 |
+    """)
+    spacing = TEST_STYLE["table"]["column_spacing"]
+
+    # four rows: headers, divider, row1, row2
+    assert len(content) == 4
+    assert dict(table.column_maxes) == {0:5, 1:4, 2:3}
+    assert table.cell_spacing == spacing
+    assert table.total_width == len("111112233333") + 2 * spacing
+
+    utils.validate_render(
+        rendered=content,
+        text=[
+            "  H1   H2   H3",
+            "──────────────",
+            "  1    22  333",
+            "11111 2233 333",
+        ],
+        style_mask=[
+            "HHHHHHHHHHHHHH",
+            "HHHHHHHHHHHHHH",
+            "EEEEEEEEEEEEEE", # even row
+            "OOOOOOOOOOOOOO", # odd row
+        ],
+        styles={
+            "H": TEST_STYLE["table"]["header"],
+            "O": TEST_STYLE["table"]["odd_rows"],
+            "E": TEST_STYLE["table"]["even_rows"],
+        }
+    )

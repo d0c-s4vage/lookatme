@@ -33,8 +33,10 @@ def validate_extension_mod(_ext_name, ext_mod):
     """
     res = []
     if not hasattr(ext_mod, "user_warnings"):
-        res.append("'user_warnings' is missing. Extension is not able to "
-                   "provide user warnings.")
+        res.append(
+            "'user_warnings' is missing. Extension is not able to "
+            "provide user warnings."
+        )
     else:
         res += ext_mod.user_warnings()
 
@@ -75,8 +77,7 @@ def load_contribs(contrib_names, safe_contribs, ignore_load_failure=False):
 
 
 def _handle_load_errors_warnings(errors: List[str], all_warnings: List[str]):
-    """Handle all load errors and warnings from loading contrib modules
-    """
+    """Handle all load errors and warnings from loading contrib modules"""
     if len(errors) > 0:
         raise Exception(
             "Error loading one or more extensions:\n\n" + "\n".join(errors),
@@ -123,7 +124,6 @@ def contrib_first(fn):
 
 
 def shutdown_contribs():
-    """Call the shutdown function on all contrib modules
-    """
+    """Call the shutdown function on all contrib modules"""
     for mod in CONTRIB_MODULES:
         getattr(mod, "shutdown", lambda: 1)()

@@ -3,7 +3,6 @@ This module defines the text user interface (TUI) for lookatme
 """
 
 
-import copy
 import threading
 import time
 from collections import defaultdict
@@ -13,10 +12,12 @@ import urwid
 
 import lookatme.config
 import lookatme.config as config
-import lookatme.contrib
-import lookatme.render.markdown_block as lam_md
-from lookatme.contrib import contrib_first
-from lookatme.utils import pile_or_listbox_add, spec_from_style
+import lookatme.parser
+import lookatme.render.markdown_block as markdown_block
+from lookatme.contrib import contrib_first, shutdown_contribs
+from lookatme.render.context import Context
+from lookatme.utils import spec_from_style
+from lookatme.widgets.clickable_text import ClickableText
 
 
 def text(style, data, align="left"):
@@ -49,16 +50,14 @@ class SlideRenderer(threading.Thread):
         self._log = lookatme.config.get_log().getChild("RENDER")
 
     def flush_cache(self):
-        """Clea everything out of the queue and the cache.
-        """
+        """Clea everything out of the queue and the cache."""
         # clear all pending items
         with self.queue.mutex:
             self.queue.queue.clear()
         self.cache.clear()
 
     def queue_render(self, slide):
-        """Queue up a slide to be rendered.
-        """
+        """Queue up a slide to be rendered."""
         self.events[slide.number].clear()
         self.queue.put(slide)
 
@@ -76,21 +75,11 @@ class SlideRenderer(threading.Thread):
             raise res
         return res
 
-    def _propagate_meta(self, item1, item2):
-        """Copy the metadata from item1 to item2
-        """
-        meta = getattr(item1, "meta", {})
-        existing_meta = getattr(item2, "meta", {})
-        new_meta = copy.deepcopy(meta)
-        new_meta.update(existing_meta)
-        setattr(item2, "meta", new_meta)
-
     def stop(self):
         self.keep_running.clear()
 
     def run(self):
-        """Run the main render thread
-        """
+        """Run the main render thread"""
         self.keep_running.set()
         while self.keep_running.is_set():
             to_render = self.queue.get()
@@ -149,7 +138,13 @@ class SlideRenderer(threading.Thread):
         # may add extra metadata to the token itself. For example, list rendering
         # uses this to determine the max indent size for each level.
         tokens = to_render.tokens
+        self._log.debug("")
+        self._log.debug("PRE-Render====================================")
+        self._log.debug("")
         self._render_tokens(tokens)
+        self._log.debug("")
+        self._log.debug("FINAL-Render====================================")
+        self._log.debug("")
         res = self._render_tokens(tokens)
 
         total = time.time() - start
@@ -159,31 +154,23 @@ class SlideRenderer(threading.Thread):
 
     def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
-        stack = [tmp_listbox]
-        for token in tokens:
-            self._log.debug(f"{'  '*len(stack)}Rendering token {token}")
-
-            last_stack = stack[-1]
-            last_stack_len = len(stack)
-
-            render_token = getattr(lam_md, f"render_{token['type']}")
-            res = render_token(token, stack[-1], stack, self.loop)
-            if len(stack) > last_stack_len:
-                self._propagate_meta(last_stack, stack[-1])
-            if res is None:
-                continue
-            pile_or_listbox_add(last_stack, res)
+        ctx = Context(self.loop)
+        ctx.tokens_push(tokens)
+        with ctx.use_container(tmp_listbox, is_new_block=True):
+            markdown_block.render_all(ctx)
+        ctx.tokens_pop()
 
         return tmp_listbox.body
 
 
 class MarkdownTui(urwid.Frame):
     def __init__(self, pres, start_idx=0):
-        """
-        """
+        """ """
+        # self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
         self.slide_body = urwid.ListBox(
-            urwid.SimpleFocusListWalker([urwid.Text("test")]))
-        self.slide_title = text("", "", "center")
+            urwid.SimpleFocusListWalker([urwid.Text("test")])
+        )
+        self.slide_title = ClickableText([""], align="center")
         self.top_spacing = urwid.Filler(self.slide_title, top=0, bottom=0)
         self.top_spacing_box = urwid.BoxAdapter(self.top_spacing, 1)
 
@@ -195,7 +182,7 @@ class MarkdownTui(urwid.Frame):
 
         self._log = lookatme.config.get_log()
 
-        urwid.set_encoding('utf8')
+        urwid.set_encoding("utf8")
         screen = urwid.raw_display.Screen()
         screen.set_terminal_properties(colors=256)
 
@@ -223,8 +210,7 @@ class MarkdownTui(urwid.Frame):
         )
 
     def prep_pres(self, pres, start_idx=0):
-        """Prepare the presentation for displaying/use
-        """
+        """Prepare the presentation for displaying/use"""
         self.curr_slide = self.pres.slides[start_idx]
         self.update()
 
@@ -234,8 +220,7 @@ class MarkdownTui(urwid.Frame):
             self.slide_renderer.queue_render(slide)
 
     def update_slide_num(self):
-        """Update the slide number
-        """
+        """Update the slide number"""
         slide_text = "slide {} / {}".format(
             self.curr_slide.number + 1,
             len(self.pres.slides),
@@ -244,35 +229,55 @@ class MarkdownTui(urwid.Frame):
         self.slide_num.set_text([(spec, slide_text)])
 
     def update_title(self):
-        """Update the title
-        """
+        """Update the title"""
         title = self.pres.meta.get("title", "")
+        if isinstance(title, str):
+            tokens = lookatme.parser.md_to_tokens(title)
+        else:
+            tokens = title
+
+        expected_types = ["paragraph_open", "inline", "paragraph_close"]
+        if tokens and [x["type"] for x in tokens] != expected_types:
+            raise ValueError(
+                "Titles must only be inline markdown, was {}".format(
+                    [x["type"] for x in tokens]
+                )
+            )
+
+        title = [] if not tokens else [tokens[1]]  # the inline token
         spec = spec_from_style(config.get_style()["title"])
-        self.slide_title.set_text([(spec, f" {title} ")])
+
+        if not title:
+            return
+
+        ctx = Context(self.loop)
+        with ctx.use_tokens(title):
+            with ctx.use_spec(spec):
+                markdown_block.render_all(ctx)
+        self.slide_title.set_text(ctx.inline_markup_consumed)
 
     def update_creation(self):
-        """Update the author and date
-        """
-        author = self.pres.meta.get('author', '')
+        """Update the author and date"""
+        author = self.pres.meta.get("author", "")
         author_spec = spec_from_style(config.get_style()["author"])
 
-        date = self.pres.meta.get('date', '')
+        date = self.pres.meta.get("date", "")
         date_spec = spec_from_style(config.get_style()["date"])
 
-        self.creation.set_text([
-            (author_spec, f"  {author} "),
-            (date_spec, f" {date} "),
-        ])
+        self.creation.set_text(
+            [
+                (author_spec, f"  {author} "),
+                (date_spec, f" {date} "),
+            ]
+        )
 
     def update_body(self):
-        """Render the provided slide body
-        """
+        """Render the provided slide body"""
         rendered = self.slide_renderer.render_slide(self.curr_slide)
         self.slide_body.body = rendered
 
     def update_slide_settings(self):
-        """Update the slide margins and paddings
-        """
+        """Update the slide margins and paddings"""
         margin = config.get_style()["margin"]
         padding = config.get_style()["padding"]
 
@@ -288,12 +293,10 @@ class MarkdownTui(urwid.Frame):
 
         self.bottom_spacing.top = padding["bottom"]
         self.bottom_spacing.bottom = margin["bottom"]
-        self.bottom_spacing_box.height = margin["bottom"] + \
-            1 + padding["bottom"]
+        self.bottom_spacing_box.height = margin["bottom"] + 1 + padding["bottom"]
 
     def update(self):
-        """
-        """
+        """ """
         self.update_slide_settings()
         self.update_slide_num()
         self.update_title()
@@ -301,8 +304,7 @@ class MarkdownTui(urwid.Frame):
         self.update_body()
 
     def reload(self):
-        """Reload the input, keeping the current slide in focus
-        """
+        """Reload the input, keeping the current slide in focus"""
         curr_slide_idx = self.curr_slide.number
         self.slide_renderer.flush_cache()
         self.pres.reload()
@@ -310,8 +312,7 @@ class MarkdownTui(urwid.Frame):
         self.update()
 
     def keypress(self, size, key):
-        """Handle keypress events
-        """
+        """Handle keypress events"""
         self._log.debug(f"KEY: {key}")
         key = self._get_key(size, key)
         if key is None:
@@ -323,7 +324,7 @@ class MarkdownTui(urwid.Frame):
         elif key in ["right", " ", "j", "l"]:
             slide_direction = 1
         elif key in ["q", "Q"]:
-            lookatme.contrib.shutdown_contribs()
+            shutdown_contribs()
             raise urwid.ExitMainLoop()
         elif key == "r":
             self.reload()
@@ -344,8 +345,7 @@ class MarkdownTui(urwid.Frame):
         self.update()
 
     def _get_key(self, size, key):
-        """Resolve the key that was pressed.
-        """
+        """Resolve the key that was pressed."""
         try:
             key = urwid.Frame.keypress(self, size, key)
             if key is None:

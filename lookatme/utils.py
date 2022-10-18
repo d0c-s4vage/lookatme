@@ -2,12 +2,31 @@
 """
 
 
+from typing import Dict, Union
+
 import urwid
+
+from lookatme.widgets.smart_attr_spec import SmartAttrSpec
+
+
+def core_widget(w) -> urwid.Widget:
+    """Resolve a wrapped widget to its core widget value"""
+    if isinstance(w, urwid.AttrMap):
+        return w.base_widget
+    return w
+
+
+def get_meta(item):
+    if not hasattr(item, "meta"):
+        meta = {}
+        setattr(item, "meta", meta)
+    else:
+        meta = getattr(item, "meta")
+    return meta
 
 
 def row_text(rendered_row):
-    """Return all text joined together from the rendered row
-    """
+    """Return all text joined together from the rendered row"""
     return b"".join(x[-1] for x in rendered_row)
 
 
@@ -33,8 +52,7 @@ def resolve_bag_of_text_markup_or_widgets(items):
 
 
 def dict_deep_update(to_update, new_vals):
-    """Deeply update the to_update dict with the new_vals
-    """
+    """Deeply update the to_update dict with the new_vals"""
     for key, value in new_vals.items():
         if isinstance(value, dict):
             node = to_update.setdefault(key, {})
@@ -44,40 +62,66 @@ def dict_deep_update(to_update, new_vals):
 
 
 def spec_from_style(styles):
-    """Create an urwid.AttrSpec from a {fg:"", bg:""} style dict. If styles
+    """Create an SmartAttrSpec from a {fg:"", bg:""} style dict. If styles
     is a string, it will be used as the foreground
     """
     if isinstance(styles, str):
-        return urwid.AttrSpec(styles, "")
+        return SmartAttrSpec(styles, "")
     else:
-        return urwid.AttrSpec(styles.get("fg", ""), styles.get("bg", ""))
+        fg = styles.get("fg", "")
+        bg = styles.get("bg", "")
+        if fg + bg == "":
+            return None
+        return SmartAttrSpec(fg, bg)
+
+
+def non_empty_split(data):
+    res = [x.strip() for x in data.split(",")]
+    return list(filter(None, res))
 
 
 def get_fg_bg_styles(style):
     if style is None:
         return [], []
 
-    def non_empty_split(data):
-        res = [x.strip() for x in data.split(",")]
-        return list(filter(None, res))
-
-    # from lookatme.config.get_style()
+    # from lookatme.config.STYLE
     if isinstance(style, dict):
         return non_empty_split(style["fg"]), non_empty_split(style["bg"])
     # just a str will only set the foreground color
     elif isinstance(style, str):
         return non_empty_split(style), []
-    elif isinstance(style, urwid.AttrSpec):
+    elif isinstance(style, SmartAttrSpec):
         return non_empty_split(style.foreground), non_empty_split(style.background)
     else:
         raise ValueError("Unsupported style value {!r}".format(style))
 
 
+def overwrite_style(orig_style: Dict[str, str], new_style: Dict[str, str]) -> Dict[str, str]:
+    orig_spec = spec_from_style(orig_style)
+    new_spec = spec_from_style(new_style)
+    res_spec = overwrite_spec(orig_spec, new_spec)
+
+    return {
+        "fg": res_spec.foreground,
+        "bg": res_spec.background,
+    }
+    
+
+
 def overwrite_spec(orig_spec, new_spec):
     if orig_spec is None:
-        orig_spec = urwid.AttrSpec("", "")
+        return new_spec
     if new_spec is None:
-        new_spec = urwid.AttrSpec("", "")
+        return orig_spec
+
+    import lookatme.widgets.clickable_text
+
+    LinkIndicatorSpec = lookatme.widgets.clickable_text.LinkIndicatorSpec
+
+    if orig_spec is None:
+        orig_spec = SmartAttrSpec("", "")
+    if new_spec is None:
+        new_spec = SmartAttrSpec("", "")
 
     fg_orig = orig_spec.foreground.split(",")
     fg_orig_color = orig_spec._foreground_color()
@@ -95,20 +139,31 @@ def overwrite_spec(orig_spec, new_spec):
     bg_new_color = new_spec._background()
     bg_new.remove(bg_new_color)
 
-    if fg_new_color == "default":
+    if fg_new_color in ("", "default"):
         fg_orig.append(fg_orig_color)
     else:
         fg_new.append(fg_new_color)
 
-    if bg_new_color == "default":
+    if bg_new_color in ("", "default"):
         bg_orig.append(bg_orig_color)
     else:
         bg_new.append(bg_new_color)
 
-    return urwid.AttrSpec(
+    plain_spec = SmartAttrSpec(
         ",".join(set(fg_orig + fg_new)),
         ",".join(set(bg_orig + bg_new)),
     )
+
+    link_spec = None
+    if isinstance(orig_spec, LinkIndicatorSpec):
+        link_spec = orig_spec
+    if isinstance(new_spec, LinkIndicatorSpec):
+        link_spec = new_spec
+
+    if link_spec is not None:
+        return link_spec.new_for_spec(plain_spec)
+    else:
+        return plain_spec
 
 
 def flatten_text(text, new_spec=None):
@@ -116,7 +171,7 @@ def flatten_text(text, new_spec=None):
     to a new urwid.Text().
 
     :param urwid.Text text: The text to flatten
-    :param urwid.AttrSpec new_spec: A new spec to merge with existing styles
+    :param SmartAttrSpec new_spec: A new spec to merge with existing styles
     :returns: list of tuples
     """
     text, chunk_stylings = text.get_text()
@@ -124,7 +179,7 @@ def flatten_text(text, new_spec=None):
     res = []
     total_len = 0
     for spec, chunk_len in chunk_stylings:
-        split_text = text[total_len:total_len + chunk_len]
+        split_text = text[total_len : total_len + chunk_len]
         total_len += chunk_len
 
         split_text_spec = overwrite_spec(new_spec, spec)
@@ -137,9 +192,28 @@ def flatten_text(text, new_spec=None):
 
 
 def can_style_item(item):
-    """Return true/false if ``style_text`` can work with the given item
-    """
+    """Return true/false if ``style_text`` can work with the given item"""
     return isinstance(item, (urwid.Text, list, tuple))
+
+
+def _default_filter_fn(_x, _y):
+    return True
+
+
+def spec_from_stack(spec_stack: list, filter_fn=None) -> Union[None, urwid.AttrSpec]:
+    if len(spec_stack) == 0:
+        return SmartAttrSpec("", "")
+
+    if filter_fn is None:
+        filter_fn = _default_filter_fn
+
+    res_spec = None
+    for spec, text_only in spec_stack:
+        if not filter_fn(spec, text_only):
+            continue
+        res_spec = overwrite_spec(res_spec, spec)
+
+    return res_spec
 
 
 def styled_text(text, new_styles, old_styles=None, supplement_style=False):
@@ -154,9 +228,11 @@ def styled_text(text, new_styles, old_styles=None, supplement_style=False):
     if isinstance(text, urwid.Text):
         new_spec = spec_from_style(new_styles)
         return flatten_text(text, new_spec)
-    elif (isinstance(text, tuple)
-            and isinstance(text[0], urwid.AttrSpec)
-            and isinstance(text[1], urwid.Text)):
+    elif (
+        isinstance(text, tuple)
+        and isinstance(text[0], SmartAttrSpec)
+        and isinstance(text[1], urwid.Text)
+    ):
         text = text[1].text
         old_styles = text[0]
 
@@ -166,7 +242,7 @@ def styled_text(text, new_styles, old_styles=None, supplement_style=False):
     def join(items):
         return ",".join(set(items))
 
-    spec = urwid.AttrSpec(
+    spec = SmartAttrSpec(
         join(new_fg + old_fg),
         join(new_bg + old_bg),
     )
@@ -174,14 +250,16 @@ def styled_text(text, new_styles, old_styles=None, supplement_style=False):
 
 
 def pile_or_listbox_add(container, widgets):
-    """Add the widget/widgets to the container
-    """
+    """Add the widget/widgets to the container"""
+    if isinstance(container, urwid.AttrMap):
+        container = container.base_widget
+
     if isinstance(container, urwid.ListBox):
         return listbox_add(container, widgets)
     elif isinstance(container, urwid.Pile):
         return pile_add(container, widgets)
     else:
-        raise ValueError("Container was not listbox, nor pile")
+        raise ValueError("Container was not listbox, nor pile: {!r}".format(container))
 
 
 def listbox_add(listbox, widgets):
@@ -189,32 +267,34 @@ def listbox_add(listbox, widgets):
         widgets = [widgets]
 
     for w in widgets:
-        if len(listbox.body) > 0 \
-                and isinstance(w, urwid.Divider) \
-                and isinstance(listbox.body[-1], urwid.Divider):
+        if (
+            len(listbox.body) > 0
+            and isinstance(w, urwid.Divider)
+            and isinstance(listbox.body[-1], urwid.Divider)
+        ):
             continue
         listbox.body.append(w)
 
 
 def pile_add(pile, widgets):
-    """
-    """
+    """ """
     if not isinstance(widgets, list):
         widgets = [widgets]
 
     for w in widgets:
-        if len(pile.contents) > 0 \
-                and isinstance(w, urwid.Divider) \
-                and isinstance(pile.contents[-1][0], urwid.Divider):
+        if (
+            len(pile.contents) > 0
+            and isinstance(w, urwid.Divider)
+            and isinstance(pile.contents[-1][0], urwid.Divider)
+        ):
             continue
         pile.contents.append((w, pile.options()))
 
 
 def int_to_roman(integer):
     integer = int(integer)
-    ints = [1000, 900,  500, 400, 100,  90, 50,  40, 10,  9,   5,  4,   1]
-    nums = ["m",  "cm", "d", "cd", "c", "xc",
-            "l", "xl", "x", "ix", "v", "iv", "i"]
+    ints = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1]
+    nums = ["m", "cm", "d", "cd", "c", "xc", "l", "xl", "x", "ix", "v", "iv", "i"]
     result = []
     for i in range(len(ints)):
         count = integer // ints[i]
