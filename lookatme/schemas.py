@@ -460,11 +460,37 @@ class MetaSchema(Schema):
     )
     extensions = fields.List(fields.Str(), dump_default=[], load_default=[])
 
+    def _ensure_top_level_defaults(self, res: Dict) -> Dict:
+        res.setdefault("title", "")
+        res.setdefault("author", "")
+        res.setdefault("date", datetime.datetime.now().strftime("%Y-%m-%d"))
+        res.setdefault("extensions", [])
+
+        return res
+
+    def loads_partial_styles(self, *args, **kwargs):
+        kwargs["partial"] = True
+        res = super(self.__class__, self).loads(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not loads")
+
+        res = self._ensure_top_level_defaults(res)
+        return res
+
     def loads(self, *args, **kwargs) -> Dict:
         res = super(self.__class__, self).loads(*args, **kwargs)
         if res is None:
             raise ValueError("Could not loads")
 
+        return res
+
+    def load_partial_styles(self, *args, **kwargs):
+        kwargs["partial"] = True
+        res = super(self.__class__, self).load(*args, **kwargs)
+        if res is None:
+            raise ValueError("Could not loads")
+
+        res = self._ensure_top_level_defaults(res)
         return res
 
     def load(self, *args, **kwargs) -> Dict:
