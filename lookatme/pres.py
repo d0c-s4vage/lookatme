@@ -113,10 +113,12 @@ class Presentation(object):
                 self.ignore_ext_failure,
             )
 
+        # style override order:
+        # 1. theme settings
         self.styles = lookatme.themes.ensure_defaults(self.theme_mod)
+        # 2. inline styles from the presentation
         dict_deep_update(self.styles, self.meta.get("styles", {}))
-
-        # now apply any command-line style overrides
+        # 3. CLI style overrides
         if self.style_override is not None:
             self.styles["style"] = self.style_override  # type: ignore
 

@@ -113,7 +113,7 @@ class Parser(object):
                 pass
 
         elif num_hrules == 0:
-            if meta["title"] in ("", None):
+            if meta.get("title", "") in ["", None]:
                 meta["title"] = hinfo["title"]
 
             def slide_split_check(token):
@@ -271,14 +271,14 @@ class Parser(object):
                 break
 
         if not found_first:
-            return input_data, MetaSchema().load({})
+            return input_data, MetaSchema().load_partial_styles({}, partial=True)
 
         new_input = input_data[skipped_chars:]
         if len(yaml_data) == 0:
-            return new_input, MetaSchema().load({})
+            return new_input, MetaSchema().load_partial_styles({}, partial=True)
 
         yaml_data = "\n".join(yaml_data)
-        data = MetaSchema().loads(yaml_data)
+        data = MetaSchema().loads_partial_styles(yaml_data, partial=True)
         return new_input, data
 
     def _create_slides(self, tokens, number):
