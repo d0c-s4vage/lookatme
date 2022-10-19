@@ -108,8 +108,7 @@ class Table(urwid.Pile):
     signals = ["change"]
 
     def __init__(self, ctx: Context, header: Dict, body: Dict):
-        """Create a new table
-        """
+        """Create a new table"""
         self.ctx = ctx
 
         self.header = header
@@ -156,7 +155,9 @@ class Table(urwid.Pile):
 
             self.header_rows = self.create_cells(
                 self.header["children"],
-                base_spec=ctx.spec_text_with(utils.spec_from_style(self.style["header"])),
+                base_spec=ctx.spec_text_with(
+                    utils.spec_from_style(self.style["header"])
+                ),
                 header=True,
             )
 
@@ -187,9 +188,11 @@ class Table(urwid.Pile):
 
         for child in row["children"]:
             if child["type"] not in ("th_open", "td_open"):
-                raise ValueError("Row cells must be th_open or td_open, was {!r}".format(
-                    child["type"]
-                ))
+                raise ValueError(
+                    "Row cells must be th_open or td_open, was {!r}".format(
+                        child["type"]
+                    )
+                )
 
     def validate_row_container(self, container: Dict):
         """Validate that the list of rows is valid. See ``validate_row`` for
@@ -272,15 +275,17 @@ class Table(urwid.Pile):
                     div_text = self.style["header_divider"]["text"] * len(padding_text)
                     # in case the divider text is more than one char, we'll
                     # truncate it
-                    div_text = div_text[:len(padding_text)]
+                    div_text = div_text[: len(padding_text)]
                     div_spec = utils.overwrite_spec(
                         row_spec_text,
-                        utils.spec_from_style(self.style["header_divider"])
+                        utils.spec_from_style(self.style["header_divider"]),
                     )
-                    padding_w = urwid.Pile([
-                        padding_w,
-                        urwid.Text((div_spec, div_text)),
-                    ])
+                    padding_w = urwid.Pile(
+                        [
+                            padding_w,
+                            urwid.Text((div_spec, div_text)),
+                        ]
+                    )
 
                 padding_w = self.ctx.wrap_widget(padding_w, spec=row_spec_general)
                 res.append(padding_w)

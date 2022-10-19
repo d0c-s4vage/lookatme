@@ -21,24 +21,11 @@ TEST_STYLE = {
         "bg": "",
         "fg": "",
         "column_spacing": 1,
-        "even_rows": {
-            "bg": "",
-            "fg": ""
-        },
-        "header": {
-            "bg": "#202020",
-            "fg": "bold"
-        },
-        "header_divider": {
-            "bg": "",
-            "fg": "bold",
-            "text": "─"
-        },
-        "odd_rows": {
-            "bg": "#181818",
-            "fg": ""
-        }
-    }
+        "even_rows": {"bg": "", "fg": ""},
+        "header": {"bg": "#202020", "fg": "bold"},
+        "header_divider": {"bg": "", "fg": "bold", "text": "─"},
+        "odd_rows": {"bg": "#181818", "fg": ""},
+    },
 }
 
 
@@ -54,7 +41,9 @@ def _md_to_table_tokens(md_text: str) -> Tuple[Dict, Dict]:
     return (thead, tbody)
 
 
-def _render_table(md_text: str) -> Tuple[Table, List[List[Tuple[None|urwid.AttrSpec, Any, bytes]]]]:
+def _render_table(
+    md_text: str,
+) -> Tuple[Table, List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]]:
     thead, tbody = _md_to_table_tokens(md_text)
 
     ctx = Context(None)
@@ -70,17 +59,19 @@ def _render_table(md_text: str) -> Tuple[Table, List[List[Tuple[None|urwid.AttrS
 
 def test_basic_render(table_setup):
     """Test that a Table widget renders correctly"""
-    table, content = _render_table(r"""
+    table, content = _render_table(
+        r"""
 | H1 | H2 | H3  |
 |----|:--:|----:|
 | 1  | 22 | 333 |
 | 1  | 22 | 333 |
-    """)
+    """
+    )
     spacing = TEST_STYLE["table"]["column_spacing"]
 
     # four rows: headers, divider, row1, row2
     assert len(content) == 4
-    assert dict(table.column_maxes) == {0:2, 1:2, 2:3}
+    assert dict(table.column_maxes) == {0: 2, 1: 2, 2: 3}
     assert table.cell_spacing == spacing
     assert table.total_width == len("H1H2333") + 2 * spacing
 
@@ -95,30 +86,32 @@ def test_basic_render(table_setup):
         style_mask=[
             "HHHHHHHHH",
             "HHHHHHHHH",
-            "EEEEEEEEE", # even row
-            "OOOOOOOOO", # odd row
+            "EEEEEEEEE",  # even row
+            "OOOOOOOOO",  # odd row
         ],
         styles={
             "H": TEST_STYLE["table"]["header"],
             "O": TEST_STYLE["table"]["odd_rows"],
             "E": TEST_STYLE["table"]["even_rows"],
-        }
+        },
     )
 
 
 def test_ignore_extra_columns_render(table_setup):
     """Test that a Table widget renders correctly"""
-    table, content = _render_table(r"""
+    table, content = _render_table(
+        r"""
 | H1 | H2 | H3  |
 |----|:--:|----:|
 | 1  | 22 | 333 | 444 |
 | 1  | 22 | 333 | 555 | 666666 |
-    """)
+    """
+    )
     spacing = TEST_STYLE["table"]["column_spacing"]
 
     # four rows: headers, divider, row1, row2
     assert len(content) == 4
-    assert dict(table.column_maxes) == {0:2, 1:2, 2:3}
+    assert dict(table.column_maxes) == {0: 2, 1: 2, 2: 3}
     assert table.cell_spacing == spacing
     assert table.total_width == len("H1H2333") + 2 * spacing
 
@@ -133,30 +126,32 @@ def test_ignore_extra_columns_render(table_setup):
         style_mask=[
             "HHHHHHHHH",
             "HHHHHHHHH",
-            "EEEEEEEEE", # even row
-            "OOOOOOOOO", # odd row
+            "EEEEEEEEE",  # even row
+            "OOOOOOOOO",  # odd row
         ],
         styles={
             "H": TEST_STYLE["table"]["header"],
             "O": TEST_STYLE["table"]["odd_rows"],
             "E": TEST_STYLE["table"]["even_rows"],
-        }
+        },
     )
 
 
 def test_default_left_align(table_setup):
     """Test that default (left) align works"""
-    table, content = _render_table(r"""
+    table, content = _render_table(
+        r"""
 | H1 | H2 | H3  |
 |----|----|-----|
 | 1  | 22 | 333 |
 | 1  | 22 | 333 |
-    """)
+    """
+    )
     spacing = TEST_STYLE["table"]["column_spacing"]
 
     # four rows: headers, divider, row1, row2
     assert len(content) == 4
-    assert dict(table.column_maxes) == {0:2, 1:2, 2:3}
+    assert dict(table.column_maxes) == {0: 2, 1: 2, 2: 3}
     assert table.cell_spacing == spacing
     assert table.total_width == len("H1H2333") + 2 * spacing
 
@@ -171,30 +166,32 @@ def test_default_left_align(table_setup):
         style_mask=[
             "HHHHHHHHH",
             "HHHHHHHHH",
-            "EEEEEEEEE", # even row
-            "OOOOOOOOO", # odd row
+            "EEEEEEEEE",  # even row
+            "OOOOOOOOO",  # odd row
         ],
         styles={
             "H": TEST_STYLE["table"]["header"],
             "O": TEST_STYLE["table"]["odd_rows"],
             "E": TEST_STYLE["table"]["even_rows"],
-        }
+        },
     )
 
 
 def test_left_align(table_setup):
     """Test that default (left) align works"""
-    table, content = _render_table(r"""
+    table, content = _render_table(
+        r"""
 | H1 | H2 | H3  |
 |:---|:---|:----|
 | 1  | 22 | 333 |
 | 1  | 22 | 333 |
-    """)
+    """
+    )
     spacing = TEST_STYLE["table"]["column_spacing"]
 
     # four rows: headers, divider, row1, row2
     assert len(content) == 4
-    assert dict(table.column_maxes) == {0:2, 1:2, 2:3}
+    assert dict(table.column_maxes) == {0: 2, 1: 2, 2: 3}
     assert table.cell_spacing == spacing
     assert table.total_width == len("H1H2333") + 2 * spacing
 
@@ -209,30 +206,32 @@ def test_left_align(table_setup):
         style_mask=[
             "HHHHHHHHH",
             "HHHHHHHHH",
-            "EEEEEEEEE", # even row
-            "OOOOOOOOO", # odd row
+            "EEEEEEEEE",  # even row
+            "OOOOOOOOO",  # odd row
         ],
         styles={
             "H": TEST_STYLE["table"]["header"],
             "O": TEST_STYLE["table"]["odd_rows"],
             "E": TEST_STYLE["table"]["even_rows"],
-        }
+        },
     )
 
 
 def test_center_align(table_setup):
     """Test that default (left) align works"""
-    table, content = _render_table(r"""
+    table, content = _render_table(
+        r"""
 | H1     | H2   | H3  |
 |:------:|:----:|:---:|
 | 1      | 22   | 333 |
 | 11111  | 2233 | 333 |
-    """)
+    """
+    )
     spacing = TEST_STYLE["table"]["column_spacing"]
 
     # four rows: headers, divider, row1, row2
     assert len(content) == 4
-    assert dict(table.column_maxes) == {0:5, 1:4, 2:3}
+    assert dict(table.column_maxes) == {0: 5, 1: 4, 2: 3}
     assert table.cell_spacing == spacing
     assert table.total_width == len("111112233333") + 2 * spacing
 
@@ -247,12 +246,12 @@ def test_center_align(table_setup):
         style_mask=[
             "HHHHHHHHHHHHHH",
             "HHHHHHHHHHHHHH",
-            "EEEEEEEEEEEEEE", # even row
-            "OOOOOOOOOOOOOO", # odd row
+            "EEEEEEEEEEEEEE",  # even row
+            "OOOOOOOOOOOOOO",  # odd row
         ],
         styles={
             "H": TEST_STYLE["table"]["header"],
             "O": TEST_STYLE["table"]["odd_rows"],
             "E": TEST_STYLE["table"]["even_rows"],
-        }
+        },
     )

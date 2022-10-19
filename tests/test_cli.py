@@ -33,7 +33,7 @@ def _get_dumped_style(
     tmpdir,
     theme: Optional[str] = None,
     md_meta_style: Optional[str] = None,
-    cli_style: Optional[str] = None
+    cli_style: Optional[str] = None,
 ) -> str:
     cli_args = ["--dump-styles"]
 
@@ -42,12 +42,16 @@ def _get_dumped_style(
     if md_meta_style is not None:
         tmpfile = tmpdir.join("test.md")
         with open(tmpfile, "w") as f:
-            f.write("\n".join([
-                "---",
-                "styles:",
-                "  style: {}".format(md_meta_style),
-                "---",
-            ]))
+            f.write(
+                "\n".join(
+                    [
+                        "---",
+                        "styles:",
+                        "  style: {}".format(md_meta_style),
+                        "---",
+                    ]
+                )
+            )
         cli_args += [str(tmpfile)]
     if cli_style is not None:
         cli_args += ["--style", cli_style]
@@ -60,20 +64,12 @@ def _get_dumped_style(
 
 
 def test_style_override_precedence_dark(tmpdir):
-    """Test that dump styles works correctly
-    """
+    """Test that dump styles works correctly"""
     default_style = _get_dumped_style(tmpdir)
     themed_style = _get_dumped_style(tmpdir, theme="dark")
-    themed_and_md = _get_dumped_style(
-        tmpdir,
-        theme="dark",
-        md_meta_style="emacs"
-    )
+    themed_and_md = _get_dumped_style(tmpdir, theme="dark", md_meta_style="emacs")
     themed_and_md_and_cli = _get_dumped_style(
-        tmpdir,
-        theme="dark",
-        md_meta_style="emacs",
-        cli_style="zenburn"
+        tmpdir, theme="dark", md_meta_style="emacs", cli_style="zenburn"
     )
 
     default = lookatme.schemas.MetaSchema().dump(None)
@@ -87,20 +83,12 @@ def test_style_override_precedence_dark(tmpdir):
 
 
 def test_style_override_precedence_light(tmpdir):
-    """Test that dump styles works correctly
-    """
+    """Test that dump styles works correctly"""
     default_style = _get_dumped_style(tmpdir)
     themed_style = _get_dumped_style(tmpdir, theme="light")
-    themed_and_md = _get_dumped_style(
-        tmpdir,
-        theme="light",
-        md_meta_style="emacs"
-    )
+    themed_and_md = _get_dumped_style(tmpdir, theme="light", md_meta_style="emacs")
     themed_and_md_and_cli = _get_dumped_style(
-        tmpdir,
-        theme="light",
-        md_meta_style="emacs",
-        cli_style="zenburn"
+        tmpdir, theme="light", md_meta_style="emacs", cli_style="zenburn"
     )
 
     default = lookatme.schemas.MetaSchema().dump(None)

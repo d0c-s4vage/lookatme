@@ -5,7 +5,7 @@ Defines utilities for testing lookatme
 
 import inspect
 import pytest
-from six.moves import StringIO
+from six.moves import StringIO # type: ignore
 from typing import Any, Dict, List, Optional, Tuple, Union
 import urwid
 
@@ -116,6 +116,7 @@ def render_widget(
 
     return list(w.render((width,), False).content())
 
+
 def render_md(
     md_text: str, width: Optional[int] = None
 ) -> List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]:
@@ -140,8 +141,7 @@ def validate_render(
     render_height: Optional[int] = None,
     as_slide: Optional[bool] = False,
 ):
-    """render_height is only used when as_slide=True
-    """
+    """render_height is only used when as_slide=True"""
     if md_text is not None:
         md_text = inspect.cleandoc(md_text)
         if as_slide:
@@ -204,6 +204,7 @@ def override_style(new_style: Dict, complete=False):
     If ``complete`` is ``True``, then a normal dict.update() is used which
     overrides entire trees in the style dict.
     """
+
     def outer(fn):
         full_style = lookatme.schemas.StyleSchema().dump(None)
         if complete:
