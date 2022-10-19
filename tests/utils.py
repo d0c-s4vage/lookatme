@@ -5,6 +5,7 @@ Defines utilities for testing lookatme
 
 import inspect
 import pytest
+from six.moves import StringIO
 from typing import Any, Dict, List, Optional, Tuple, Union
 import urwid
 
@@ -13,6 +14,7 @@ import lookatme.config
 import lookatme.schemas
 import lookatme.parser
 import lookatme.render.markdown_block as markdown_block
+from lookatme.pres import Presentation
 import lookatme.tui
 
 
@@ -100,6 +102,20 @@ def _vtext_from_text_and_style_mask(
     return "".join(res)
 
 
+def render_widget(
+    w: urwid.Widget, width: Optional[int] = None
+) -> List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]:
+    if width is None:
+        min_width = 300
+        _, orig_rows = w.pack((min_width,))
+        curr_rows = orig_rows
+        while min_width > 0 and curr_rows == orig_rows:
+            min_width -= 1
+            _, curr_rows = w.pack((min_width,))
+        width = min_width + 1
+
+    return list(w.render((width,), False).content())
+
 def render_md(
     md_text: str, width: Optional[int] = None
 ) -> List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]:
@@ -111,16 +127,7 @@ def render_md(
         with ctx.use_container(root, is_new_block=True):
             markdown_block.render_all(ctx)
 
-    if width is None:
-        min_width = 300
-        _, orig_rows = root.pack((min_width,))
-        curr_rows = orig_rows
-        while min_width > 0 and curr_rows == orig_rows:
-            min_width -= 1
-            _, curr_rows = root.pack((min_width,))
-        width = min_width + 1
-
-    return list(root.render((width,), False).content())
+    return render_widget(root, width)
 
 
 def validate_render(
@@ -130,10 +137,26 @@ def validate_render(
     md_text: Optional[str] = None,
     rendered: Optional[List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]] = None,
     render_width: Optional[int] = None,
+    render_height: Optional[int] = None,
+    as_slide: Optional[bool] = False,
 ):
+    """render_height is only used when as_slide=True
+    """
     if md_text is not None:
         md_text = inspect.cleandoc(md_text)
-        rendered = render_md(md_text, width=render_width)
+        if as_slide:
+            assert render_width is not None
+            assert render_height is not None
+            input_stream = StringIO(md_text)
+            pres = Presentation(input_stream, "dark")
+            tui = lookatme.tui.create_tui(pres)
+            tui.slide_renderer.stop()
+            tui.slide_renderer.join()
+            loop_widget = tui.loop.widget
+            canvas = loop_widget.render((render_width, render_height), False)
+            rendered = list(canvas.content())
+        else:
+            rendered = render_md(md_text, width=render_width)
 
     if rendered is None:
         raise Exception("Rendered should not be none here")
@@ -153,7 +176,7 @@ def validate_render(
 
         row_vtext = _vtext_from_text_and_style_mask(text[idx], style_mask[idx], styles)
         rendered_vtext = _markups_to_vtext(rendered[idx])
-        assert row_vtext == rendered_vtext
+        assert row_vtext == rendered_vtext, f"Row idx {idx} did not match"
 
 
 def setup_lookatme(tmpdir, mocker, style=None):

@@ -6,7 +6,7 @@ This module defines the text user interface (TUI) for lookatme
 import threading
 import time
 from collections import defaultdict
-from queue import Queue
+from queue import Queue, Empty
 
 import urwid
 
@@ -82,7 +82,11 @@ class SlideRenderer(threading.Thread):
         """Run the main render thread"""
         self.keep_running.set()
         while self.keep_running.is_set():
-            to_render = self.queue.get()
+            try:
+                to_render = self.queue.get(timeout=0.05)
+            except Empty:
+                continue
+
             slide_num = to_render.number
 
             try:
@@ -268,12 +272,15 @@ class MarkdownTui(urwid.Frame):
         date_spec = spec_from_style(config.get_style()["date"])
         date_spec = self.ctx.spec_text_with(date_spec)
 
-        self.creation.set_text(
-            [
-                (author_spec, f"  {author} "),
-                (date_spec, f" {date} "),
-            ]
-        )
+        markups = []
+        if author not in ("", None):
+            markups.append((author_spec, author))
+        if date not in ("", None):
+            if len(markups) > 0:
+                markups.append(" ")
+            markups.append((date_spec, date))
+
+        self.creation.set_text(markups)
 
     def update_body(self):
         """Render the provided slide body"""
