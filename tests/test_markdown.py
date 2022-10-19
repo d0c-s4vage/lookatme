@@ -11,16 +11,19 @@ import tests.utils as utils
 from tests.utils import override_style
 
 
-@override_style({
-    "headings": {
-        "default": {
-            "fg": "bold",
-            "bg": "",
-            "prefix": "|",
-            "suffix": "|",
+@override_style(
+    {
+        "headings": {
+            "default": {
+                "fg": "bold",
+                "bg": "",
+                "prefix": "|",
+                "suffix": "|",
+            },
         },
     },
-}, complete=True)
+    complete=True,
+)
 def test_heading_defaults(style):
     """Test basic header rendering"""
     utils.validate_render(
@@ -50,38 +53,40 @@ def test_heading_defaults(style):
             "h": style["headings"]["default"],
             "a": style["headings"]["default"],
             "/": {},
-        }
+        },
     )
 
 
-@override_style({
-    "headings": {
-        "default": {
-            "fg": "bold",
-            "bg": "",
-            "prefix": ".",
-            "suffix": ".",
+@override_style(
+    {
+        "headings": {
+            "default": {
+                "fg": "bold",
+                "bg": "",
+                "prefix": ".",
+                "suffix": ".",
+            },
+            "1": {
+                "fg": "bold",
+                "bg": "",
+                "prefix": "|",
+                "suffix": "|",
+            },
+            "2": {
+                "fg": "italics",
+                "bg": "",
+                "prefix": ">>",
+                "suffix": "<<",
+            },
+            "3": {
+                "fg": "underline",
+                "bg": "",
+                "prefix": "[[[",
+                "suffix": "]]]",
+            },
         },
-        "1": {
-            "fg": "bold",
-            "bg": "",
-            "prefix": "|",
-            "suffix": "|",
-        },
-        "2": {
-            "fg": "italics",
-            "bg": "",
-            "prefix": ">>",
-            "suffix": "<<",
-        },
-        "3": {
-            "fg": "underline",
-            "bg": "",
-            "prefix": "[[[",
-            "suffix": "]]]",
-        },
-    },
-})
+    }
+)
 def test_heading_levels(style):
     """Test basic header rendering"""
     utils.validate_render(
@@ -111,16 +116,18 @@ def test_heading_levels(style):
             "h": style["headings"]["2"],
             "a": style["headings"]["3"],
             "/": {},
-        }
+        },
     )
 
 
-@override_style({
-    "table": {
-        "column_spacing": 1,
-        "header_divider": { "text": "-" },
+@override_style(
+    {
+        "table": {
+            "column_spacing": 1,
+            "header_divider": {"text": "-"},
+        }
     }
-})
+)
 def test_table(style):
     """Test basic header rendering"""
     utils.validate_render(
@@ -151,25 +158,27 @@ def test_table(style):
             "H": style["table"]["header"],
             # the divider is part of the header and inherits its styles
             "D": l_utils.overwrite_style(
-                style["table"]["header"],
-                style["table"]["header_divider"]
+                style["table"]["header"], style["table"]["header_divider"]
             ),
             "O": style["table"]["odd_rows"],
             "E": style["table"]["even_rows"],
             ".": style["table"]["border"]["tl_corner"],
             " ": {},
-        }
+        },
     )
 
 
-@override_style({
-    "bullets": {
-        "default": { "text": "*", "fg": "#505050" },
-        "1": { "text": "-", "fg": "#808080" },
-        "2": { "text": "=", "fg": "#707070" },
-        "3": { "text": "^", "fg": "#606060" },
+@override_style(
+    {
+        "bullets": {
+            "default": {"text": "*", "fg": "#505050"},
+            "1": {"text": "-", "fg": "#808080"},
+            "2": {"text": "=", "fg": "#707070"},
+            "3": {"text": "^", "fg": "#606060"},
+        },
     },
-}, complete=True)
+    complete=True,
+)
 def test_lists_basic(style):
     """Test list rendering"""
     utils.validate_render(
@@ -210,18 +219,21 @@ def test_lists_basic(style):
             "3": style["bullets"]["3"],
             "d": style["bullets"]["default"],
             " ": {},
-        }
+        },
     )
 
 
-@override_style({
-    "bullets": {
-        "default": { "text": "*", "fg": "#505050" },
-        "1": { "text": "-", "fg": "#808080" },
-        "2": { "text": "=", "fg": "#707070" },
-        "3": { "text": "^", "fg": "#606060" },
+@override_style(
+    {
+        "bullets": {
+            "default": {"text": "*", "fg": "#505050"},
+            "1": {"text": "-", "fg": "#808080"},
+            "2": {"text": "=", "fg": "#707070"},
+            "3": {"text": "^", "fg": "#606060"},
+        },
     },
-}, complete=True)
+    complete=True,
+)
 def test_lists_with_newline(style):
     """Test list rendering with a newline between a new nested list and the
     previous list item
@@ -244,22 +256,25 @@ def test_lists_with_newline(style):
             "1": style["bullets"]["1"],
             "2": style["bullets"]["2"],
             " ": {},
-        }
+        },
     )
 
 
-@override_style({
-    "numbering": {
-        "default": { "text": "numeric", "fg": "italics" },
-        "1": { "text": "numeric", "fg": "italics" },
-        "2": { "text": "alpha", "fg": "bold" },
-        "3": { "text": "roman", "fg": "underline" },
+@override_style(
+    {
+        "numbering": {
+            "default": {"text": "numeric", "fg": "italics"},
+            "1": {"text": "numeric", "fg": "italics"},
+            "2": {"text": "alpha", "fg": "bold"},
+            "3": {"text": "roman", "fg": "underline"},
+        },
+        "bullets": {
+            "default": {"text": "*", "fg": "italics"},
+            "3": {"text": "^", "fg": "underline"},
+        },
     },
-    "bullets": {
-        "default": { "text": "*", "fg": "italics" },
-        "3": { "text": "^", "fg": "underline" },
-    },
-}, complete=True)
+    complete=True,
+)
 def test_numbered_lists(style):
     """Test list rendering"""
     utils.validate_render(
@@ -315,17 +330,19 @@ def test_numbered_lists(style):
             "B": style["bullets"]["3"],
             "_": {},
             " ": {},
-        }
+        },
     )
 
 
-@override_style({
-    "hrule": {
-        "text": "=",
-        "fg": "italics",
-        "bg": "#004400",
-    },
-})
+@override_style(
+    {
+        "hrule": {
+            "text": "=",
+            "fg": "italics",
+            "bg": "#004400",
+        },
+    }
+)
 def test_hrule(style):
     """Test that hrules render correctly"""
     utils.validate_render(
@@ -346,32 +363,34 @@ def test_hrule(style):
         styles={
             "x": style["hrule"],
             " ": {},
-        }
+        },
     )
 
 
-@override_style({
-    "quote": {
-        "style": {
-            "fg": "italics",
-            "bg": "#202020",
-        },
-        "border": {
-            "tl_corner": {
-                "text": "██━━──",
-                "fg": "#ff0000",
+@override_style(
+    {
+        "quote": {
+            "style": {
+                "fg": "italics",
+                "bg": "#202020",
             },
-            "l_line": {
-                "text": "┃",
-                "fg": "#00ff00",
+            "border": {
+                "tl_corner": {
+                    "text": "██━━──",
+                    "fg": "#ff0000",
+                },
+                "l_line": {
+                    "text": "┃",
+                    "fg": "#00ff00",
+                },
+                "bl_corner": {
+                    "text": "██━━──",
+                    "fg": "#0000ff",
+                },
             },
-            "bl_corner": {
-                "text": "██━━──",
-                "fg": "#0000ff",
-            },
-        },
+        }
     }
-})
+)
 def test_block_quote(style):
     """Test block quote rendering"""
     utils.validate_render(
@@ -407,7 +426,7 @@ def test_block_quote(style):
             "i": style["quote"]["style"],
             "_": {},
             " ": {},
-        }
+        },
     )
 
 

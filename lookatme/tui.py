@@ -6,7 +6,7 @@ This module defines the text user interface (TUI) for lookatme
 import threading
 import time
 from collections import defaultdict
-from queue import Queue
+from queue import Queue, Empty
 
 import urwid
 
@@ -40,12 +40,12 @@ def root_urwid_widget(to_wrap):
 class SlideRenderer(threading.Thread):
     daemon = True
 
-    def __init__(self, loop):
+    def __init__(self, ctx: Context):
         threading.Thread.__init__(self)
         self.events = defaultdict(threading.Event)
         self.keep_running = threading.Event()
         self.queue = Queue()
-        self.loop = loop
+        self.ctx = ctx
         self.cache = {}
         self._log = lookatme.config.get_log().getChild("RENDER")
 
@@ -82,7 +82,11 @@ class SlideRenderer(threading.Thread):
         """Run the main render thread"""
         self.keep_running.set()
         while self.keep_running.is_set():
-            to_render = self.queue.get()
+            try:
+                to_render = self.queue.get(timeout=0.05)
+            except Empty:
+                continue
+
             slide_num = to_render.number
 
             try:
@@ -154,18 +158,16 @@ class SlideRenderer(threading.Thread):
 
     def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
-        ctx = Context(self.loop)
-        ctx.tokens_push(tokens)
-        with ctx.use_container(tmp_listbox, is_new_block=True):
-            markdown_block.render_all(ctx)
-        ctx.tokens_pop()
+        with self.ctx.use_tokens(tokens):
+            with self.ctx.use_container(tmp_listbox, is_new_block=True):
+                markdown_block.render_all(self.ctx)
 
         return tmp_listbox.body
 
 
 class MarkdownTui(urwid.Frame):
     def __init__(self, pres, start_idx=0):
-        """ """
+        """Create a new MarkdownTui"""
         # self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
         self.slide_body = urwid.ListBox(
             urwid.SimpleFocusListWalker([urwid.Text("test")])
@@ -189,14 +191,18 @@ class MarkdownTui(urwid.Frame):
         self.root_margins = urwid.Padding(self, left=2, right=2)
         self.root_paddings = urwid.Padding(self.slide_body, left=10, right=10)
 
-        root_widget = root_urwid_widget(self.root_margins)
+        self.ctx = Context(None)
+        self.ctx.spec_push(spec_from_style(config.get_style()["slides"]))
+
+        self.root_widget = root_urwid_widget(self.root_margins)
         self.loop = urwid.MainLoop(
-            root_widget,
+            self.ctx.wrap_widget(self.root_widget),
             screen=screen,
         )
+        self.ctx.loop = self.loop
 
         # used to track slides that are being rendered
-        self.slide_renderer = SlideRenderer(self.loop)
+        self.slide_renderer = SlideRenderer(self.ctx)
         self.slide_renderer.start()
 
         self.pres = pres
@@ -225,7 +231,8 @@ class MarkdownTui(urwid.Frame):
             self.curr_slide.number + 1,
             len(self.pres.slides),
         )
-        spec = spec_from_style(config.get_style()["slides"])
+        spec = spec_from_style(config.get_style()["slide_number"])
+        spec = self.ctx.spec_text_with(spec)
         self.slide_num.set_text([(spec, slide_text)])
 
     def update_title(self):
@@ -250,26 +257,30 @@ class MarkdownTui(urwid.Frame):
         if not title:
             return
 
-        ctx = Context(self.loop)
-        with ctx.use_tokens(title):
-            with ctx.use_spec(spec):
-                markdown_block.render_all(ctx)
-        self.slide_title.set_text(ctx.inline_markup_consumed)
+        with self.ctx.use_tokens(title):
+            with self.ctx.use_spec(spec):
+                markdown_block.render_all(self.ctx)
+        self.slide_title.set_text(self.ctx.inline_markup_consumed)
 
     def update_creation(self):
         """Update the author and date"""
         author = self.pres.meta.get("author", "")
         author_spec = spec_from_style(config.get_style()["author"])
+        author_spec = self.ctx.spec_text_with(author_spec)
 
         date = self.pres.meta.get("date", "")
         date_spec = spec_from_style(config.get_style()["date"])
+        date_spec = self.ctx.spec_text_with(date_spec)
 
-        self.creation.set_text(
-            [
-                (author_spec, f"  {author} "),
-                (date_spec, f" {date} "),
-            ]
-        )
+        markups = []
+        if author not in ("", None):
+            markups.append((author_spec, author))
+        if date not in ("", None):
+            if len(markups) > 0:
+                markups.append(" ")
+            markups.append((date_spec, date))
+
+        self.creation.set_text(markups)
 
     def update_body(self):
         """Render the provided slide body"""
@@ -278,6 +289,12 @@ class MarkdownTui(urwid.Frame):
 
     def update_slide_settings(self):
         """Update the slide margins and paddings"""
+        # reset the base spec from the slides settings
+        self.ctx.spec_pop()
+        self.ctx.spec_push(spec_from_style(config.get_style()["slides"]))
+        # re-wrap the root widget with the new styles
+        self.loop.widget = self.ctx.wrap_widget(self.root_widget)
+
         margin = config.get_style()["margin"]
         padding = config.get_style()["padding"]
 

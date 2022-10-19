@@ -224,7 +224,7 @@ def render_blockquote_open(token: Dict, ctx: Context):
     pile = urwid.Pile([])
 
     quote_style = config.get_style()["quote"]
-    border_style =  quote_style["border"]
+    border_style = quote_style["border"]
 
     inner_spec = ctx.spec_text_with(utils.spec_from_style(quote_style["style"]))
 

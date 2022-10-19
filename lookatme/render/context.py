@@ -51,7 +51,7 @@ class TokenIterator:
 class Context:
     """ """
 
-    def __init__(self, loop):
+    def __init__(self, loop: None | urwid.MainLoop):
         self.container_stack: List[ContainerInfo] = []
         self.loop = loop
         self.tag_stack = []

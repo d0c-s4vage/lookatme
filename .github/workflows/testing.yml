@@ -2,9 +2,11 @@ name: "testing"
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - "main"
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - "*.*-dev"
 
 jobs:
   isort:
