@@ -97,6 +97,30 @@ A quote is below:
 
 ---
 
+# Progressive Slides
+
+Add a `<!-- stop -->` comment between paragraphs to progressively render
+the current slide!
+
+For example, the markdown in the codeblock below is used at the end of this
+slide:
+
+```markdown
+paragraph 1
+
+<!-- stop -->
+
+paragraph 2
+```
+
+paragraph 1
+
+<!-- stop -->
+
+paragraph 2
+
+---
+
 # Extensions
 
 lookatme supports extensions that can add additional functionality to lookatme

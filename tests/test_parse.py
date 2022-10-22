@@ -76,8 +76,33 @@ code block
 More text
     """
     parser = Parser()
-    slides = parser.parse_slides({}, input_data)
+    _, slides = parser.parse_slides({}, input_data)
     assert len(slides) == 2
+
+
+def test_parse_slides_with_progressive_stops_and_hrule_splits():
+    """Test that slide parsing works correctly
+    """
+    input_data = r"""
+# Heading
+
+<!-- stop -->
+
+p1
+
+<!-- stop -->
+
+p2
+
+---
+
+# Slide 2
+
+More text
+    """
+    parser = Parser()
+    _, slides = parser.parse_slides({}, input_data)
+    assert len(slides) == 4
 
 
 def test_parse_smart_slides_one_h1():

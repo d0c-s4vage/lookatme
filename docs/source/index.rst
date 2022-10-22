@@ -67,6 +67,25 @@ A basic, optional YAML header may be included at the top of the slides:
 
     Some text
 
+Slides can be progressively rendered by adding ``<!-- stop -->`` comments
+between block elements (paragraphs, tables, lists, etc.):
+
+.. code-block:: md
+
+   # Progressive Slide
+
+   <!-- stop -->
+
+   Paragraph 1
+
+   <!-- stop -->
+
+   Paragraph 2
+
+   <!-- stop -->
+
+   Paragraph 3
+
 .. toctree::
   :maxdepth: 2
 
