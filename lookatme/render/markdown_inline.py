@@ -8,9 +8,9 @@ import functools
 
 import lookatme.config as config
 import lookatme.render.pygments as pygments_render
-from lookatme.tutorial import tutor
 import lookatme.utils as utils
 from lookatme.contrib import contrib_first
+from lookatme.tutorial import tutor
 from lookatme.widgets.clickable_text import LinkIndicatorSpec
 
 options = {}

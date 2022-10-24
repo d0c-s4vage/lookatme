@@ -11,6 +11,7 @@ import mistune
 
 from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
+from lookatme.tutorial import tutor
 
 
 def is_progressive_slide_delimiter_token(token):
@@ -85,7 +86,7 @@ class Parser(object):
             def slide_split_check(token):
                 return token["type"] == "hrule"
 
-            def heading_mod(token):
+            def heading_mod(_):
                 pass
             keep_split_token = False
 
@@ -129,6 +130,40 @@ class Parser(object):
 
         return slides
 
+    @tutor(
+        "general",
+        "slides splitting",
+        r"""
+        Slides can be:
+
+        ## Separated by horizontal rules (three or more `*`, `-`, or `_`)
+
+        ```markdown
+        slide 1
+        ***
+        slide 2
+        ```
+
+        <!-- stop -->
+
+        ## Split using existing headings ("smart" splitting)
+
+        ```markdown
+        # Slide 1
+
+        # Slide 2
+        ```
+
+        <!-- stop -->
+
+        ## Rendered as a single slide with the `--single` or `--one` CLI parameter
+
+        ```bash
+        lookatme --single content.md
+        ```
+        """,
+        order=2,
+    )
     def _scan_for_smart_split(self, tokens):
         """Scan the provided tokens for the number of hrules, and the lowest
         (h1 < h2) header level.
@@ -167,6 +202,33 @@ class Parser(object):
 
         return num_hrules, hinfo
 
+    @tutor(
+        "general",
+        "metadata",
+        r"""
+        The YAML metadata that can be prefixed in slides includes these top level
+        fields:
+
+        ```yaml
+        ---
+        title: "title"
+        date: "date"
+        author: "author"
+        extensions:
+          - extension 1
+          # .. list of extensions
+        styles:
+          # .. nested style fields ..
+        ---
+        ```
+
+        > **NOTE** Extensions are explained later in the tutorial
+        >
+        > **NOTE** The `styles` field will be explained in detail with each markdown
+        > element.
+        """,
+        order=3,
+    )
     def parse_meta(self, input_data) -> Tuple[AnyStr, Dict]:
         """Parse the PresentationMeta out of the input data
 

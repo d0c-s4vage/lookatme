@@ -14,8 +14,9 @@ import urwid
 import lookatme.config
 import lookatme.config as config
 import lookatme.contrib
-import lookatme.render.markdown_block as lam_md
+import lookatme.render.markdown_block as markdown_block
 from lookatme.contrib import contrib_first
+from lookatme.tutorial import tutor
 from lookatme.utils import pile_or_listbox_add, spec_from_style
 
 
@@ -157,6 +158,31 @@ class SlideRenderer(threading.Thread):
 
         return res
 
+    @tutor(
+        "general",
+        "markdown supported features",
+        r"""
+        Lookatme supports most markdown features.
+
+        |                         Supported | Not (yet) Supported |
+        |----------------------------------:|---------------------|
+        |                            Tables | Footnotes           |
+        |                          Headings | *Images             |
+        |                        Paragraphs | Inline HTML         |
+        |                      Block quotes |                     |
+        |                     Ordered lists |                     |
+        |                   Unordered lists |                     |
+        | Code blocks & syntax highlighting |                     |
+        |                 Inline code spans |                     |
+        |                   Double emphasis |                     |
+        |                   Single Emphasis |                     |
+        |                     Strikethrough |                     |
+        |                             Links |                     |
+
+        \*Images may be supported through extensions
+        """,
+        order=4,
+    )
     def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
         stack = [tmp_listbox]
@@ -166,7 +192,7 @@ class SlideRenderer(threading.Thread):
             last_stack = stack[-1]
             last_stack_len = len(stack)
 
-            render_token = getattr(lam_md, f"render_{token['type']}")
+            render_token = getattr(markdown_block, f"render_{token['type']}")
             res = render_token(token, stack[-1], stack, self.loop)
             if len(stack) > last_stack_len:
                 self._propagate_meta(last_stack, stack[-1])
@@ -243,6 +269,49 @@ class MarkdownTui(urwid.Frame):
         spec = spec_from_style(config.get_style()["slides"])
         self.slide_num.set_text([(spec, slide_text)])
 
+    @tutor(
+        "general",
+        "title",
+        r"""
+        Notice the **title** up top *↑*  You can set it through
+
+        ## 1. Smart Slide Splitting
+
+        The first, lowest-level heading becomes the title, the next highest level
+        splits the slides
+
+        ```md
+        # My title
+
+        ## Slide 1
+
+        contents
+        ```
+
+        <!-- stop -->
+
+        ## 2. Metadata
+
+        Set the title explicitly through YAML metadata at the start of the slide:
+
+        ```md
+        ---
+        title: My title
+        ---
+
+        # Slide 1
+
+        Slide contents
+        ```
+
+        <!-- stop -->
+
+        > **NOTE** Metadata and styling will be covered later in this tutorial
+        >
+        > **NOTE** `h | k | delete | backspace | left arrow` reverse the slides
+        """,
+        order=1,
+    )
     def update_title(self):
         """Update the title
         """

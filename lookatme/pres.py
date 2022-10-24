@@ -14,9 +14,27 @@ import lookatme.prompt
 import lookatme.themes
 import lookatme.tui
 from lookatme.parser import Parser
-from lookatme.utils import dict_deep_update
+from lookatme.tutorial import tutor
 
 
+@tutor(
+    "general",
+    "intro",
+    r"""
+    `lookatme` is a terminal-based markdown presentation tool.
+
+    That means that you can:
+
+     | Write                 | Render          | Use                            |
+     |-----------------------|-----------------|--------------------------------|
+     | basic markdown slides | in the terminal | anywhere with markdown support |
+
+    > **NOTE** `l | j | right arrow` advance the slides
+    >
+    > **NOTE** `q` quits
+    """,
+    order=0,
+)
 class Presentation(object):
     """Defines a presentation
     """
@@ -107,8 +125,7 @@ class Presentation(object):
                 self.ignore_ext_failure,
             )
 
-        
-        lookatme.config.set_global_style_with_precedence(
+        self.styles = lookatme.config.set_global_style_with_precedence(
             self.theme_mod,
             self.meta.get("styles", {}),
             self.style_override,

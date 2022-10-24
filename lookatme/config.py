@@ -5,15 +5,13 @@ Config module for lookatme
 
 import logging
 import os
-from typing import Dict, Optional
-
+from typing import Any, Dict
 
 import lookatme.themes
 from lookatme.utils import dict_deep_update
 
-
 LOG = None
-STYLE: Optional[Dict] = None
+STYLE: Dict[str, Any] = {}
 
 
 def get_log() -> logging.Logger:
@@ -23,8 +21,8 @@ def get_log() -> logging.Logger:
 
 
 def get_style() -> Dict:
-    if STYLE is None:
-        raise Exception("STYLE was None!")
+    if not STYLE:
+        raise Exception("STYLE was empty!")
     return STYLE
 
 
@@ -40,9 +38,13 @@ def get_style_with_precedence(theme_mod, direct_overrides, style_override):
 
     return styles
 
-def set_global_style_with_precedence(theme_mod, direct_overrides, style_override):
+
+def set_global_style_with_precedence(theme_mod, direct_overrides, style_override) -> Dict[str, Any]:
     global STYLE
-    STYLE = get_style_with_precedence(theme_mod, direct_overrides, style_override)
+    STYLE = get_style_with_precedence(
+        theme_mod, direct_overrides, style_override)
+
+    return STYLE
 
 
 # default to the current working directory - this will be set later by

@@ -43,6 +43,8 @@ setup(
     entry_points={
         "console_scripts": [
             "lookatme = lookatme.__main__:main",
+            "lam = lookatme.__main__:main",
+            "witnessme = lookatme.__main__:main",
         ]
     },
 )

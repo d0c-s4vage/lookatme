@@ -8,13 +8,12 @@ import mistune
 import pygments
 import urwid
 
-
-from lookatme.tutorial import tutor
 import lookatme.config as config
 import lookatme.render.markdown_inline as markdown_inline_renderer
 import lookatme.render.pygments as pygments_render
 import lookatme.utils as utils
 from lookatme.contrib import contrib_first
+from lookatme.tutorial import tutor
 from lookatme.widgets.clickable_text import ClickableText
 
 
@@ -28,14 +27,12 @@ def _meta(item):
 
 
 def _set_is_list(item, level=1, ordered=False):
-    _meta(item).update(
-        {
-            "is_list": True,
-            "list_level": level,
-            "ordered": ordered,
-            "item_count": 0,
-        }
-    )
+    _meta(item).update({
+        "is_list": True,
+        "list_level": level,
+        "ordered": ordered,
+        "item_count": 0,
+    })
 
 
 def _inc_item_count(item):
@@ -69,8 +66,8 @@ def render_hrule(token, body, stack, loop):
     value descriptions.
     """
     hrule_conf = config.get_style()["hrule"]
-    div = urwid.Divider(hrule_conf["char"], top=1, bottom=1)
-    return urwid.Pile([urwid.AttrMap(div, utils.spec_from_style(hrule_conf["style"]))])
+    div = urwid.Divider(hrule_conf['char'], top=1, bottom=1)
+    return urwid.Pile([urwid.AttrMap(div, utils.spec_from_style(hrule_conf['style']))])
 
 
 @tutor(
@@ -148,8 +145,7 @@ def render_heading(token, body, stack, loop):
     return [
         urwid.Divider(),
         ClickableText(
-            [prefix] + utils.styled_text(rendered, style) + [suffix]
-        ),  # type: ignore
+            [prefix] + utils.styled_text(rendered, style) + [suffix]),  # type: ignore
         urwid.Divider(),
     ]
 
@@ -158,15 +154,19 @@ def render_heading(token, body, stack, loop):
     "markdown",
     "tables",
     r"""
-    The tables 
+    Rows in tables are defined by separating columns with `|` characters. The
+    header row is the first row defined and is separated by hypens (`---`).
+
+    Alignment within a column can be set by adding a colon, `:`, to the left,
+    right, or both ends of a header's separator.
 
     <TUTOR:EXAMPLE>
-    | header 1 |   h2  |    3 |
-    |----------|:-----:|-----:|
-    | 1        |   a   |    A |
-    | 11       |   aa  |   AA |
-    | 111      |  aaa  |  AAA |
-    | 1111     | aaaaa | AAAA |
+    | left align | centered | right align |
+    |------------|:--------:|------------:|
+    | 1          |     a    |           A |
+    | 11         |    aa    |          AA |
+    | 111        |    aaa   |         AAA |
+    | 1111       |   aaaaa  |        AAAA |
     </TUTOR:EXAMPLE>
 
     ## Style
@@ -225,9 +225,9 @@ def render_list_start(token, body, stack, loop):
     list_level = 1
     if in_list:
         list_level = _list_level(stack[-1]) + 1
-    _set_is_list(res, list_level, ordered=token["ordered"])
-    _meta(res)["list_start_token"] = token
-    _meta(res)["max_list_marker_width"] = token.get("max_list_marker_width", 2)
+    _set_is_list(res, list_level, ordered=token['ordered'])
+    _meta(res)['list_start_token'] = token
+    _meta(res)['max_list_marker_width'] = token.get('max_list_marker_width', 2)
     stack.append(res)
 
     widgets = []
@@ -247,7 +247,7 @@ def render_list_end(token, body, stack, loop):
     value descriptions.
     """
     meta = _meta(stack[-1])
-    meta["list_start_token"]["max_list_marker_width"] = meta["max_list_marker_width"]
+    meta['list_start_token']['max_list_marker_width'] = meta['max_list_marker_width']
     stack.pop()
 
 
@@ -371,12 +371,10 @@ def _list_item_start(token, body, stack, loop):
     marker_col_width = meta["max_list_marker_width"]
 
     res = urwid.Text(("bold", marker_text))
-    res = urwid.Columns(
-        [
-            (marker_col_width, urwid.Text(("bold", marker_text))),
-            pile,
-        ]
-    )
+    res = urwid.Columns([
+        (marker_col_width, urwid.Text(("bold", marker_text))),
+        pile,
+    ])
     stack.append(pile)
     return res
 
@@ -560,14 +558,9 @@ def render_block_quote_start(token, body, stack, loop):
                 urwid.Padding(pile, left=2),
                 utils.spec_from_style(quote_style),
             ),
-            lline=quote_side,
-            rline="",
-            tline=" ",
-            trcorner="",
-            tlcorner=quote_top_corner,
-            bline=" ",
-            brcorner="",
-            blcorner=quote_bottom_corner,
+            lline=quote_side, rline="",
+            tline=" ", trcorner="", tlcorner=quote_top_corner,
+            bline=" ", brcorner="", blcorner=quote_bottom_corner,
         ),
         urwid.Divider(),
     ]
@@ -634,4 +627,8 @@ def render_code(token, body, stack, loop):
     text = token["text"]
     res = pygments_render.render_text(text, lang=lang)
 
-    return [urwid.Divider(), res, urwid.Divider()]
+    return [
+        urwid.Divider(),
+        res,
+        urwid.Divider()
+    ]
