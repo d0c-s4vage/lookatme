@@ -5,7 +5,7 @@ Functions and sources for the markdown tutorial slides!
 import inspect
 import re
 from collections import OrderedDict
-from typing import Callable, List, Optional, Union
+from typing import Callable, List, Union
 
 import yaml
 
@@ -74,6 +74,9 @@ class Tutor:
 
     def _get_source_link(self):
         file_name = inspect.getsourcefile(inspect.unwrap(self.impl_fn))
+        if file_name is None:
+            return "??"
+
         relpath = file_name.split("lookatme/", 1)[1]
         _, lineno = inspect.getsourcelines(self.impl_fn)
 
@@ -145,7 +148,7 @@ def print_tutorial_help():
     """).strip())
 
 
-def tutor(group: str, name: str, slides_md: str, order: Optional[int] = 99999):
+def tutor(group: str, name: str, slides_md: str, order: int = 99999):
     """Define tutorial slides by using this as a decorator on a function!"""
     def capture_fn(fn):
         tutor = Tutor(name, group, slides_md, fn, order)

@@ -3,7 +3,7 @@ This module tests contrib-specific functionality
 """
 
 import urwid
-from six.moves import StringIO, reload_module
+from six.moves import StringIO, reload_module  # type: ignore
 
 import lookatme.config
 import lookatme.contrib

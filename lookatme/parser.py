@@ -68,14 +68,14 @@ class Parser(object):
             if meta.get("title", "") in ["", None]:
                 meta["title"] = hinfo["title"]
 
-            def slide_split_check(token):
+            def slide_split_check(token):  # type: ignore
                 nonlocal hinfo
                 return (
                     token["type"] == "heading"
                     and token["level"] == hinfo["lowest_non_title"]
                 )
 
-            def heading_mod(token):
+            def heading_mod(token):  # type: ignore
                 nonlocal hinfo
                 token["level"] = max(
                     token["level"] - (hinfo["title_level"] or 0),
@@ -83,10 +83,10 @@ class Parser(object):
                 )
             keep_split_token = True
         else:
-            def slide_split_check(token):
+            def slide_split_check(token):  # type: ignore
                 return token["type"] == "hrule"
 
-            def heading_mod(_):
+            def heading_mod(_):  # type: ignore
                 pass
             keep_split_token = False
 

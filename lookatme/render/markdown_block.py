@@ -6,6 +6,7 @@ representations
 
 import mistune
 import pygments
+import pygments.styles
 import urwid
 
 import lookatme.config as config

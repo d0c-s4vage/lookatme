@@ -5,6 +5,7 @@ Config module for lookatme
 
 import logging
 import os
+from types import ModuleType
 from typing import Any, Dict
 
 import lookatme.themes
@@ -26,7 +27,13 @@ def get_style() -> Dict:
     return STYLE
 
 
-def get_style_with_precedence(theme_mod, direct_overrides, style_override):
+def get_style_with_precedence(
+    theme_mod: ModuleType,
+    direct_overrides: Dict,
+    style_override: str
+) -> Dict[str, Any]:
+    """Return the resulting style dict from the provided override values.
+    """
     # style override order:
     # 1. theme settings
     styles = lookatme.themes.ensure_defaults(theme_mod)
@@ -39,7 +46,14 @@ def get_style_with_precedence(theme_mod, direct_overrides, style_override):
     return styles
 
 
-def set_global_style_with_precedence(theme_mod, direct_overrides, style_override) -> Dict[str, Any]:
+def set_global_style_with_precedence(
+    theme_mod,
+    direct_overrides,
+    style_override
+) -> Dict[str, Any]:
+    """Set the lookatme.config.STYLE value based on the provided override
+    values
+    """
     global STYLE
     STYLE = get_style_with_precedence(
         theme_mod, direct_overrides, style_override)
