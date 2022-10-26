@@ -27,23 +27,17 @@ function replace_in_files {
     local replacement="$2"
 
     log "==== Replacing $placeholder"
-    log "placeholder: $placeholder"
-    log "replacement: $replacement"
-    log "Files with $placeholder:"
     (
         cd "$DIR"/..
-        grep -rl "$placeholder" . | grep -v bin/fill_placeholders
+        log "Files with $placeholder:"
+        grep -rl "$placeholder" . | grep -v bin/fill_placeholders | grep -v "\.git"
         files_to_replace=$(grep -rl "$placeholder" . \ | grep -v bin/fill_placeholders)
         python3 <(cat <<-EOF
 import sys
 
-print(repr(sys.argv))
 placeholder = sys.argv[1]
 replacement = sys.argv[2]
 files_to_replace = sys.argv[3:]
-print("PLACEHOLDER: " + repr(placeholder))
-print("REPLACEMENT: " + repr(replacement))
-print("FILES TO REPLACE: " + str(files_to_replace))
 
 for file in files_to_replace:
     with open(file, "r") as f:
@@ -55,7 +49,7 @@ for file in files_to_replace:
 EOF
         ) "$placeholder" "$replacement" $files_to_replace
         log "Files with $placeholder after replacing:"
-        grep -rl "$placeholder" . | grep -v bin/fill_placeholders || true
+        grep -rl "$placeholder" . | grep -v bin/fill_placeholders | grep -v "\.git" || true
     )
 }
 
