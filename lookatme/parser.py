@@ -5,9 +5,8 @@ This module defines the parser for the markdown presentation file
 
 import re
 from collections import defaultdict
-from typing import AnyStr, Callable, Dict, List, Tuple
-
 import mistune
+from typing import AnyStr, Callable, Dict, List, Tuple
 
 from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
@@ -144,8 +143,6 @@ class Parser(object):
         slide 2
         ```
 
-        <!-- stop -->
-
         ## Split using existing headings ("smart" splitting)
 
         ```markdown
@@ -153,8 +150,6 @@ class Parser(object):
 
         # Slide 2
         ```
-
-        <!-- stop -->
 
         ## Rendered as a single slide with the `--single` or `--one` CLI parameter
 
@@ -269,6 +264,24 @@ class Parser(object):
         data = MetaSchema().loads_partial_styles(yaml_data, partial=True)
         return new_input, data
 
+    @tutor(
+        "general",
+        "progressive slides",
+        r"""
+        Slides can be progressively displayed by inserting `<!-- stop -->`
+        comments between block elemtents (as in, inline within some other
+        markdown element).
+
+        <TUTOR:EXAMPLE>
+        This will display first, and after you press advance ...
+
+        <!-- stop -->
+
+        This will display!
+        </TUTOR:EXAMPLE>
+        """,
+        order=2,
+    )
     def _create_slides(self, tokens, number):
         """Iterate on tokens and create slides out of them. Can create multiple
         slides if the tokens contain progressive slide delimiters.
