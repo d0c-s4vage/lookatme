@@ -54,9 +54,7 @@ class Tutor:
             slides_md = slides_md.format(**self.lazy_formatting())
 
         tag_handlers = {
-            "EXAMPLE": (
-                lambda contents: self._handle_show_and_render(contents, rendered_example),
-            ),
+            "EXAMPLE": lambda contents: self._handle_show_and_render(contents, rendered_example),
             "STYLE": self._handle_style_yaml,
         }
 

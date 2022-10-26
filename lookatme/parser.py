@@ -5,8 +5,9 @@ This module defines the parser for the markdown presentation file
 
 import re
 from collections import defaultdict
-import mistune
 from typing import AnyStr, Callable, Dict, List, Tuple
+
+import mistune
 
 from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
@@ -217,8 +218,6 @@ class Parser(object):
         ---
         ```
 
-        > **NOTE** Extensions are explained later in the tutorial
-        >
         > **NOTE** The `styles` field will be explained in detail with each markdown
         > element.
         """,
