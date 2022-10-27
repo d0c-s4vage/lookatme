@@ -24,6 +24,7 @@ tool.
 ## Features
 
 * Markdown rendering
+* Built-in tutorial slides `lookatme --tutorial`
 * Live (input file modification time watching) and manual reloading
 * Live terminals embedded directly in slides
 * Syntax highlighting using [Pygments](https://pygments.org/)
@@ -32,7 +33,12 @@ tool.
 * Smart slide splitting
 * Progressive slides with `<!-- stop -->` comments between block elements
 
-### Tour
+### Tutorial
+
+```bash
+pip install --upgrade lookatme
+lookatme --tutorial
+```
 
 General tour
 
@@ -64,11 +70,15 @@ Usage: lookatme [OPTIONS] [INPUT_FILES]...
 
   lookatme - An interactive, terminal-based markdown presentation tool.
 
-  See https://lookatme.readthedocs.io/en/v2.4.1 for documentation
+  See https://lookatme.readthedocs.io/en/v{{VERSION}} for documentation
 
 Options:
   --debug
   -l, --log PATH
+  --tutorial TEXT                 As a flag: show all tutorials. With a
+                                  value/comma-separated values: show the
+                                  specific tutorials. Use the value 'help' for
+                                  more help
   -t, --theme [dark|light]
   --style [default|emacs|friendly|friendly_grayscale|colorful|autumn|murphy|manni|material|monokai|perldoc|pastie|borland|trac|native|fruity|bw|vim|vs|tango|rrt|xcode|igor|paraiso-light|paraiso-dark|lovelace|algol|algol_nu|arduino|rainbow_dash|abap|solarized-dark|solarized-light|sas|staroffice|stata|stata-light|stata-dark|inkpot|zenburn|gruvbox-dark|gruvbox-light|dracula|one-dark|lilypond|nord|nord-darker|github-dark]
   --dump-styles                   Dump the resolved styles that will be used

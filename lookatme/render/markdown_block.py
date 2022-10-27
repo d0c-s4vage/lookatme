@@ -5,6 +5,8 @@ representations
 
 
 import mistune
+import pygments
+import pygments.styles
 import urwid
 
 import lookatme.config as config
@@ -12,6 +14,7 @@ import lookatme.render.markdown_inline as markdown_inline_renderer
 import lookatme.render.pygments as pygments_render
 import lookatme.utils as utils
 from lookatme.contrib import contrib_first
+from lookatme.tutorial import tutor
 from lookatme.widgets.clickable_text import ClickableText
 
 
@@ -68,6 +71,26 @@ def render_hrule(token, body, stack, loop):
     return urwid.Pile([urwid.AttrMap(div, utils.spec_from_style(hrule_conf['style']))])
 
 
+@tutor(
+    "markdown",
+    "headings",
+    r"""
+    Headings are specified by prefixing text with `#` characters:
+
+    <TUTOR:EXAMPLE>
+    ## Heading Level 2
+    ### Heading Level 3
+    #### Heading Level 4
+    ##### Heading Level 5
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Headings can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>headings</TUTOR:STYLE>
+    """,
+)
 @contrib_first
 def render_heading(token, body, stack, loop):
     """Render markdown headings, using the defined styles for the styling and
@@ -128,6 +151,32 @@ def render_heading(token, body, stack, loop):
     ]
 
 
+@tutor(
+    "markdown",
+    "tables",
+    r"""
+    Rows in tables are defined by separating columns with `|` characters. The
+    header row is the first row defined and is separated by hypens (`---`).
+
+    Alignment within a column can be set by adding a colon, `:`, to the left,
+    right, or both ends of a header's separator.
+
+    <TUTOR:EXAMPLE>
+    | left align | centered | right align |
+    |------------|:--------:|------------:|
+    | 1          |     a    |           A |
+    | 11         |    aa    |          AA |
+    | 111        |    aaa   |         AAA |
+    | 1111       |   aaaaa  |        AAAA |
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Tables can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>table</TUTOR:STYLE>
+    """,
+)
 @contrib_first
 def render_table(token, body, stack, loop):
     """Renders a table using the :any:`Table` widget.
@@ -203,6 +252,80 @@ def render_list_end(token, body, stack, loop):
     stack.pop()
 
 
+@tutor(
+    "markdown",
+    "ordered lists",
+    r"""
+    Ordered lists are lines of text prefixed by a `N. ` or `N)`, where `N` is
+    any number.
+
+    <TUTOR:EXAMPLE>
+    1. item
+    1. item
+        1. item
+            5. item
+            6. item
+        1. item
+    1. item
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Ordered lists can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>numbering</TUTOR:STYLE>
+    """
+)
+@tutor(
+    "markdown",
+    "unordered lists",
+    r"""
+    Unordered lists are lines of text starting with either `*`, `+`, or `-`.
+
+    <TUTOR:EXAMPLE>
+    * item
+    * item
+        * item
+            * item
+            * item
+        * item
+    * item
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Unordered lists can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>bullets</TUTOR:STYLE>
+    """
+)
+@tutor(
+    "markdown",
+    "lists",
+    r"""
+    Lists can either be ordered or unordered. You can nest lists by indenting
+    child lists by four spaces.
+
+    Other markdown elements can also be nested in lists.
+
+    <TUTOR:EXAMPLE>
+    1. item
+       > quote
+    1. item
+        * item
+            1. item
+               a paragraph
+
+               More text here blah blah blah
+            1. A new item
+        * item
+           ```python
+           print("hello")
+           ```
+    1. item
+    </TUTOR:EXAMPLE>
+    """
+)
 def _list_item_start(token, body, stack, loop):
     """Render the start of a list item. This function makes use of two
     different styles, one each for unordered lists (bullet styles) and ordered
@@ -246,7 +369,7 @@ def _list_item_start(token, body, stack, loop):
     marker_text = list_marker + " "
     if len(marker_text) > meta["max_list_marker_width"]:
         meta["max_list_marker_width"] = len(marker_text)
-    marker_col_width = meta['max_list_marker_width']
+    marker_col_width = meta["max_list_marker_width"]
 
     res = urwid.Text(("bold", marker_text))
     res = urwid.Columns([
@@ -342,6 +465,23 @@ def render_text(token=None, body=None, stack=None, loop=None, text=None):
     return widget_list
 
 
+@tutor(
+    "markdown",
+    "paragraph",
+    r"""
+    Paragraphs in markdown are simply text with a full empty line between them:
+
+    <TUTOR:EXAMPLE>
+    paragraph 1
+
+    paragraph 2
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Paragraphs cannot be styled in lookatme.
+    """,
+)
 @contrib_first
 def render_paragraph(token, body, stack, loop):
     """Renders the provided text with additional pre and post paddings.
@@ -354,6 +494,33 @@ def render_paragraph(token, body, stack, loop):
     return [urwid.Divider()] + res + [urwid.Divider()]
 
 
+@tutor(
+    "markdown",
+    "block quote",
+    r"""
+    Block quotes are lines of markdown prefixed with `> `. Block quotes can
+    contain text, other markdown, and can even be nested!
+
+    <TUTOR:EXAMPLE>
+    > Some quoted text
+    > > > > # Heading
+    > > > >
+    > > > *hello world*
+    > > >
+    > > ~~apples~~
+    > >
+    > space chips
+    </TUTOR:EXAMPLE>
+
+
+
+    ## Style
+
+    Block quotes can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>quote</TUTOR:STYLE>
+    """
+)
 @contrib_first
 def render_block_quote_start(token, body, stack, loop):
     """Begins rendering of a block quote. Pushes a new ``urwid.Pile()`` to the
@@ -417,6 +584,39 @@ def render_block_quote_end(token, body, stack, loop):
         pile.contents = pile.contents[:-1]
 
 
+@tutor(
+    "markdown",
+    "code blocks",
+    r"""
+    Multi-line code blocks are either surrounded by "fences" (three in a row of
+    either `\`` or `~`), or are lines of text indented at least four spaces.
+
+    Fenced codeblocks let you specify the language of the code:
+
+    <TUTOR:EXAMPLE>
+    ```python
+    def hello_world():
+        print("Hello, world!\n")
+    ```
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    The syntax highlighting style used to highlight the code block can be
+    specified in the markdown metadata:
+
+    <TUTOR:STYLE>style</TUTOR:STYLE>
+
+    Valid values for the `style` field come directly from pygments. In the
+    version of pygments being used as you read this, the list of valid values is:
+
+    {pygments_values}
+
+    > **NOTE** This style name is confusing and will be renamed in lookatme v3.0+
+    """.format(
+        pygments_values=" ".join(pygments.styles.get_all_styles()),
+    )
+)
 @contrib_first
 def render_code(token, body, stack, loop):
     """Renders a code block using the Pygments library.

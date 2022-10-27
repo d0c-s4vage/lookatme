@@ -10,6 +10,7 @@ import lookatme.config as config
 import lookatme.render.pygments as pygments_render
 import lookatme.utils as utils
 from lookatme.contrib import contrib_first
+from lookatme.tutorial import tutor
 from lookatme.widgets.clickable_text import LinkIndicatorSpec
 
 options = {}
@@ -99,6 +100,23 @@ def footnote_ref(key, index):
     return render_no_change(key)
 
 
+@tutor(
+    "markdown",
+    "images",
+    r"""
+    Vanilla lookatme renders images as links. Some extensions provide ways to
+    render images in the terminal.
+
+    Consider exploring:
+
+    * [lookatme.contrib.image_ueberzug](https://github.com/d0c-s4vage/lookatme.contrib.image_ueberzug)
+      * This works on Linux only, with X11, and must be separately installed
+
+    <TUTOR:EXAMPLE>
+    ![image alt](https://image/url)
+    </TUTOR:EXAMPLE>
+    """
+)
 @contrib_first
 def image(link_uri, title, text):
     """Renders an image as a link. This would be a cool extension to render
@@ -110,6 +128,23 @@ def image(link_uri, title, text):
     return link(link_uri, title, text)
 
 
+@tutor(
+    "markdown",
+    "links",
+    r"""
+    Links are inline elements in markdown and have the form `[text](link)`
+
+    <TUTOR:EXAMPLE>
+    [lookatme on GitHub](https://github.com/d0c-s4vage/lookatme)
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Links can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>link</TUTOR:STYLE>
+    """
+)
 @contrib_first
 def link(link_uri, title, link_text):
     """Renders a link. This function does a few special things to make the
@@ -137,17 +172,15 @@ def link(link_uri, title, link_text):
     return [(spec, text)]
 
 
-@expanded_styles
-@contrib_first
-def double_emphasis(text, old_styles):
-    """Renders double emphasis. Handles both ``**word**`` and ``__word__``
-
-    :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
-        tuples.
+@tutor(
+    "markdown",
+    "emphasis",
+    r"""
+    <TUTOR:EXAMPLE>
+    The donut jumped *under* the crane.
+    </TUTOR:EXAMPLE>
     """
-    return [utils.styled_text(text, "underline", old_styles)]
-
-
+)
 @expanded_styles
 @contrib_first
 def emphasis(text, old_styles):
@@ -159,6 +192,36 @@ def emphasis(text, old_styles):
     return [utils.styled_text(text, "italics", old_styles)]
 
 
+@tutor(
+    "markdown",
+    "double emphasis",
+    r"""
+    <TUTOR:EXAMPLE>
+    They jumped **over** the wagon
+    </TUTOR:EXAMPLE>
+    """
+)
+@expanded_styles
+@contrib_first
+def double_emphasis(text, old_styles):
+    """Renders double emphasis. Handles both ``**word**`` and ``__word__``
+
+    :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
+        tuples.
+    """
+    return [utils.styled_text(text, "underline", old_styles)]
+
+
+@tutor(
+    "markdown",
+    "inline code",
+    r"""
+    <TUTOR:EXAMPLE>
+    The `OddOne` class accepts `Table` instances, converts them to raw pointers,
+    forces garbage collection to run.
+    </TUTOR:EXAMPLE>
+    """
+)
 @expanded_styles
 @contrib_first
 def codespan(text, old_styles):
@@ -186,6 +249,15 @@ def linebreak():
     return ["\n"]
 
 
+@tutor(
+    "markdown",
+    "strikethrough",
+    r"""
+    <TUTOR:EXAMPLE>
+    I lost my ~~mind~~ keyboard and couldn't type anymore.
+    </TUTOR:EXAMPLE>
+    """
+)
 @expanded_styles
 @contrib_first
 def strikethrough(text, old_styles):
