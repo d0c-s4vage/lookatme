@@ -29,9 +29,7 @@ function replace_in_files {
     log "==== Replacing $placeholder"
     (
         cd "$DIR"/..
-        log "Files with $placeholder:"
-        grep -rl "$placeholder" . | grep -v bin/fill_placeholders | grep -v "\.git"
-        files_to_replace=$(grep -rl "$placeholder" . \ | grep -v bin/fill_placeholders)
+        files_to_replace=$(grep -rl "$placeholder" $(git ls-files) | grep -v bin/fill_placeholders)
         python3 <(cat <<-EOF
 import sys
 
@@ -43,18 +41,17 @@ for file in files_to_replace:
     with open(file, "r") as f:
         data = f.read()
 
-    data = data.replace(placeholder, replacement)
+    new_data = data.replace(placeholder, replacement)
+    if new_data != data:
+        print("    replacing {}".format(file))
     with open(file, "w") as f:
-        f.write(data)
+        f.write(new_data)
 EOF
         ) "$placeholder" "$replacement" $files_to_replace
-        log "Files with $placeholder after replacing:"
-        grep -rl "$placeholder" . | grep -v bin/fill_placeholders | grep -v "\.git" || true
     )
 }
 
 function set_version {
-    echo replace_in_files "{{VERSION}}" "$VERSION"
     replace_in_files "{{VERSION}}" "$VERSION"
 }
 
