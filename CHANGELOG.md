@@ -1,5 +1,6 @@
 # Changelog
 
+- [v2.5.0](#v250)
 - [v2.4.1](#v241)
 - [v2.4.0](#v240)
 - [v2.3.2](#v232)
@@ -20,6 +21,15 @@
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+## v2.5.0
+
+Adds the `--tutorial` CLI option.
+
+|    type | PR/ticket                                                | author                                       | description                               |
+|--------:|----------------------------------------------------------|----------------------------------------------|-------------------------------------------|
+| feature | [#169](https://github.com/d0c-s4vage/lookatme/issue/169) | [@d0c-s4vage](https://github.com/d0c-s4vage) | Adds the `--tutorial` CLI option          |
+|     bug | [#168](https://github.com/d0c-s4vage/lookatme/issue/168) | [@d0c-s4vage](https://github.com/d0c-s4vage) | Adds documentation for progressive slides |
 
 ## v2.4.1
 
