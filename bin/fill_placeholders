@@ -86,5 +86,6 @@ function parse_args {
 }
 
 parse_args "$@"
-set_version
+# needs to come first, can contain {{VERSION}} placeholders
 set_help_output
+set_version
