@@ -36,7 +36,7 @@ tool.
 ### Tutorial
 
 ```bash
-pip install lookatme
+pip install --upgrade lookatme
 lookatme --tutorial
 ```
 
