@@ -15,6 +15,7 @@ import lookatme.utils as utils
 from lookatme.contrib import contrib_first
 from lookatme.render.context import Context
 from lookatme.render.markdown_html import Tag
+from lookatme.tutorial import tutor
 from lookatme.widgets.clickable_text import LinkIndicatorSpec
 
 THIS_MOD = sys.modules[__name__]
@@ -52,6 +53,15 @@ def render_text(token, ctx: Context):
     ctx.inline_push((ctx.spec_text, token.get("content", "")))
 
 
+@tutor(
+    "markdown",
+    "emphasis",
+    r"""
+    <TUTOR:EXAMPLE>
+    The donut jumped *under* the crane.
+    </TUTOR:EXAMPLE>
+    """
+)
 @contrib_first
 def render_em_open(_, ctx: Context):
     ctx.spec_push(utils.spec_from_style("italics"))
@@ -62,6 +72,15 @@ def render_em_close(_, ctx: Context):
     ctx.spec_pop()
 
 
+@tutor(
+    "markdown",
+    "double emphasis",
+    r"""
+    <TUTOR:EXAMPLE>
+    They jumped **over** the wagon
+    </TUTOR:EXAMPLE>
+    """
+)
 @contrib_first
 def render_strong_open(_, ctx: Context):
     ctx.spec_push(utils.spec_from_style("bold"))
@@ -72,6 +91,15 @@ def render_strong_close(_, ctx: Context):
     ctx.spec_pop()
 
 
+@tutor(
+    "markdown",
+    "strikethrough",
+    r"""
+    <TUTOR:EXAMPLE>
+    I lost my ~~mind~~ keyboard and couldn't type anymore.
+    </TUTOR:EXAMPLE>
+    """
+)
 @contrib_first
 def render_s_open(_, ctx: Context):
     ctx.spec_push(utils.spec_from_style("strikethrough"))
@@ -82,6 +110,23 @@ def render_s_close(_, ctx: Context):
     ctx.spec_pop()
 
 
+@tutor(
+    "markdown",
+    "links",
+    r"""
+    Links are inline elements in markdown and have the form `[text](link)`
+
+    <TUTOR:EXAMPLE>
+    [lookatme on GitHub](https://github.com/d0c-s4vage/lookatme)
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Links can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>link</TUTOR:STYLE>
+    """
+)
 @contrib_first
 def render_link_open(token, ctx: Context):
     attrs = dict(token["attrs"])
@@ -96,11 +141,54 @@ def render_link_close(_, ctx: Context):
     ctx.spec_pop()
 
 
+@tutor(
+    "markdown",
+    "images",
+    r"""
+    Vanilla lookatme renders images as links. Some extensions provide ways to
+    render images in the terminal.
+
+    Consider exploring:
+
+    * [lookatme.contrib.image_ueberzug](https://github.com/d0c-s4vage/lookatme.contrib.image_ueberzug)
+      * This works on Linux only, with X11, and must be separately installed
+
+    <TUTOR:EXAMPLE>
+    ![image alt](https://image/url)
+    </TUTOR:EXAMPLE>
+    """
+)
+@contrib_first
+def render_image(token, ctx: Context):
+    attrs = dict(token["attrs"])
+    attrs["href"] = attrs.get("src", "")
+
+    render_link_open({"type": "image_open", "attrs": list(attrs.items())}, ctx)
+    with ctx.use_tokens(token["children"]):
+        render_all(ctx)
+    render_link_close({}, ctx)
+
+
+@contrib_first
+def render_image_close(token, ctx: Context):
+    return render_link_close(token, ctx)
+
+
 @contrib_first
 def render_softbreak(_, ctx: Context):
     ctx.inline_push((ctx.spec_text, "\n"))
 
 
+@tutor(
+    "markdown",
+    "inline code",
+    r"""
+    <TUTOR:EXAMPLE>
+    The `OddOne` class accepts `Table` instances, converts them to raw pointers,
+    forces garbage collection to run.
+    </TUTOR:EXAMPLE>
+    """
+)
 @contrib_first
 def render_code_inline(token, ctx: Context):
     # TODO: add a style for the default programming language for inline text

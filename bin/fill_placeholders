@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+THIS_PROG="$0"
+SUBPROGRAM="ls"
+
+. "$DIR"/_utils.sh
+
+
+function show_help {
+    cat <<-EOF
+USAGE: $THIS_PROG VERSION_NUMBER
+
+This script will fill all placeholder values in the lookatme me project.
+Specifically:
+
+* {{VERSION}} will be replaced with the version number (no 'v' prefix!)
+* {{LOOKATME_HELP_OUTPUT}} will be replaced with output from  "lookatme --help"
+* {{LOOKATME_HELP_OUTPUT_INDENTED}} will be replaced with the indented
+  output of "lookatme --help"
+EOF
+}
+
+function replace_in_files {
+    local placeholder="$1"
+    local replacement="$2"
+
+    log "==== Replacing $placeholder"
+    (
+        cd "$DIR"/..
+        files_to_replace=$(grep -rl "$placeholder" $(git ls-files) | grep -v bin/fill_placeholders)
+        python3 <(cat <<-EOF
+import sys
+
+placeholder = sys.argv[1]
+replacement = sys.argv[2]
+files_to_replace = sys.argv[3:]
+
+for file in files_to_replace:
+    with open(file, "r") as f:
+        data = f.read()
+
+    new_data = data.replace(placeholder, replacement)
+    if new_data != data:
+        print("    replacing {}".format(file))
+    with open(file, "w") as f:
+        f.write(new_data)
+EOF
+        ) "$placeholder" "$replacement" $files_to_replace
+    )
+}
+
+function set_version {
+    replace_in_files "{{VERSION}}" "$VERSION"
+}
+
+function set_help_output {
+    local help_output=$(cd "$DIR"/.. ; python3 -m lookatme --help)
+    replace_in_files "{{LOOKATME_HELP_OUTPUT}}" "$help_output"
+
+    local help_output_indented=$(sed 's/^/    /' <<<$help_output)
+    replace_in_files "{{LOOKATME_HELP_OUTPUT_INDENTED}}" "$help_output_indented"
+}
+
+
+function parse_args {
+    VERSION=""
+    while [ $# -ne 0 ] ; do
+        param="$1"
+        shift
+
+        case "$param" in
+            --help|-h)
+                show_help
+                exit 1
+                ;;
+            *)
+                VERSION="$param"
+                ;;
+        esac
+    done
+}
+
+parse_args "$@"
+# needs to come first, can contain {{VERSION}} placeholders
+set_help_output
+set_version

@@ -13,6 +13,7 @@ import markdown_it.token
 import lookatme.config
 from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
+from lookatme.tutorial import tutor
 
 
 def md_to_tokens(md_text):
@@ -116,11 +117,11 @@ class Parser(object):
             if meta.get("title", "") in ["", None]:
                 meta["title"] = hinfo["title"]
 
-            def slide_split_check(token):
+            def slide_split_check(token):  # type: ignore
                 nonlocal hinfo
                 return is_heading(token) and token["level"] == hinfo["lowest_non_title"]
 
-            def heading_mod(token):
+            def heading_mod(token):  # type: ignore
                 nonlocal hinfo
                 token["level"] = max(
                     token["level"] - (hinfo["title_level"] or 0),
@@ -129,11 +130,10 @@ class Parser(object):
 
             keep_split_token = True
         else:
-
-            def slide_split_check(token):
+            def slide_split_check(token):  # type: ignore
                 return is_hrule(token)
 
-            def heading_mod(token):
+            def heading_mod(_):  # type: ignore
                 pass
 
             keep_split_token = False
@@ -196,6 +196,36 @@ class Parser(object):
                 res.append(token)
         return res
 
+    @tutor(
+        "general",
+        "slides splitting",
+        r"""
+        Slides can be:
+
+        ## Separated by horizontal rules (three or more `*`, `-`, or `_`)
+
+        ```markdown
+        slide 1
+        ***
+        slide 2
+        ```
+
+        ## Split using existing headings ("smart" splitting)
+
+        ```markdown
+        # Slide 1
+
+        # Slide 2
+        ```
+
+        ## Rendered as a single slide with the `--single` or `--one` CLI parameter
+
+        ```bash
+        lookatme --single content.md
+        ```
+        """,
+        order=2,
+    )
     def _scan_for_smart_split(self, tokens):
         """Scan the provided tokens for the number of hrules, and the lowest
         (h1 < h2) header level.
@@ -241,6 +271,31 @@ class Parser(object):
 
         return num_hrules, hinfo
 
+    @tutor(
+        "general",
+        "metadata",
+        r"""
+        The YAML metadata that can be prefixed in slides includes these top level
+        fields:
+
+        ```yaml
+        ---
+        title: "title"
+        date: "date"
+        author: "author"
+        extensions:
+          - extension 1
+          # .. list of extensions
+        styles:
+          # .. nested style fields ..
+        ---
+        ```
+
+        > **NOTE** The `styles` field will be explained in detail with each markdown
+        > element.
+        """,
+        order=3,
+    )
     def parse_meta(self, input_data) -> Tuple[AnyStr, Dict]:
         """Parse the PresentationMeta out of the input data
 
@@ -281,6 +336,24 @@ class Parser(object):
         data = MetaSchema().loads_partial_styles(yaml_data, partial=True)
         return new_input, data
 
+    @tutor(
+        "general",
+        "progressive slides",
+        r"""
+        Slides can be progressively displayed by inserting `<!-- stop -->`
+        comments between block elemtents (as in, inline within some other
+        markdown element).
+
+        <TUTOR:EXAMPLE>
+        This will display first, and after you press advance ...
+
+        <!-- stop -->
+
+        This will display!
+        </TUTOR:EXAMPLE>
+        """,
+        order=2,
+    )
     def _create_slides(self, tokens, number):
         """Iterate on tokens and create slides out of them. Can create multiple
         slides if the tokens contain progressive slide delimiters.

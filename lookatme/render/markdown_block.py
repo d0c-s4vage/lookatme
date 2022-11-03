@@ -5,6 +5,8 @@ representations
 
 
 import copy
+import pygments
+import pygments.styles
 import re
 import sys
 from typing import Dict, List, Tuple, Union
@@ -16,6 +18,7 @@ import lookatme.render.markdown_inline as markdown_inline
 import lookatme.render.pygments as pygments_render
 from lookatme.contrib import contrib_first
 from lookatme.render.context import Context
+from lookatme.tutorial import tutor
 from lookatme.widgets.fancy_box import FancyBox
 import lookatme.utils as utils
 
@@ -48,6 +51,23 @@ def render_all(ctx: Context):
         render(token, ctx)
 
 
+@tutor(
+    "markdown",
+    "paragraph",
+    r"""
+    Paragraphs in markdown are simply text with a full empty line between them:
+
+    <TUTOR:EXAMPLE>
+    paragraph 1
+
+    paragraph 2
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Paragraphs cannot be styled in lookatme.
+    """,
+)
 @contrib_first
 def render_paragraph_open(token, ctx: Context):
     """ """
@@ -135,6 +155,80 @@ def render_list_close(_, ctx: Context):
     ctx.container_pop()
 
 
+@tutor(
+    "markdown",
+    "ordered lists",
+    r"""
+    Ordered lists are lines of text prefixed by a `N. ` or `N)`, where `N` is
+    any number.
+
+    <TUTOR:EXAMPLE>
+    1. item
+    1. item
+        1. item
+            5. item
+            6. item
+        1. item
+    1. item
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Ordered lists can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>numbering</TUTOR:STYLE>
+    """
+)
+@tutor(
+    "markdown",
+    "unordered lists",
+    r"""
+    Unordered lists are lines of text starting with either `*`, `+`, or `-`.
+
+    <TUTOR:EXAMPLE>
+    * item
+    * item
+        * item
+            * item
+            * item
+        * item
+    * item
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Unordered lists can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>bullets</TUTOR:STYLE>
+    """
+)
+@tutor(
+    "markdown",
+    "lists",
+    r"""
+    Lists can either be ordered or unordered. You can nest lists by indenting
+    child lists by four spaces.
+
+    Other markdown elements can also be nested in lists.
+
+    <TUTOR:EXAMPLE>
+    1. item
+       > quote
+    1. item
+        * item
+            1. item
+               a paragraph
+
+               More text here blah blah blah
+            1. A new item
+        * item
+           ```python
+           print("hello")
+           ```
+    1. item
+    </TUTOR:EXAMPLE>
+    """
+)
 @contrib_first
 def render_list_item_open(_, ctx: Context):
     """ """
@@ -187,6 +281,27 @@ def render_list_item_close(_, ctx: Context):
     ctx.container_pop()
 
 
+@tutor(
+    "markdown",
+    "headings",
+    r"""
+    Headings are specified by prefixing text with `#` characters:
+
+    <TUTOR:EXAMPLE>
+    ## Heading Level 2
+    ### Heading Level 3
+    #### Heading Level 4
+    ##### Heading Level 5
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Headings can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>headings</TUTOR:STYLE>
+    """,
+)
+@contrib_first
 @contrib_first
 def render_heading_open(token: Dict, ctx: Context):
     """ """
@@ -216,6 +331,33 @@ def render_heading_close(token: Dict, ctx: Context):
     ctx.ensure_new_block()
 
 
+@tutor(
+    "markdown",
+    "block quote",
+    r"""
+    Block quotes are lines of markdown prefixed with `> `. Block quotes can
+    contain text, other markdown, and can even be nested!
+
+    <TUTOR:EXAMPLE>
+    > Some quoted text
+    > > > > # Heading
+    > > > >
+    > > > *hello world*
+    > > >
+    > > ~~apples~~
+    > >
+    > space chips
+    </TUTOR:EXAMPLE>
+
+
+
+    ## Style
+
+    Block quotes can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>quote</TUTOR:STYLE>
+    """
+)
 @contrib_first
 def render_blockquote_open(token: Dict, ctx: Context):
     """ """
@@ -259,6 +401,39 @@ def render_blockquote_close(token: Dict, ctx: Context):
     ctx.container_pop()
 
 
+@tutor(
+    "markdown",
+    "code blocks",
+    r"""
+    Multi-line code blocks are either surrounded by "fences" (three in a row of
+    either `\`` or `~`), or are lines of text indented at least four spaces.
+
+    Fenced codeblocks let you specify the language of the code:
+
+    <TUTOR:EXAMPLE>
+    ```python
+    def hello_world():
+        print("Hello, world!\n")
+    ```
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    The syntax highlighting style used to highlight the code block can be
+    specified in the markdown metadata:
+
+    <TUTOR:STYLE>style</TUTOR:STYLE>
+
+    Valid values for the `style` field come directly from pygments. In the
+    version of pygments being used as you read this, the list of valid values is:
+
+    {pygments_values}
+
+    > **NOTE** This style name is confusing and will be renamed in lookatme v3.0+
+    """.format(
+        pygments_values=" ".join(pygments.styles.get_all_styles()),
+    )
+)
 @contrib_first
 def render_fence(token: Dict, ctx: Context):
     """Renders a code block using the Pygments library.
@@ -323,6 +498,32 @@ def _extract_nested_table_tokens(
     return (thead_token, tbody_token)
 
 
+@tutor(
+    "markdown",
+    "tables",
+    r"""
+    Rows in tables are defined by separating columns with `|` characters. The
+    header row is the first row defined and is separated by hypens (`---`).
+
+    Alignment within a column can be set by adding a colon, `:`, to the left,
+    right, or both ends of a header's separator.
+
+    <TUTOR:EXAMPLE>
+    | left align | centered | right align |
+    |------------|:--------:|------------:|
+    | 1          |     a    |           A |
+    | 11         |    aa    |          AA |
+    | 111        |    aaa   |         AAA |
+    | 1111       |   aaaaa  |        AAAA |
+    </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Tables can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>table</TUTOR:STYLE>
+    """,
+)
 @contrib_first
 def render_table_open(token: Dict, ctx: Context):
     """ """

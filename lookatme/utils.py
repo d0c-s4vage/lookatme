@@ -25,6 +25,10 @@ def get_meta(item):
     return meta
 
 
+def prefix_text(text: str, prefix: str, split: str = "\n") -> str:
+    return split.join(prefix + part for part in text.split(split))
+
+
 def row_text(rendered_row):
     """Return all text joined together from the rendered row"""
     return b"".join(x[-1] for x in rendered_row)
