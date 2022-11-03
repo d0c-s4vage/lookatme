@@ -318,7 +318,9 @@ class Table(urwid.Pile):
             # list of urwid.Piles
             for idx, cell in enumerate(row):
                 rend = cell.render((200,))
-                curr_col_width = max(len(rend_row.strip()) for rend_row in rend.text)
+
+                row_lens = [len(rend_row.strip()) for rend_row in rend.text]
+                curr_col_width = max([0] if not row_lens else row_lens)
                 column_maxes[idx] = max(column_maxes[idx], curr_col_width)
 
         return column_maxes

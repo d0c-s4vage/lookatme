@@ -16,18 +16,31 @@ import lookatme
 import lookatme.config
 import lookatme.log
 import lookatme.tui
+import lookatme.tutorial
 from lookatme.pres import Presentation
 from lookatme.schemas import StyleSchema
 
 
 @click.command("lookatme")
-@click.option("--debug", "debug", is_flag="True", default=False)
+@click.option("--debug", "debug", is_flag=True, default=False)
 @click.option(
     "-l",
     "--log",
     "log_path",
     type=click.Path(writable=True),
     default=os.path.join(tempfile.gettempdir(), "lookatme.log"),
+)
+@click.option(
+    "--tutorial",
+    "tutorial",
+    is_flag=False,
+    flag_value="all",
+    show_default=True,
+    help=(
+        "As a flag: show all tutorials. "
+        "With a value/comma-separated values: show the specific tutorials. "
+        "Use the value 'help' for more help"
+    )
 )
 @click.option(
     "-t",
@@ -101,6 +114,7 @@ from lookatme.schemas import StyleSchema
     nargs=-1,
 )
 def main(
+    tutorial,
     debug,
     log_path,
     theme,
@@ -125,6 +139,25 @@ def main(
 
     if len(input_files) == 0:
         input_files = [io.StringIO("")]
+
+    if tutorial:
+        if tutorial == "all":
+            tutors = ["general", "markdown"]
+        else:
+            tutors = [x.strip() for x in tutorial.split(",")]
+
+        theme_mod = __import__("lookatme.themes." + theme, fromlist=[theme])
+        lookatme.config.set_global_style_with_precedence(
+            theme_mod,
+            {},
+            code_style,
+        )
+        tutorial_md = lookatme.tutorial.get_tutorial_md(tutors)
+        if tutorial_md is None:
+            lookatme.tutorial.print_tutorial_help()
+            return 1
+
+        input_files = [io.StringIO(tutorial_md)]
 
     preload_exts = [x.strip() for x in extensions.split(",")]
     preload_exts = list(filter(lambda x: x != "", preload_exts))

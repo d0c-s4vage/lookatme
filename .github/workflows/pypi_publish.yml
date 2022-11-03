@@ -14,17 +14,16 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-      - name: Set VERSION number
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Fill placeholders
         run: |
           version_num="${{github.ref_name}}"
           # strip the leading v
           version_num=${version_num#v}
-          echo "Replacing {{VERSION}} with '$version_num'"
-          echo "Files with {{VERSION}}:"
-          grep -rl '{{VERSION}}' .
-          grep -rl '{{VERSION}}' . | xargs sed -i "s/{{VERSION}}/$version_num/g"
-          echo "Files with {{VERSION}} after replacing:"
-          grep -rl '{{VERSION}}' . || true
+          bin/fill_placeholders "$version_num"
       - name: Install pypa/build
         run: python -m pip install build --user
       - name: Build binary wheel + tarball
