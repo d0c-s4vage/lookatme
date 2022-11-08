@@ -5,7 +5,7 @@ Defines utilities for testing lookatme
 
 import inspect
 import pytest
-from six.moves import StringIO # type: ignore
+from six.moves import StringIO  # type: ignore
 from typing import Any, Dict, List, Optional, Tuple, Union
 import urwid
 

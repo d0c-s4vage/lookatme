@@ -218,7 +218,7 @@ class BorderBoxSchema(Schema):
         TextStyleFieldSchema,
         dump_default=TextStyleFieldSchema().dump(
             {
-                "text": "╭",
+                "text": "┌",
                 "fg": "bold",
                 "bg": "",
             }
@@ -517,6 +517,27 @@ class StyleSchema(Schema):
         StyleFieldSchema,
         dump_default={
             "fg": "#33c,underline",
+            "bg": "default",
+        },
+    )
+    emphasis = fields.Nested(
+        StyleFieldSchema,
+        dump_default={
+            "fg": "italics",
+            "bg": "default",
+        },
+    )
+    strong_emphasis = fields.Nested(
+        StyleFieldSchema,
+        dump_default={
+            "fg": "bold",
+            "bg": "default",
+        },
+    )
+    strikethrough = fields.Nested(
+        StyleFieldSchema,
+        dump_default={
+            "fg": "strikethrough",
             "bg": "default",
         },
     )

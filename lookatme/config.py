@@ -28,12 +28,9 @@ def get_style() -> Dict:
 
 
 def get_style_with_precedence(
-    theme_mod: ModuleType,
-    direct_overrides: Dict,
-    style_override: str
+    theme_mod: ModuleType, direct_overrides: Dict, style_override: str
 ) -> Dict[str, Any]:
-    """Return the resulting style dict from the provided override values.
-    """
+    """Return the resulting style dict from the provided override values."""
     # style override order:
     # 1. theme settings
     styles = lookatme.themes.ensure_defaults(theme_mod)
@@ -47,16 +44,13 @@ def get_style_with_precedence(
 
 
 def set_global_style_with_precedence(
-    theme_mod,
-    direct_overrides,
-    style_override
+    theme_mod, direct_overrides, style_override
 ) -> Dict[str, Any]:
     """Set the lookatme.config.STYLE value based on the provided override
     values
     """
     global STYLE
-    STYLE = get_style_with_precedence(
-        theme_mod, direct_overrides, style_override)
+    STYLE = get_style_with_precedence(theme_mod, direct_overrides, style_override)
 
     return STYLE
 

@@ -40,7 +40,7 @@ from lookatme.schemas import StyleSchema
         "As a flag: show all tutorials. "
         "With a value/comma-separated values: show the specific tutorials. "
         "Use the value 'help' for more help"
-    )
+    ),
 )
 @click.option(
     "-t",

@@ -130,6 +130,7 @@ class Parser(object):
 
             keep_split_token = True
         else:
+
             def slide_split_check(token):  # type: ignore
                 return is_hrule(token)
 

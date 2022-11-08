@@ -430,131 +430,317 @@ def test_block_quote(style):
     )
 
 
-def test_code(tmpdir, mocker):
+@override_style(
+    {
+        "code": "monokai",
+    }
+)
+def test_code(styles):
     """Test code block rendering"""
-    setup_lookatme(
-        tmpdir,
-        mocker,
-        style={
-            "style": "monokai",
+    utils.validate_render(
+        md_text="""
+            ```python
+            'Hello'
+            'Hello'
+            'Hello'
+            'Hello'
+            ```
+        """,
+        text=[
+            "       ",
+            "'Hello'",
+            "'Hello'",
+            "'Hello'",
+            "'Hello'",
+            "       ",
+        ],
+        style_mask=[
+            "       ",
+            "RRRRRRR",
+            "RRRRRRR",
+            "RRRRRRR",
+            "RRRRRRR",
+            "       ",
+        ],
+        styles={
+            "R": {"fg": "#dd8", "bg": "g15"},
+            " ": {},
         },
     )
 
-    rendered = render_markdown(
-        """
-```python
-def some_fn(*args, **kargs):
-    pass```
-"""
-    )
 
-    stripped_rows = [
-        b"",
-        b"def some_fn(*args, **kargs):",
-        b"    pass",
-        b"",
-    ]
-    assert_render(stripped_rows, rendered)
-
-
-def test_empty_codeblock(tmpdir, mocker):
+@override_style(
+    {
+        "code": "monokai",
+    }
+)
+def test_empty_codeblock(style):
     """Test that empty code blocks render correctly"""
-    setup_lookatme(
-        tmpdir,
-        mocker,
-        style={
-            "style": "monokai",
+    utils.validate_render(
+        md_text="""
+            ```python
+
+            ```
+        """,
+        text=[
+            " ",
+            " ",
+            " ",
+        ],
+        style_mask=[
+            " ",
+            "B",
+            " ",
+        ],
+        styles={
+            "B": {"bg": "g15"},
+            " ": {},
         },
     )
 
-    render_markdown(
-        """
-```python
 
-```"""
-    )
-
-
-def test_code_yaml(tmpdir, mocker):
+@override_style(
+    {
+        "code": "monokai",
+    }
+)
+def test_code_yaml(styles):
     """Test code block rendering with yaml language"""
-    setup_lookatme(
-        tmpdir,
-        mocker,
-        style={
-            "style": "monokai",
+    utils.validate_render(
+        md_text="""
+            ```yaml
+            test: a value
+            test2: "another value"
+            array:
+              - item1
+              - item2
+              - item3
+            ```
+        """,
+        text=[
+            "                      ",
+            "test: a value         ",
+            'test2: "another value"',
+            "array:                ",
+            "  - item1             ",
+            "  - item2             ",
+            "  - item3             ",
+            "                      ",
+        ],
+        style_mask=[
+            "                      ",
+            "KKKK::VVVVVVV_________",
+            "KKKKK::SSSSSSSS:SSSSSS",
+            "KKKKK:________________",
+            "::::VVVVV_____________",
+            "::::VVVVV_____________",
+            "::::VVVVV_____________",
+            "                      ",
+        ],
+        styles={
+            "K": {"fg": "#f06", "bg": "g15"},
+            "S": {"fg": "#dd8", "bg": "g15"},
+            "V": {"fg": "#a8f", "bg": "g15"},
+            ":": {"fg": "g93", "bg": "g15"},
+            "-": {"bg": "g15"},
+            "_": {"bg": "g15"},
+            " ": {},
         },
     )
 
-    rendered = render_markdown(
-        """
-```yaml
-test: a value
-test2: "another value"
-array:
-  - item1
-  - item2
-  - item3
-```"""
-    )
 
-    stripped_rows = [
-        b"",
-        b"test: a value",
-        b'test2: "another value"',
-        b"array:",
-        b"  - item1",
-        b"  - item2",
-        b"  - item3",
-        b"",
-    ]
-    assert_render(stripped_rows, rendered)
-
-
-def test_inline(tmpdir, mocker):
-    """Test inline markdown"""
-    setup_lookatme(
-        tmpdir,
-        mocker,
-        style={
-            "style": "monokai",
-            "link": {
-                "fg": "underline",
-                "bg": "default",
-            },
+@override_style(
+    {
+        "link": {
+            "fg": "#ff0000",
+            "bg": "#00ff00",
+        }
+    }
+)
+def test_link(styles):
+    utils.validate_render(
+        md_text="""
+            [text](href)
+        """,
+        text=[
+            "text",
+        ],
+        style_mask=[
+            "TTTT",
+        ],
+        styles={
+            "T": styles["link"],
         },
     )
 
-    rendered = render_markdown("*emphasis*")
-    assert rendered[0][0][0].foreground == "default,italics"
-    assert row_text(rendered[0]).strip() == b"emphasis"
 
-    rendered = render_markdown("**emphasis**")
-    assert rendered[0][0][0].foreground == "default,bold"
-    assert row_text(rendered[0]).strip() == b"emphasis"
+@override_style(
+    {
+        "emphasis": {
+            "fg": "#ff0000",
+            "bg": "#00ff00",
+        }
+    }
+)
+def test_emphasis(styles):
+    utils.validate_render(
+        md_text="""
+            *emphasis*
+            _emphasis_
+        """,
+        text=[
+            "emphasis",
+            "emphasis",
+        ],
+        style_mask=[
+            "EEEEEEEE",
+            "EEEEEEEE",
+        ],
+        styles={
+            "E": styles["emphasis"],
+        },
+    )
 
-    rendered = render_markdown("_emphasis_")
-    assert rendered[0][0][0].foreground == "default,italics"
-    assert row_text(rendered[0]).strip() == b"emphasis"
 
-    rendered = render_markdown("__emphasis__")
-    assert rendered[0][0][0].foreground == "default,bold"
-    assert row_text(rendered[0]).strip() == b"emphasis"
+@override_style(
+    {
+        "strong_emphasis": {
+            "fg": "#ff0000",
+            "bg": "#00ff00",
+        }
+    }
+)
+def test_strong_emphasis(styles):
+    utils.validate_render(
+        md_text="""
+            **strong emphasis**
+            __strong emphasis__
+        """,
+        text=[
+            "strong emphasis",
+            "strong emphasis",
+        ],
+        style_mask=[
+            "EEEEEEEEEEEEEEE",
+            "EEEEEEEEEEEEEEE",
+        ],
+        styles={
+            "E": styles["strong_emphasis"],
+        },
+    )
 
-    rendered = render_markdown("`inline code`")
-    assert row_text(rendered[0]).rstrip() == b" inline code"
 
-    rendered = render_markdown("~~strikethrough~~")
-    assert rendered[0][0][0].foreground == "default,strikethrough"
-    assert row_text(rendered[0]).rstrip() == b"strikethrough"
+@override_style(
+    {
+        "emphasis": {
+            "fg": "italics",
+            "bg": "default",
+        },
+        "strong_emphasis": {
+            "fg": "bold",
+            "bg": "#00ff00",
+        },
+    }
+)
+def test_emphasis_strong_emphasis(styles):
+    utils.validate_render(
+        md_text="""
+            *em **strong emphasis** em*
+            ***strong emphasis***
+            _em __strong emphasis__ em_
+            ___strong emphasis___
+        """,
+        text=[
+            "em strong emphasis em",
+            "strong emphasis      ",
+            "em strong emphasis em",
+            "strong emphasis      ",
+        ],
+        style_mask=[
+            "EEEDDDDDDDDDDDDDDDEEE",
+            "DDDDDDDDDDDDDDD      ",
+            "EEEDDDDDDDDDDDDDDDEEE",
+            "DDDDDDDDDDDDDDD      ",
+        ],
+        styles={
+            "E": styles["emphasis"],
+            # both emphasis and strong_emphasis styles
+            "D": {"fg": "italics,bold", "bg": "#00ff00"},
+            " ": {},
+        },
+    )
 
-    rendered = render_markdown("[link](http://domain.tld)")
-    assert rendered[0][0][0].foreground == "default,underline"
-    assert row_text(rendered[0]).rstrip() == b"link"
 
-    rendered = render_markdown("http://domain.tld")
-    assert rendered[0][0][0].foreground == "default,underline"
-    assert row_text(rendered[0]).rstrip() == b"http://domain.tld"
+@override_style(
+    {
+        "strikethrough": {
+            "fg": "#ff0000",
+            "bg": "#00ff00",
+        }
+    }
+)
+def test_strikethrough(styles):
+    utils.validate_render(
+        md_text="""
+            ~~strikethrough~~
+        """,
+        text=[
+            "strikethrough",
+        ],
+        style_mask=[
+            "SSSSSSSSSSSSS",
+        ],
+        styles={
+            "S": styles["strikethrough"],
+        },
+    )
 
-    rendered = render_markdown("![link](http://domain.tld)")
-    assert rendered[0][0][0].foreground == "default,underline"
-    assert row_text(rendered[0]).rstrip() == b"link"
+
+@override_style(
+    {
+        "link": {
+            "fg": "#ff0000",
+            "bg": "#00ff00",
+        }
+    }
+)
+def test_plain_url(styles):
+    utils.validate_render(
+        md_text="""
+            https://github.com/d0c-s4vage/lookatme
+        """,
+        text=[
+            "https://github.com/d0c-s4vage/lookatme",
+        ],
+        style_mask=[
+            "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+        ],
+        styles={
+            "L": styles["link"],
+        },
+    )
+
+
+@override_style(
+    {
+        "link": {
+            "fg": "#ff0000",
+            "bg": "#00ff00",
+        }
+    }
+)
+def test_image_as_link(styles):
+    utils.validate_render(
+        md_text="""
+            ![link_text](image_url)
+        """,
+        text=[
+            "link_text",
+        ],
+        style_mask=[
+            "LLLLLLLLL",
+        ],
+        styles={
+            "L": styles["link"],
+        },
+    )

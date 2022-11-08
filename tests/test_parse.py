@@ -80,8 +80,7 @@ More text
 
 
 def test_parse_slides_with_progressive_stops_and_hrule_splits():
-    """Test that slide parsing works correctly
-    """
+    """Test that slide parsing works correctly"""
     input_data = r"""
 # Heading
 

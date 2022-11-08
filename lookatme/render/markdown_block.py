@@ -177,7 +177,7 @@ def render_list_close(_, ctx: Context):
     Ordered lists can be styled with slide metadata. This is the default style:
 
     <TUTOR:STYLE>numbering</TUTOR:STYLE>
-    """
+    """,
 )
 @tutor(
     "markdown",
@@ -200,7 +200,7 @@ def render_list_close(_, ctx: Context):
     Unordered lists can be styled with slide metadata. This is the default style:
 
     <TUTOR:STYLE>bullets</TUTOR:STYLE>
-    """
+    """,
 )
 @tutor(
     "markdown",
@@ -227,7 +227,7 @@ def render_list_close(_, ctx: Context):
            ```
     1. item
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_list_item_open(_, ctx: Context):
@@ -356,7 +356,7 @@ def render_heading_close(token: Dict, ctx: Context):
     Block quotes can be styled with slide metadata. This is the default style:
 
     <TUTOR:STYLE>quote</TUTOR:STYLE>
-    """
+    """,
 )
 @contrib_first
 def render_blockquote_open(token: Dict, ctx: Context):
@@ -432,7 +432,7 @@ def render_blockquote_close(token: Dict, ctx: Context):
     > **NOTE** This style name is confusing and will be renamed in lookatme v3.0+
     """.format(
         pygments_values=" ".join(pygments.styles.get_all_styles()),
-    )
+    ),
 )
 @contrib_first
 def render_fence(token: Dict, ctx: Context):
