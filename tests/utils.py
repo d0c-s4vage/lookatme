@@ -196,7 +196,7 @@ def precise_update(full_style, new_style):
             full_style[k] = v
 
 
-def override_style(new_style: Dict, complete=False):
+def override_style(new_style: Dict, complete=False, pass_tmpdir=False):
     """Override the style settings for lookatme. By default a precise update
     will be performed where nested subkeys will be specifically updated if
     they exist in the original style dict.
@@ -215,7 +215,10 @@ def override_style(new_style: Dict, complete=False):
 
         def inner(tmpdir, mocker):
             setup_lookatme(tmpdir, mocker, style=full_style)
-            return fn(full_style)
+            if pass_tmpdir:
+                return fn(tmpdir, full_style)
+            else:
+                return fn(full_style)
 
         return inner
 

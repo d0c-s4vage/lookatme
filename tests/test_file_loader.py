@@ -8,7 +8,9 @@ import pytest
 import lookatme.config
 import lookatme.contrib.file_loader
 import lookatme.render.pygments
-from tests.utils import assert_render, render_markdown
+import tests.utils as utils
+from tests.utils import override_style
+
 
 TEST_STYLE = {
     "style": "monokai",
@@ -24,38 +26,42 @@ TEST_STYLE = {
 
 
 @pytest.fixture(autouse=True)
-def file_loader_setup(tmpdir, mocker):
-    mocker.patch.object(lookatme.config, "LOG")
-    mocker.patch("lookatme.config.SLIDE_SOURCE_DIR", new=str(tmpdir))
+def file_loader_setup(mocker):
     mocker.patch("lookatme.contrib.CONTRIB_MODULES", new=[lookatme.contrib.file_loader])
-    mocker.patch("lookatme.config.STYLE", new=TEST_STYLE)
 
 
-def test_file_loader(tmpdir, mocker):
+@override_style({}, pass_tmpdir=True)
+def test_file_loader(tmpdir, _):
     """Test the built-in file loader extension"""
     tmppath = tmpdir.join("test.py")
-    tmppath.write("print('hello')")
+    tmppath.write("'hello'")
 
-    rendered = render_markdown(
-        f"""
-```file
-path: {tmppath}
-relative: false
-```
-    """
+    utils.validate_render(
+        md_text=f"""
+            ```file
+            path: {tmppath}
+            relative: false
+            ```
+        """,
+        text=[
+            "       ",
+            "'hello'",
+            "       ",
+        ],
+        style_mask=[
+            "       ",
+            "SSSSSSS",
+            "       ",
+        ],
+        styles={
+            "S": {"fg": "g93", "bg": "g15"},
+            " ": {},
+        },
     )
 
-    stripped_rows = [
-        b"",
-        b"print('hello')",
-        b"",
-        b"",
-        b"",
-    ]
-    assert_render(stripped_rows, rendered)
 
-
-def test_file_loader_with_transform(tmpdir, mocker):
+@override_style({}, pass_tmpdir=True)
+def test_file_loader_with_transform(tmpdir, _):
     """Test the built-in file loader extension"""
     tmppath = tmpdir.join("test.py")
     tmppath.write(
@@ -69,67 +75,86 @@ Apples1
 """
     )
 
-    rendered = render_markdown(
-        f"""
-```file
-path: {tmppath}
-relative: false
-transform: "grep -i apples | sort"
-```
-    """
+    utils.validate_render(
+        md_text=f"""
+            ```file
+            path: {tmppath}
+            relative: false
+            transform: "grep -i apples | sort"
+            ```
+        """,
+        text=[
+            "       ",
+            "Apples1",
+            "Apples2",
+            "Apples3",
+            "       ",
+        ],
+        style_mask=[
+            "       ",
+            "TTTTTTT",
+            "TTTTTTT",
+            "TTTTTTT",
+            "       ",
+        ],
+        styles={
+            "T": {"fg": "g93", "bg": "g15"},
+            " ": {},
+        },
     )
 
-    stripped_rows = [
-        b"",
-        b"Apples1",
-        b"Apples2",
-        b"Apples3",
-        b"",
-        b"",
-        b"",
-    ]
-    assert_render(stripped_rows, rendered)
 
-
-def test_file_loader_relative(tmpdir, mocker):
+@override_style({}, pass_tmpdir=True)
+def test_file_loader_relative(tmpdir, _):
     """Test the built-in file loader extension"""
     tmppath = tmpdir.join("test.py")
-    tmppath.write("print('hello')")
+    tmppath.write("'hello'")
 
-    rendered = render_markdown(
-        """
-```file
-path: test.py
-relative: true
-```
-    """
+    utils.validate_render(
+        md_text=f"""
+            ```file
+            path: test.py
+            relative: true
+            ```
+        """,
+        text=[
+            "       ",
+            "'hello'",
+            "       ",
+        ],
+        style_mask=[
+            "       ",
+            "SSSSSSS",
+            "       ",
+        ],
+        styles={
+            "S": {"fg": "g93", "bg": "g15"},
+            " ": {},
+        },
     )
 
-    stripped_rows = [
-        b"",
-        b"print('hello')",
-        b"",
-        b"",
-        b"",
-    ]
-    assert_render(stripped_rows, rendered)
 
-
-def test_file_loader_not_found(mocker):
+@override_style({})
+def test_file_loader_not_found(_):
     """Test the built-in file loader extension"""
-    rendered = render_markdown(
-        """
-```file
-path: does_not_exist.py
-```
-    """
+    utils.validate_render(
+        md_text=f"""
+            ```file
+            path: does_not_exist.py
+            ```
+        """,
+        text=[
+            "              ",
+            "File not found",
+            "              ",
+        ],
+        style_mask=[
+            "              ",
+            "TTTTTTTTTTTTTT",
+            "              ",
+        ],
+        styles={
+            "T": {"fg": "g93", "bg": "g15"},
+            " ": {},
+        },
     )
-
-    stripped_rows = [
-        b"",
-        b"File not found",
-        b"",
-        b"",
-        b"",
-    ]
-    assert_render(stripped_rows, rendered)

@@ -44,4 +44,4 @@ def test_overridable_root(mocker):
     pres = lookatme.pres.Presentation(input_stream, "dark")
     tui = lookatme.tui.MarkdownTui(pres)
 
-    assert isinstance(tui.loop.widget, Wrapper)
+    assert isinstance(tui.root_widget, Wrapper)
