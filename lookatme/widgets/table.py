@@ -107,7 +107,7 @@ class SortSetting:
 class Table(urwid.Pile):
     signals = ["change"]
 
-    def __init__(self, ctx: Context, header: Dict, body: None|Dict):
+    def __init__(self, ctx: Context, header: Dict, body: None | Dict):
         """Create a new table"""
         self.ctx = ctx
 
@@ -338,7 +338,7 @@ class Table(urwid.Pile):
                 column_maxes[idx] = max(column_maxes[idx], curr_col_width)
 
         return column_maxes
-    
+
     def _calc_canvas_width(self, canvas):
         canvas_max = 0
         for row in canvas.content():

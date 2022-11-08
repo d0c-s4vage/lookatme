@@ -79,15 +79,18 @@ class SlideIsolator:
 
         self._isolate_progressive_slides(tokens, self.slide_tokens)
 
-        if not self.slides or (self.slides and self.slides[-1].tokens != self.slide_tokens):
+        if not self.slides or (
+            self.slides and self.slides[-1].tokens != self.slide_tokens
+        ):
             self._isolate_slide()
 
         return self.slides
-    
+
     def _is_progressive_slide_delimiter(self, token: Dict) -> bool:
-        return token["type"] == "html_inline" and re.match(
-            r"<!--\s*stop\s*-->", token["content"]
-        ) is not None
+        return (
+            token["type"] == "html_inline"
+            and re.match(r"<!--\s*stop\s*-->", token["content"]) is not None
+        )
 
     def _isolate_progressive_slides(
         self,

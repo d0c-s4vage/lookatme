@@ -13,6 +13,7 @@ from marshmallow import INCLUDE, RAISE, Schema, fields, validate
 
 line_color = "#505050"
 
+
 class NoDatesSafeLoader(yaml.SafeLoader):
     @classmethod
     def remove_implicit_resolver(cls, tag_to_remove):
@@ -400,6 +401,7 @@ class HeadingsSchema(Schema):
 table_border_default = BorderBoxSchema().dump(None)
 for k, v in table_border_default.items():
     table_border_default[k]["fg"] = "bold,#c0c0c0"
+
 
 class TableSchema(Schema):
     column_spacing = fields.Int(dump_default=3)

@@ -33,7 +33,7 @@ class TokenIterator:
         if self.idx >= len(self.tokens):
             return None
         return self.tokens[self.idx]
-    
+
     def _handle_unwind(self, token: Dict[str, str]):
         if "_open" in token["type"]:
             close_token_type = token["type"].replace("open", "close")
