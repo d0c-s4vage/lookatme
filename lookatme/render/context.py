@@ -4,7 +4,7 @@
 
 import contextlib
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import urwid
 
@@ -24,6 +24,8 @@ class TokenIterator:
         self.tokens = tokens
         self.idx = 0
 
+        self.unwind_stack = []
+
     def peek(self) -> Optional[Dict]:
         """Return the next token in the token stream, or None if it does
         not exist
@@ -31,11 +33,21 @@ class TokenIterator:
         if self.idx >= len(self.tokens):
             return None
         return self.tokens[self.idx]
+    
+    def _handle_unwind(self, token: Dict[str, str]):
+        if "_open" in token["type"]:
+            close_token_type = token["type"].replace("open", "close")
+            self.unwind_stack.append({"type": close_token_type})
+        elif "_close" in token["type"]:
+            popped = self.unwind_stack.pop()
+            if popped["type"] != token["type"]:
+                raise RuntimeError("Mismatched unwind token stack")
 
     def next(self):
         token = self.peek()
         if token is not None:
             self.idx += 1
+            self._handle_unwind(token)
         return token
 
     def __iter__(self):
@@ -63,6 +75,25 @@ class Context:
         self.token_stack: List[TokenIterator] = []
 
         self._log = lookatme.config.get_log()
+
+    @property
+    def unwind_tokens(self) -> Iterator[Dict]:
+        """Generate a list of unwind (close) tokens from the token iterators
+        in the stack
+        """
+        if not self.token_stack:
+            raise ValueError("Attempted to fetch unwind stack without having a stack")
+        for token in reversed(self.token_stack[-1].unwind_stack):
+            yield token
+
+    @property
+    def unwind_tokens_consumed(self) -> Iterator[Dict]:
+        """Generate a list of unwind (close) tokens from the token iterators
+        in the stack
+        """
+        for token in self.unwind_tokens:
+            yield token
+        self.token_stack[-1].unwind_stack.clear()
 
     @property
     def tokens(self) -> TokenIterator:

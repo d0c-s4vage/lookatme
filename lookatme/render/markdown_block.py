@@ -50,6 +50,15 @@ def render_all(ctx: Context):
         ctx.log_debug("Rendering block token: {!r}".format(token))
         render(token, ctx)
 
+    # normally ctx.unwind_tokens will be empty as every "open" token will have
+    # a matching "close" token. However, sometimes (like with progressive slides),
+    # there will be some tokens missing from the token stream.
+    #
+    # this is where we artificially close all open tokens
+    for unwind_token in ctx.unwind_tokens:
+        ctx.log_debug("Rendering unwind block token: {!r}".format(unwind_token))
+        render(unwind_token, ctx)
+
 
 @tutor(
     "markdown",
@@ -555,14 +564,13 @@ def render_table_open(token: Dict, ctx: Context):
     table_children = []
     # consume the tokens until we see a table_close!
     for token in ctx.tokens:
+        table_children.append(copy.deepcopy(token))
         if token["type"] == "table_close":
             break
         table_children.append(copy.deepcopy(token))
 
     extractor = TableTokenExtractor()
-    extractor.process_tokens(table_children)
-    thead = extractor.thead_token
-    tbody = extractor.tbody_token
+    thead, tbody = extractor.process_tokens(table_children)
     if thead is None or tbody is None:
         raise Exception("thead and tbody must be defined!")
 

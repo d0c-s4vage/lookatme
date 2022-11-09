@@ -11,6 +11,8 @@ import yaml
 from marshmallow import INCLUDE, RAISE, Schema, fields, validate
 
 
+line_color = "#505050"
+
 class NoDatesSafeLoader(yaml.SafeLoader):
     @classmethod
     def remove_implicit_resolver(cls, tag_to_remove):
@@ -328,9 +330,9 @@ class BlockQuoteSchema(Schema):
         BorderBoxSchema,
         dump_default=BorderBoxSchema().dump(
             {
-                "tl_corner": {"text": "╭── ", "fg": "#808080"},
-                "l_line": {"text": "│", "fg": "#808080"},
-                "bl_corner": {"text": "╰── ", "fg": "#808080"},
+                "tl_corner": {"text": "╭── ", "fg": line_color},
+                "l_line": {"text": "│", "fg": line_color},
+                "bl_corner": {"text": "╰── ", "fg": line_color},
                 "b_line": {"text": " ", "fg": "", "bg": ""},
                 "r_line": {"text": " ", "fg": "", "bg": ""},
                 "t_line": {"text": " ", "fg": "", "bg": ""},
@@ -395,6 +397,10 @@ class HeadingsSchema(Schema):
         }
 
 
+table_border_default = BorderBoxSchema().dump(None)
+for k, v in table_border_default.items():
+    table_border_default[k]["fg"] = "bold,#c0c0c0"
+
 class TableSchema(Schema):
     column_spacing = fields.Int(dump_default=3)
     bg = fields.Str(dump_default="")
@@ -414,7 +420,7 @@ class TableSchema(Schema):
         dump_default=StyleFieldSchema().dump(
             {
                 "fg": "",
-                "bg": "#202020",
+                "bg": "#101010",
             }
         ),
     )
@@ -432,11 +438,25 @@ class TableSchema(Schema):
         dump_default=StyleFieldSchema().dump(
             {
                 "fg": "",
-                "bg": "#181818",
+                "bg": "#0c0c0c",
             }
         ),
     )
-    border = fields.Nested(BorderBoxSchema, dump_default=BorderBoxSchema().dump(None))
+    border = fields.Nested(
+        BorderBoxSchema,
+        dump_default=BorderBoxSchema().dump(
+            {
+                "tl_corner": {"text": "┌", "fg": line_color, "bg": ""},
+                "l_line": {"text": "│", "fg": line_color, "bg": ""},
+                "bl_corner": {"text": "└", "fg": line_color, "bg": ""},
+                "b_line": {"text": "─", "fg": line_color, "bg": ""},
+                "r_line": {"text": "│", "fg": line_color, "bg": ""},
+                "t_line": {"text": "─", "fg": line_color, "bg": ""},
+                "br_corner": {"text": "┘", "fg": line_color, "bg": ""},
+                "tr_corner": {"text": "┐", "fg": line_color, "bg": ""},
+            }
+        ),
+    )
 
 
 class StyleSchema(Schema):
