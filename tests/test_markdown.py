@@ -3,7 +3,6 @@ Test basic markdown renderings
 """
 
 
-from lookatme.schemas import StyleSchema
 import lookatme.utils as l_utils
 
 

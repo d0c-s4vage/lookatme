@@ -4,9 +4,8 @@ Defines utilities for testing lookatme
 
 
 import inspect
-import pytest
 from six.moves import StringIO  # type: ignore
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import cast, Any, Dict, List, Optional, Tuple, Union
 import urwid
 
 from lookatme.render.context import Context
@@ -206,7 +205,7 @@ def override_style(new_style: Dict, complete=False, pass_tmpdir=False):
     """
 
     def outer(fn):
-        full_style = lookatme.schemas.StyleSchema().dump(None)
+        full_style = cast(Dict, lookatme.schemas.StyleSchema().dump(None))
         if complete:
             full_style.update(new_style)
         else:
@@ -235,24 +234,6 @@ def assert_render(correct_render, rendered, full_strip=False):
             assert stripped == b""
         else:
             assert correct_render[idx] == stripped
-
-
-def render_markdown(markdown, height=50, width=200, single_slide=False):
-    """Returns the rendered canvas contents of the markdown"""
-    loop = urwid.MainLoop(urwid.ListBox([]))
-    renderer = lookatme.tui.SlideRenderer(loop)
-    renderer.start()
-
-    parser = Parser(single_slide=single_slide)
-    _, slides = parser.parse_slides({"title": ""}, markdown)
-
-    renderer.stop()
-    contents = renderer.render_slide(slides[0], force=True)
-    renderer.join()
-
-    container = urwid.ListBox([urwid.Text("testing")])
-    container.body = contents
-    return list(container.render((width, height)).content())
 
 
 def spec_and_text(item):

@@ -83,7 +83,7 @@ function run_pytest {
         local color_opt=""
         [ "$COLOR" == true ] && color_opt="--color=yes"
 
-        $RUN_PREFIX pytest $color_opt "$@"
+        $RUN_PREFIX pytest $color_opt --cov lookatme --cov-report term-missing "$@"
     fi
 }
 

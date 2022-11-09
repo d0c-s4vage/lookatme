@@ -10,7 +10,6 @@ import urwid
 import lookatme.parser
 import lookatme.render.markdown_block as markdown_block
 from lookatme.render.context import Context
-import lookatme.schemas as schemas
 from lookatme.widgets.table import Table
 import tests.utils as utils
 
@@ -34,17 +33,19 @@ def table_setup(tmpdir, mocker):
     utils.setup_lookatme(tmpdir, mocker, style=TEST_STYLE)
 
 
-def _md_to_table_tokens(md_text: str) -> Tuple[Dict, Dict]:
+def _md_to_table_tokens(md_text: str) -> Tuple[Optional[Dict], Optional[Dict]]:
     tokens = lookatme.parser.md_to_tokens(md_text)
     # skip the table_open token and the table_close tokens
-    thead, tbody = markdown_block._extract_nested_table_tokens(tokens[1:-1])
-    return (thead, tbody)
+    extractor = markdown_block.TableTokenExtractor()
+    return extractor.process_tokens(tokens[1:-1])
 
 
 def _render_table(
     md_text: str,
 ) -> Tuple[Table, List[List[Tuple[Optional[urwid.AttrSpec], Any, bytes]]]]:
     thead, tbody = _md_to_table_tokens(md_text)
+    assert thead is not None
+    assert tbody is not None
 
     ctx = Context(None)
     root = urwid.Pile([])

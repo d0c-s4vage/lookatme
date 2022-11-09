@@ -9,7 +9,7 @@ import pygments
 import pygments.styles
 import re
 import sys
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Optional, Union
 
 import urwid
 
@@ -450,52 +450,70 @@ def render_fence(token: Dict, ctx: Context):
     ctx.widget_add([urwid.Divider(), res, urwid.Divider()])
 
 
-def _extract_nested_table_tokens(
-    tokens: List[Dict],
-) -> Tuple[Dict, Dict]:
-    idx = 0
+class TableTokenExtractor:
+    def __init__(self):
+        self.root = {"children": []}
+        self.parent_token_stack = [self.root]
+        self.thead_token = None
+        self.tbody_token = None
 
-    thead_token = None
-    tbody_token = None
+    @property
+    def curr_parent(self) -> Dict:
+        return self.parent_token_stack[-1]
 
-    parent_token_stack = []
-    while idx < len(tokens):
-        token = tokens[idx]
-        idx += 1
+    @property
+    def curr_siblings(self) -> List[Dict]:
+        parent = self.curr_parent
+        siblings = parent.get("children", [])
+        if not isinstance(siblings, list):
+            siblings = parent["children"] = []
+        return siblings
 
-        if re.match(r"(thead|tbody|tr|th|td)_open", token["type"]):
-            if parent_token_stack:
-                parent = parent_token_stack[-1]
-                parent["children"].append(token)
-            token["children"] = token.get("children", None) or []
-            parent_token_stack.append(token)
-            if token["type"] == "thead_open":
-                thead_token = token
-            elif token["type"] == "tbody_open":
-                tbody_token = token
+    def is_table_element_open(self, token: Dict) -> bool:
+        ttype = token["type"]
+        return re.match(r"(thead|tbody|tr|th|td)_open", ttype) is not None
 
-            attrs = token.get("attrs", None)
-            if attrs is not None:
-                token["attrs"] = dict(attrs)
-                style = token["attrs"].get("style", "")
-                align = "left"
-                if "text-align:center" in style:
-                    align = "center"
-                elif "text-align:right" in style:
-                    align = "right"
-                token["align"] = align
-        elif re.match(r"(thead|tbody|tr|th|td)_close", token["type"]):
-            parent_token_stack.pop()
+    def is_table_element_close(self, token: Dict) -> bool:
+        ttype = token["type"]
+        return re.match(r"(thead|tbody|tr|th|td)_close", ttype) is not None
+
+    def set_token_alignment(self, token: Dict):
+        attrs = token.get("attrs", None)
+        if attrs is None:
+            align = "left"
         else:
-            parent = parent_token_stack[-1]
-            parent["children"].append(token)
+            token["attrs"] = dict(attrs)
+            style = token["attrs"].get("style", "")
+            align = "left"
+            if "text-align:center" in style:
+                align = "center"
+            elif "text-align:right" in style:
+                align = "right"
+            token["align"] = align
 
-    if thead_token is None:
-        raise ValueError("thead must be present!")
-    if tbody_token is None:
-        raise ValueError("thead must be present!")
+    def process_tokens(
+        self, tokens: List[Dict]
+    ) -> Tuple[Optional[Dict], Optional[Dict]]:
+        for token in tokens:
+            self.process_token(token)
 
-    return (thead_token, tbody_token)
+        return self.thead_token, self.tbody_token
+
+    def process_token(self, token: Dict):
+        if self.is_table_element_open(token):
+            self.curr_siblings.append(token)
+            self.parent_token_stack.append(token)
+
+            if token["type"] == "thead_open":
+                self.thead_token = token
+            elif token["type"] == "tbody_open":
+                self.tbody_token = token
+
+            self.set_token_alignment(token)
+        elif self.is_table_element_close(token):
+            self.parent_token_stack.pop()
+        else:
+            self.curr_siblings.append(token)
 
 
 @tutor(
@@ -541,7 +559,10 @@ def render_table_open(token: Dict, ctx: Context):
             break
         table_children.append(copy.deepcopy(token))
 
-    thead, tbody = _extract_nested_table_tokens(table_children)
+    extractor = TableTokenExtractor()
+    extractor.process_tokens(table_children)
+    thead = extractor.thead_token
+    tbody = extractor.tbody_token
     if thead is None or tbody is None:
         raise Exception("thead and tbody must be defined!")
 

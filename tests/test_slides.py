@@ -4,7 +4,6 @@ Test slide rendering
 
 import yaml
 
-from lookatme.tui import MarkdownTui
 
 import tests.utils as utils
 from tests.utils import override_style

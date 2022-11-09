@@ -111,7 +111,7 @@ def test_file_loader_relative(tmpdir, _):
     tmppath.write("'hello'")
 
     utils.validate_render(
-        md_text=f"""
+        md_text="""
             ```file
             path: test.py
             relative: true
@@ -138,7 +138,7 @@ def test_file_loader_relative(tmpdir, _):
 def test_file_loader_not_found(_):
     """Test the built-in file loader extension"""
     utils.validate_render(
-        md_text=f"""
+        md_text="""
             ```file
             path: does_not_exist.py
             ```
