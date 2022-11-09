@@ -51,7 +51,7 @@ class TokenIterator:
 class Context:
     """ """
 
-    def __init__(self, loop: None | urwid.MainLoop):
+    def __init__(self, loop: Optional[urwid.MainLoop]):
         self.container_stack: List[ContainerInfo] = []
         self.loop = loop
         self.tag_stack = []
@@ -180,7 +180,7 @@ class Context:
                     curr_text_markup = []
                 res.append(render_res)
             if isinstance(render_res, str) or (
-                isinstance(render_res, (tuple | list)) and len(render_res) == 2
+                isinstance(render_res, (tuple, list)) and len(render_res) == 2
             ):
                 curr_text_markup.append(render_res)
 

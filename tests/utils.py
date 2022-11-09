@@ -104,7 +104,7 @@ def _vtext_from_text_and_style_mask(
 
 def render_widget(
     w: urwid.Widget, width: Optional[int] = None
-) -> List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]:
+) -> List[List[Tuple[Optional[urwid.AttrSpec], Any, bytes]]]:
     if width is None:
         min_width = 300
         _, orig_rows = w.pack((min_width,))
@@ -119,7 +119,7 @@ def render_widget(
 
 def render_md(
     md_text: str, width: Optional[int] = None
-) -> List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]:
+) -> List[List[Tuple[Optional[urwid.AttrSpec], Any, bytes]]]:
     tokens = lookatme.parser.md_to_tokens(md_text)
 
     root = urwid.Pile([])
@@ -136,7 +136,7 @@ def validate_render(
     style_mask: List[str],
     styles: Dict[str, Dict[str, str]],
     md_text: Optional[str] = None,
-    rendered: Optional[List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]] = None,
+    rendered: Optional[List[List[Tuple[Optional[urwid.AttrSpec], Any, bytes]]]] = None,
     render_width: Optional[int] = None,
     render_height: Optional[int] = None,
     as_slide: Optional[bool] = False,

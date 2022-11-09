@@ -4,7 +4,7 @@ This module tests the Table widget in lookatme/widgets/table.py
 
 
 import pytest
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Optional
 import urwid
 
 import lookatme.parser
@@ -43,7 +43,7 @@ def _md_to_table_tokens(md_text: str) -> Tuple[Dict, Dict]:
 
 def _render_table(
     md_text: str,
-) -> Tuple[Table, List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]]:
+) -> Tuple[Table, List[List[Tuple[Optional[urwid.AttrSpec], Any, bytes]]]]:
     thead, tbody = _md_to_table_tokens(md_text)
 
     ctx = Context(None)
