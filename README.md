@@ -31,7 +31,7 @@ tool.
 * Loading external files into code blocks
 * Support for contrib extensions
 * Smart slide splitting
-* Progressive slides with `<!-- stop -->` comments between block elements
+* Progressive slides by adding `<!-- stop -->` comments anywhere
 
 ### Tutorial
 

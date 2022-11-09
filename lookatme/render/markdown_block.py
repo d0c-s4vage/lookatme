@@ -567,12 +567,16 @@ def render_table_open(token: Dict, ctx: Context):
         table_children.append(copy.deepcopy(token))
         if token["type"] == "table_close":
             break
-        table_children.append(copy.deepcopy(token))
+    # loop completed without breaking
+    else:
+        table_children += list(ctx.unwind_tokens_consumed)
 
     extractor = TableTokenExtractor()
-    thead, tbody = extractor.process_tokens(table_children)
-    if thead is None or tbody is None:
-        raise Exception("thead and tbody must be defined!")
+    extractor.process_tokens(table_children)
+    thead = extractor.thead_token
+    tbody = extractor.tbody_token
+    if thead is None:
+        raise Exception("At least thead must be defined for tables")
 
     border_style = config.get_style()["table"]["border"]
 

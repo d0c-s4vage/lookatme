@@ -391,15 +391,21 @@ class Parser(object):
         "progressive slides",
         r"""
         Slides can be progressively displayed by inserting `<!-- stop -->`
-        comments between block elemtents (as in, inline within some other
-        markdown element).
+        comments anywhere in the markdown.
 
         <TUTOR:EXAMPLE>
-        This will display first, and after you press advance ...
+        This will display first, and after you press advance ...<!-- stop -->
+
+        * this <!-- stop -->
+          * displays <!-- stop -->
+
+        | and <!-- stop --> | then <!-- stop -->     |
+        |-------------------|------------------------|
+        | this              | and this               |
 
         <!-- stop -->
 
-        This will display!
+        and finally this!
         </TUTOR:EXAMPLE>
         """,
         order=2,

@@ -4,7 +4,7 @@ Defines all schemas used in lookatme
 
 
 import datetime
-from typing import Dict
+from typing import cast, Dict
 
 import pygments.styles
 import yaml
@@ -398,7 +398,7 @@ class HeadingsSchema(Schema):
         }
 
 
-table_border_default = BorderBoxSchema().dump(None)
+table_border_default = cast(Dict, BorderBoxSchema().dump(None))
 for k, v in table_border_default.items():
     table_border_default[k]["fg"] = "bold,#c0c0c0"
 

@@ -6,7 +6,7 @@ Defines a basic Table widget for urwid
 import re
 from collections import defaultdict
 from distutils.version import StrictVersion
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple, Optional
 
 import dateutil.parser
 import urwid
@@ -107,7 +107,7 @@ class SortSetting:
 class Table(urwid.Pile):
     signals = ["change"]
 
-    def __init__(self, ctx: Context, header: Dict, body: None | Dict):
+    def __init__(self, ctx: Context, header: Dict, body: Optional[Dict]):
         """Create a new table"""
         self.ctx = ctx
 
@@ -252,6 +252,8 @@ class Table(urwid.Pile):
 
         body_tokens = []
         for idx in sorted_indices:
+            if self.body is None:
+                raise Exception("Table body was unexpectedly None")
             body_tokens.append(self.body["children"][idx])
 
         if sorted_indices == list(range(len(self.body_rows))):
