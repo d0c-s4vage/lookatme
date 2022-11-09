@@ -128,7 +128,7 @@ def test_heading_levels(style):
     }
 )
 def test_table(style):
-    """Test basic header rendering"""
+    """Test basic table rendering rendering"""
     utils.validate_render(
         render_width=30,
         md_text=r"""
@@ -161,6 +161,40 @@ def test_table(style):
             ),
             "O": style["table"]["odd_rows"],
             "E": style["table"]["even_rows"],
+            ".": style["table"]["border"]["tl_corner"],
+            " ": {},
+        },
+    )
+
+
+@override_style(
+    {
+        "table": {
+            "column_spacing": 1,
+            "header_divider": {"text": "-"},
+        }
+    }
+)
+def test_table_with_no_body(style):
+    """Test table rendering when there isn't a body present"""
+    utils.validate_render(
+        render_width=10,
+        md_text=r"""
+            | H1      |   H2   |     H3 |
+            |:--------|:------:|-------:|
+        """,
+        text=[
+            "┌────────┐",
+            "│H1 H2 H3│",
+            "└────────┘",
+        ],
+        style_mask=[
+            "..........",
+            ".HHHHHHHH.",
+            "..........",
+        ],
+        styles={
+            "H": style["table"]["header"],
             ".": style["table"]["border"]["tl_corner"],
             " ": {},
         },

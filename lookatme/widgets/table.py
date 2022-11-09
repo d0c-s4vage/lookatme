@@ -6,7 +6,7 @@ Defines a basic Table widget for urwid
 import re
 from collections import defaultdict
 from distutils.version import StrictVersion
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple, Optional
 
 import dateutil.parser
 import urwid
@@ -107,7 +107,7 @@ class SortSetting:
 class Table(urwid.Pile):
     signals = ["change"]
 
-    def __init__(self, ctx: Context, header: Dict, body: Dict):
+    def __init__(self, ctx: Context, header: Dict, body: Optional[Dict]):
         """Create a new table"""
         self.ctx = ctx
 
@@ -117,7 +117,9 @@ class Table(urwid.Pile):
 
         self.body = body
         self.body_rows = []
-        self.validate_row_container(self.body)
+        if self.body is not None:
+            self.validate_row_container(self.body)
+        self.normalize_body()
 
         self.num_columns = 0
         self.sort_setting = SortSetting()
@@ -175,6 +177,20 @@ class Table(urwid.Pile):
 
         self.contents = self.gen_contents()
         self._invalidate()
+
+    def normalize_body(self):
+        """Normalize the cells in the body - truncate all cells that go beyond
+        the number of headers, and add blank cells if we're missing any
+        """
+        if self.body is None:
+            return
+
+        num_cols = len(self.header["children"][0]["children"])
+        for row in self.body["children"]:
+            while len(row["children"]) < num_cols:
+                row["children"].append({"type": "td_open", "children": []})
+            # truncate the number of cells
+            row["children"] = row["children"][:num_cols]
 
     def validate_row(self, row: Dict):
         """Validate that the provided row is a tr_open, with th_open or td_open
@@ -236,6 +252,8 @@ class Table(urwid.Pile):
 
         body_tokens = []
         for idx in sorted_indices:
+            if self.body is None:
+                raise Exception("Table body was unexpectedly None")
             body_tokens.append(self.body["children"][idx])
 
         if sorted_indices == list(range(len(self.body_rows))):
@@ -271,7 +289,7 @@ class Table(urwid.Pile):
             if idx > 0:
                 padding_text = " " * self.cell_spacing
                 padding_w = urwid.Text((row_spec_general, padding_text))
-                if cell_pile.is_header:
+                if cell_pile.is_header and self.body_rows:
                     div_text = self.style["header_divider"]["text"] * len(padding_text)
                     # in case the divider text is more than one char, we'll
                     # truncate it
@@ -290,7 +308,7 @@ class Table(urwid.Pile):
                 padding_w = self.ctx.wrap_widget(padding_w, spec=row_spec_general)
                 res.append(padding_w)
 
-            if cell_pile.is_header:
+            if cell_pile.is_header and self.body_rows:
                 for w in cell_pile.widget_list:
                     self.watch_header(idx, utils.core_widget(w))
 
@@ -318,12 +336,22 @@ class Table(urwid.Pile):
             # list of urwid.Piles
             for idx, cell in enumerate(row):
                 rend = cell.render((200,))
-
-                row_lens = [len(rend_row.strip()) for rend_row in rend.text]
-                curr_col_width = max([0] if not row_lens else row_lens)
+                curr_col_width = self._calc_canvas_width(rend)
                 column_maxes[idx] = max(column_maxes[idx], curr_col_width)
 
         return column_maxes
+
+    def _calc_canvas_width(self, canvas):
+        canvas_max = 0
+        for row in canvas.content():
+            row_width = 0
+            for spec, _, text in row:
+                if spec is None:
+                    continue
+                row_width += len(text)
+            if row_width > canvas_max:
+                canvas_max = row_width
+        return canvas_max
 
     def create_cells(
         self, rows, base_spec=None, header=False

@@ -5,6 +5,7 @@ This module defines the parser for the markdown presentation file
 
 import re
 from collections import defaultdict
+import copy
 from typing import AnyStr, Callable, Dict, List, Tuple
 
 import markdown_it
@@ -65,20 +66,63 @@ def debug_print_tokens(tokens, level=1):
             stack.append({"type": "children_open"})
 
 
-def is_progressive_slide_delimiter_token(token):
-    """Returns True if the token indicates the end of a progressive slide
+class SlideIsolator:
+    def __init__(self):
+        self.slide_tokens = []
+        self.slides = []
+        self.number = 0
 
-    :param dict token: The markdown token
-    :returns: True if the token is a progressive slide delimiter
-    """
-    if token["type"] != "inline" or len(token["children"]) != 1:
-        return False
+    def create_slides(self, tokens, number) -> List[Slide]:
+        self.slide_tokens = []
+        self.slides: List[Slide] = []
+        self.number = number
 
-    token = token["children"][0]
-    return (
-        token["type"] == "html_inline"
-        and re.match(r"<!--\s*stop\s*-->", token["content"]) is not None
-    )
+        self._isolate_progressive_slides(tokens, self.slide_tokens)
+
+        if not self.slides or (
+            self.slides and self.slides[-1].tokens != self.slide_tokens
+        ):
+            self._isolate_slide()
+
+        return self.slides
+
+    def _is_progressive_slide_delimiter(self, token: Dict) -> bool:
+        return (
+            token["type"] == "html_inline"
+            and re.match(r"<!--\s*stop\s*-->", token["content"]) is not None
+        )
+
+    def _isolate_progressive_slides(
+        self,
+        input_tokens: List[Dict],
+        output_tokens: List[Dict],
+    ):
+        """Recursively iterate through the provided input tokens, calling the
+        isolate_slide callback whenever a progressive slide token is found. Also
+        adding all iterated tokens back into the output_tokens list.
+        """
+        for token in input_tokens:
+            if self._is_progressive_slide_delimiter(token):
+                self._isolate_slide()
+                continue
+
+            children = token.get("children", None)
+            if children is not None:
+                # shallow copy here is fine - we only care about zeroing out the
+                # children and adding the children back in one-by-one
+                output_token = copy.copy(token)
+                output_token["children"] = []
+                output_tokens.append(output_token)
+                self._isolate_progressive_slides(
+                    children,
+                    output_token["children"],
+                )
+            else:
+                output_tokens.append(token)
+
+    def _isolate_slide(self):
+        self.slides.append(Slide(copy.deepcopy(self.slide_tokens), self.number))
+        self.number += 1
 
 
 class Parser(object):
@@ -347,32 +391,28 @@ class Parser(object):
         "progressive slides",
         r"""
         Slides can be progressively displayed by inserting `<!-- stop -->`
-        comments between block elemtents (as in, inline within some other
-        markdown element).
+        comments anywhere in the markdown.
 
         <TUTOR:EXAMPLE>
-        This will display first, and after you press advance ...
+        This will display first, and after you press advance ...<!-- stop -->
+
+        * this <!-- stop -->
+          * displays <!-- stop -->
+
+        | and <!-- stop --> | then <!-- stop -->     |
+        |-------------------|------------------------|
+        | this              | and this               |
 
         <!-- stop -->
 
-        This will display!
+        and finally this!
         </TUTOR:EXAMPLE>
         """,
         order=2,
     )
     def _create_slides(self, tokens, number):
-        """Iterate on tokens and create slides out of them. Can create multiple
-        slides if the tokens contain progressive slide delimiters.
-
-        :param list tokens: The tokens to create slides out of
-        :param int number: The starting slide number
-        :returns: A list of Slides
+        """Create additional slides from the provided token stream, splitting
+        wherever progressive slide markers are found.
         """
-        slide_tokens = []
-        for token in tokens:
-            if is_progressive_slide_delimiter_token(token):
-                yield Slide(slide_tokens[:], number)
-                number += 1
-            else:
-                slide_tokens.append(token)
-        yield Slide(slide_tokens, number)
+        slide_isolator = SlideIsolator()
+        return slide_isolator.create_slides(tokens, number)

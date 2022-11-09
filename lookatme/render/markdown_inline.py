@@ -44,6 +44,15 @@ def render_all(ctx: Context):
         ctx.log_debug("Rendering inline token: {!r}".format(token))
         render(token, ctx)
 
+    # normally ctx.unwind_tokens will be empty as every "open" token will have
+    # a matching "close" token. However, sometimes (like with progressive slides),
+    # there will be some tokens missing from the token stream.
+    #
+    # this is where we artificially close all open tokens
+    for unwind_token in ctx.unwind_tokens:
+        ctx.log_debug("Rendering unwind block token: {!r}".format(unwind_token))
+        render(unwind_token, ctx)
+
 
 # -------------------------------------------------------------------------
 
