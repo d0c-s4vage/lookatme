@@ -14,8 +14,7 @@ def test_real_tutorials_exist():
 
 
 def test_tutorial_basic(mocker):
-    """Test that tutorials work correctly
-    """
+    """Test that tutorials work correctly"""
     mocker.patch("lookatme.tutorial.GROUPED_TUTORIALS", {})
     mocker.patch("lookatme.tutorial.NAMED_TUTORIALS", {})
 
@@ -42,10 +41,12 @@ def test_tutor(mocker):
     tutor = tutorial.Tutor(
         "name",
         "group",
-        "\n".join([
-            "<TUTOR:EXAMPLE>contents</TUTOR:EXAMPLE>",
-            "<TUTOR:STYLE>test</TUTOR:STYLE>",
-        ]),
+        "\n".join(
+            [
+                "<TUTOR:EXAMPLE>contents</TUTOR:EXAMPLE>",
+                "<TUTOR:STYLE>test</TUTOR:STYLE>",
+            ]
+        ),
         impl_fn=lambda _: 10,
         order=99999,
     )
@@ -58,7 +59,8 @@ def test_tutor(mocker):
     md_rendered = "\ncontents"
     assert md_rendered in md_text
 
-    style_yaml = inspect.cleandoc("""
+    style_yaml = inspect.cleandoc(
+        """
         ```yaml
         ---
         styles:
@@ -66,5 +68,6 @@ def test_tutor(mocker):
             test: hello
         ---
         ```
-    """).strip()
+    """
+    ).strip()
     assert style_yaml in md_text

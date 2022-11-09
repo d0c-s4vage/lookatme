@@ -83,7 +83,7 @@ function run_pytest {
         local color_opt=""
         [ "$COLOR" == true ] && color_opt="--color=yes"
 
-        $RUN_PREFIX pytest $color_opt "$@"
+        $RUN_PREFIX pytest $color_opt --cov lookatme --cov-report term-missing "$@"
     fi
 }
 
@@ -132,6 +132,7 @@ SUBCOMMAND may be one of the below values. The default is "all":
        fmt - Run autopep8 and then black (black is the final check)
     pytest - Run pytest tests
     flake8 - Run flake8
+   pyright - Run pyright
 
  --autofix  Run the command's autofix functionality
  --color    Run the command with color

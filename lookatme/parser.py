@@ -71,8 +71,13 @@ def is_progressive_slide_delimiter_token(token):
     :param dict token: The markdown token
     :returns: True if the token is a progressive slide delimiter
     """
-    return token["type"] == "close_html" and re.match(
-        r"<!--\s*stop\s*-->", token["text"]
+    if token["type"] != "inline" or len(token["children"]) != 1:
+        return False
+
+    token = token["children"][0]
+    return (
+        token["type"] == "html_inline"
+        and re.match(r"<!--\s*stop\s*-->", token["content"]) is not None
     )
 
 
@@ -130,6 +135,7 @@ class Parser(object):
 
             keep_split_token = True
         else:
+
             def slide_split_check(token):  # type: ignore
                 return is_hrule(token)
 

@@ -4,8 +4,18 @@ This module tests that markdown presentations can be correctly parsed
 
 
 import datetime
+import pytest
+
 
 from lookatme.parser import Parser
+
+
+import tests.utils as utils
+
+
+@pytest.fixture(autouse=True)
+def parse_setup(tmpdir, mocker):
+    utils.setup_lookatme(tmpdir, mocker)
 
 
 def test_parse_metadata():
@@ -80,8 +90,7 @@ More text
 
 
 def test_parse_slides_with_progressive_stops_and_hrule_splits():
-    """Test that slide parsing works correctly
-    """
+    """Test that slide parsing works correctly"""
     input_data = r"""
 # Heading
 
@@ -127,7 +136,18 @@ more text
     meta = {"title": ""}
     _, slides = parser.parse_slides(meta, input_data)
     assert len(slides) == 4
-    assert meta["title"] == "Heading Title"
+    # the title should be a list of tokens!
+    assert isinstance(meta["title"], list)
+
+    types = []
+    contents = []
+    for token in meta["title"]:
+        assert isinstance(token, dict)
+        types.append(token.get("type"))
+        contents.append(token.get("content", None))
+
+    assert types == ["paragraph_open", "inline", "paragraph_close"]
+    assert contents == [None, "Heading Title", None]
 
 
 def test_parse_smart_slides_multiple_h2():

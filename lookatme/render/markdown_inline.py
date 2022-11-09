@@ -60,11 +60,12 @@ def render_text(token, ctx: Context):
     <TUTOR:EXAMPLE>
     The donut jumped *under* the crane.
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_em_open(_, ctx: Context):
-    ctx.spec_push(utils.spec_from_style("italics"))
+    spec = utils.spec_from_style(config.get_style()["emphasis"])
+    ctx.spec_push(spec)
 
 
 @contrib_first
@@ -79,11 +80,12 @@ def render_em_close(_, ctx: Context):
     <TUTOR:EXAMPLE>
     They jumped **over** the wagon
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_strong_open(_, ctx: Context):
-    ctx.spec_push(utils.spec_from_style("bold"))
+    spec = utils.spec_from_style(config.get_style()["strong_emphasis"])
+    ctx.spec_push(spec)
 
 
 @contrib_first
@@ -98,11 +100,12 @@ def render_strong_close(_, ctx: Context):
     <TUTOR:EXAMPLE>
     I lost my ~~mind~~ keyboard and couldn't type anymore.
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_s_open(_, ctx: Context):
-    ctx.spec_push(utils.spec_from_style("strikethrough"))
+    spec = utils.spec_from_style(config.get_style()["strikethrough"])
+    ctx.spec_push(spec)
 
 
 @contrib_first
@@ -125,7 +128,7 @@ def render_s_close(_, ctx: Context):
     Links can be styled with slide metadata. This is the default style:
 
     <TUTOR:STYLE>link</TUTOR:STYLE>
-    """
+    """,
 )
 @contrib_first
 def render_link_open(token, ctx: Context):
@@ -156,7 +159,7 @@ def render_link_close(_, ctx: Context):
     <TUTOR:EXAMPLE>
     ![image alt](https://image/url)
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_image(token, ctx: Context):
@@ -187,7 +190,7 @@ def render_softbreak(_, ctx: Context):
     The `OddOne` class accepts `Table` instances, converts them to raw pointers,
     forces garbage collection to run.
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_code_inline(token, ctx: Context):

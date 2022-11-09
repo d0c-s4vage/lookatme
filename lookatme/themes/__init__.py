@@ -10,8 +10,7 @@ from lookatme.utils import dict_deep_update
 
 
 def ensure_defaults(mod) -> Dict[str, Any]:
-    """Ensure that all required attributes exist within the provided module
-    """
+    """Ensure that all required attributes exist within the provided module"""
     defaults = StyleSchema().dump(None)
     dict_deep_update(defaults, mod.theme)
 

@@ -4,9 +4,8 @@ Defines utilities for testing lookatme
 
 
 import inspect
-import pytest
-from six.moves import StringIO # type: ignore
-from typing import Any, Dict, List, Optional, Tuple, Union
+from six.moves import StringIO  # type: ignore
+from typing import cast, Any, Dict, List, Optional, Tuple, Union
 import urwid
 
 from lookatme.render.context import Context
@@ -104,7 +103,7 @@ def _vtext_from_text_and_style_mask(
 
 def render_widget(
     w: urwid.Widget, width: Optional[int] = None
-) -> List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]:
+) -> List[List[Tuple[Optional[urwid.AttrSpec], Any, bytes]]]:
     if width is None:
         min_width = 300
         _, orig_rows = w.pack((min_width,))
@@ -119,7 +118,7 @@ def render_widget(
 
 def render_md(
     md_text: str, width: Optional[int] = None
-) -> List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]:
+) -> List[List[Tuple[Optional[urwid.AttrSpec], Any, bytes]]]:
     tokens = lookatme.parser.md_to_tokens(md_text)
 
     root = urwid.Pile([])
@@ -136,7 +135,7 @@ def validate_render(
     style_mask: List[str],
     styles: Dict[str, Dict[str, str]],
     md_text: Optional[str] = None,
-    rendered: Optional[List[List[Tuple[None | urwid.AttrSpec, Any, bytes]]]] = None,
+    rendered: Optional[List[List[Tuple[Optional[urwid.AttrSpec], Any, bytes]]]] = None,
     render_width: Optional[int] = None,
     render_height: Optional[int] = None,
     as_slide: Optional[bool] = False,
@@ -196,7 +195,7 @@ def precise_update(full_style, new_style):
             full_style[k] = v
 
 
-def override_style(new_style: Dict, complete=False):
+def override_style(new_style: Dict, complete=False, pass_tmpdir=False):
     """Override the style settings for lookatme. By default a precise update
     will be performed where nested subkeys will be specifically updated if
     they exist in the original style dict.
@@ -206,7 +205,7 @@ def override_style(new_style: Dict, complete=False):
     """
 
     def outer(fn):
-        full_style = lookatme.schemas.StyleSchema().dump(None)
+        full_style = cast(Dict, lookatme.schemas.StyleSchema().dump(None))
         if complete:
             full_style.update(new_style)
         else:
@@ -215,7 +214,10 @@ def override_style(new_style: Dict, complete=False):
 
         def inner(tmpdir, mocker):
             setup_lookatme(tmpdir, mocker, style=full_style)
-            return fn(full_style)
+            if pass_tmpdir:
+                return fn(tmpdir, full_style)
+            else:
+                return fn(full_style)
 
         return inner
 
@@ -232,24 +234,6 @@ def assert_render(correct_render, rendered, full_strip=False):
             assert stripped == b""
         else:
             assert correct_render[idx] == stripped
-
-
-def render_markdown(markdown, height=50, width=200, single_slide=False):
-    """Returns the rendered canvas contents of the markdown"""
-    loop = urwid.MainLoop(urwid.ListBox([]))
-    renderer = lookatme.tui.SlideRenderer(loop)
-    renderer.start()
-
-    parser = Parser(single_slide=single_slide)
-    _, slides = parser.parse_slides({"title": ""}, markdown)
-
-    renderer.stop()
-    contents = renderer.render_slide(slides[0], force=True)
-    renderer.join()
-
-    container = urwid.ListBox([urwid.Text("testing")])
-    container.body = contents
-    return list(container.render((width, height)).content())
 
 
 def spec_and_text(item):
