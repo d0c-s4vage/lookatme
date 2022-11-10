@@ -44,18 +44,13 @@ def test_file_loader(tmpdir, _):
             ```
         """,
         text=[
-            "       ",
             "'hello'",
-            "       ",
         ],
         style_mask=[
-            "       ",
             "SSSSSSS",
-            "       ",
         ],
         styles={
             "S": {"fg": "g93", "bg": "g15"},
-            " ": {},
         },
     )
 
@@ -84,22 +79,17 @@ Apples1
             ```
         """,
         text=[
-            "       ",
             "Apples1",
             "Apples2",
             "Apples3",
-            "       ",
         ],
         style_mask=[
-            "       ",
             "TTTTTTT",
             "TTTTTTT",
             "TTTTTTT",
-            "       ",
         ],
         styles={
             "T": {"fg": "g93", "bg": "g15"},
-            " ": {},
         },
     )
 
@@ -118,18 +108,13 @@ def test_file_loader_relative(tmpdir, _):
             ```
         """,
         text=[
-            "       ",
             "'hello'",
-            "       ",
         ],
         style_mask=[
-            "       ",
             "SSSSSSS",
-            "       ",
         ],
         styles={
             "S": {"fg": "g93", "bg": "g15"},
-            " ": {},
         },
     )
 
@@ -144,17 +129,12 @@ def test_file_loader_not_found(_):
             ```
         """,
         text=[
-            "              ",
             "File not found",
-            "              ",
         ],
         style_mask=[
-            "              ",
             "TTTTTTTTTTTTTT",
-            "              ",
         ],
         styles={
             "T": {"fg": "g93", "bg": "g15"},
-            " ": {},
         },
     )
