@@ -188,7 +188,11 @@ def render_image_close(token, ctx: Context):
 
 @contrib_first
 def render_softbreak(_, ctx: Context):
-    ctx.inline_push((ctx.spec_text, "\n"))
+    markup = ctx.get_inline_markup()
+    # if the previous line ended with a dash, don't add a space!
+    if len(markup) > 0 and markup[-1][-1].endswith("-"):
+        return
+    ctx.inline_push((ctx.spec_text, " "))
 
 
 @tutor(

@@ -429,17 +429,17 @@ def test_block_quote(style):
     utils.validate_render(
         md_text="""
             > Quote text
+            >
             > Quote italic text
-            > Quote italic text
-            > Quote italic text
+            >
             > Quote text
         """,
         text=[
             "██━━──               ",
             "┃  Quote text        ",
+            "┃                    ",
             "┃  Quote italic text ",
-            "┃  Quote italic text ",
-            "┃  Quote italic text ",
+            "┃                    ",
             "┃  Quote text        ",
             "██━━──               ",
         ],
@@ -619,18 +619,22 @@ def test_emphasis(styles):
     utils.validate_render(
         md_text="""
             *emphasis*
+
             _emphasis_
         """,
         text=[
             "emphasis",
+            "        ",
             "emphasis",
         ],
         style_mask=[
             "EEEEEEEE",
+            "        ",
             "EEEEEEEE",
         ],
         styles={
             "E": styles["emphasis"],
+            " ": {},
         },
     )
 
@@ -647,18 +651,22 @@ def test_strong_emphasis(styles):
     utils.validate_render(
         md_text="""
             **strong emphasis**
+
             __strong emphasis__
         """,
         text=[
             "strong emphasis",
+            "               ",
             "strong emphasis",
         ],
         style_mask=[
             "EEEEEEEEEEEEEEE",
+            "               ",
             "EEEEEEEEEEEEEEE",
         ],
         styles={
             "E": styles["strong_emphasis"],
+            " ": {},
         },
     )
 
@@ -679,20 +687,29 @@ def test_emphasis_strong_emphasis(styles):
     utils.validate_render(
         md_text="""
             *em **strong emphasis** em*
+
             ***strong emphasis***
+
             _em __strong emphasis__ em_
+
             ___strong emphasis___
         """,
         text=[
             "em strong emphasis em",
+            "                     ",
             "strong emphasis      ",
+            "                     ",
             "em strong emphasis em",
+            "                     ",
             "strong emphasis      ",
         ],
         style_mask=[
             "EEEDDDDDDDDDDDDDDDEEE",
+            "                     ",
             "DDDDDDDDDDDDDDD      ",
+            "                     ",
             "EEEDDDDDDDDDDDDDDDEEE",
+            "                     ",
             "DDDDDDDDDDDDDDD      ",
         ],
         styles={
@@ -775,5 +792,43 @@ def test_image_as_link(styles):
         ],
         styles={
             "L": styles["link"],
+        },
+    )
+
+
+def test_softbreak():
+    utils.validate_render(
+        md_text="""
+            hello
+            world
+        """,
+        text=[
+            "hello world",
+        ],
+        style_mask=[
+            "XXXXXXXXXXX",
+        ],
+        styles={
+            "X": {},
+        },
+    )
+
+
+def test_softbreak_with_dash():
+    utils.validate_render(
+        md_text="""
+            hello-
+            world
+            hello world
+            hello world
+        """,
+        text=[
+            "hello-world hello world hello world",
+        ],
+        style_mask=[
+            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        ],
+        styles={
+            "X": {},
         },
     )
