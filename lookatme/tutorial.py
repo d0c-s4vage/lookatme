@@ -74,7 +74,7 @@ class Tutor:
                     )
                 )
             res_md.append(handler(match_groups["inner"]))
-            last_idx = match.end() + 1
+            last_idx = match.end()
 
         res_md.append(slides_md[last_idx:])
 

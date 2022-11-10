@@ -4,6 +4,7 @@ interface
 """
 
 
+import re
 import sys
 from typing import Union
 
@@ -69,6 +70,12 @@ def render_text(token, ctx: Context):
     <TUTOR:EXAMPLE>
     The donut jumped *under* the crane.
     </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Emphasis can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>emphasis</TUTOR:STYLE>
     """,
 )
 @contrib_first
@@ -84,11 +91,17 @@ def render_em_close(_, ctx: Context):
 
 @tutor(
     "markdown",
-    "double emphasis",
+    "strong emphasis",
     r"""
     <TUTOR:EXAMPLE>
     They jumped **over** the wagon
     </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Strong emphasis can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>strong_emphasis</TUTOR:STYLE>
     """,
 )
 @contrib_first
@@ -109,6 +122,12 @@ def render_strong_close(_, ctx: Context):
     <TUTOR:EXAMPLE>
     I lost my ~~mind~~ keyboard and couldn't type anymore.
     </TUTOR:EXAMPLE>
+
+    ## Style
+
+    Strikethrough can be styled with slide metadata. This is the default style:
+
+    <TUTOR:STYLE>strikethrough</TUTOR:STYLE>
     """,
 )
 @contrib_first
@@ -188,7 +207,22 @@ def render_image_close(token, ctx: Context):
 
 @contrib_first
 def render_softbreak(_, ctx: Context):
-    ctx.inline_push((ctx.spec_text, "\n"))
+    markup = ctx.get_inline_markup()
+    # if the previous line ended with a dash, don't add a space!
+    if len(markup) > 0:
+        prev_markup = markup[-1]
+        if isinstance(prev_markup, str):
+            prev_text = prev_markup
+        elif isinstance(prev_markup, tuple) and len(prev_markup) == 2:
+            prev_text = prev_markup[1]
+        else:
+            raise Exception("Unknown condition handling softbreak")
+
+        # if the previous text was a dash-split, then don't add a space
+        if re.match(r".*[^\s]-$", prev_text.split("\n")[-1]) is not None:
+            return
+
+    ctx.inline_push((ctx.spec_text, " "))
 
 
 @tutor(
@@ -371,210 +405,3 @@ def render_html_tag_li_close(
 ):
     ctx.tag_pop()
     markdown_block().render_list_item_close({"type": "list_item_close"}, ctx)
-
-
-# def render_no_change(text, ctx: Context):
-#     """Render inline markdown text with no changes
-#     """
-#     ctx.inline_push((ctx.spec_text, text))
-#
-#
-# @contrib_first
-# def render_inline_html(token, ctx: Context):
-#     """Renders inline html as plaintext
-#
-#     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
-#         tuples.
-#     """
-#     raise NotImplementedError("render_inline_html is not implemented")
-#
-#
-# @contrib_first
-# def render_text(token, ctx: Context):
-#     """Renders plain text (does nothing)
-#
-#     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
-#         tuples.
-#     """
-#     data = token["text"]
-#     new_data = lookatme.parser.unobscure_html_tags(data)
-#     if new_data != data:
-#         tokens = LookatmeHTMLParser(ctx).parse(new_data)
-#         render_all(tokens, ctx)
-#         return
-#
-#     if ctx.is_literal:
-#         text = token["text"].replace("\r", "").replace("\n", " ")
-#     else:
-#         text = token["text"]
-#     ctx.inline_push((ctx.spec_text, text))
-#
-#
-# @contrib_first
-# def render_footnote_ref(token, ctx: Context):
-#     """Renders a footnote
-#
-#     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
-#         tuples.
-#     """
-#     raise NotImplementedError("render_footnote_ref is not implemented")
-#
-#
-# @contrib_first
-# def render_image(token, ctx: Context):
-#     """Renders an image as a link. This would be a cool extension to render
-#     referenced images as scaled-down ansii pixel blocks.
-#
-#     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
-#         tuples.
-#     """
-#     #raise NotImplementedError("render_image is not implemented")
-#
-#
-# @contrib_first
-# def render_link(token, ctx: Context):
-#     """Renders a link. This function does a few special things to make the
-#     clickable links happen. All text in lookatme is rendered using the
-#     :any:`ClickableText` class. The ``ClickableText`` class looks for
-#     ``urwid.AttrSpec`` instances that are actually ``LinkIndicatorSpec`` instances
-#     within the Text markup. If an AttrSpec is an instance of ``LinkIndicator``
-#     spec in the Text markup, ClickableText knows to handle clicks on that
-#     section of the text as a link.
-#
-#     Example token:
-#
-#     ..:code:
-#
-#         {'type': 'link', 'link': 'https://google.com', 'children': [{'type': 'text', 'text': 'blah'}], 'title': None}
-#     """
-#     plain_spec = utils.spec_from_style(config.get_style()["link"])
-#     link_spec = LinkIndicatorSpec(token["link"], token["link"], plain_spec)
-#
-#     with ctx.use_spec(link_spec):
-#         render_all(token["children"], ctx)
-#
-#
-# @contrib_first
-# def render_strong(token, ctx: Context):
-#     """Renders double emphasis. Handles both ``**word**`` and ``__word__``
-#     """
-#     with ctx.use_spec(utils.spec_from_style("underline")):
-#         render_all(token["children"], ctx)
-#
-#
-# @contrib_first
-# def render_emphasis(token, ctx: Context):
-#     """Renders double emphasis. Handles both ``*word*`` and ``_word_``
-#
-#     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
-#         tuples.
-#     """
-#     with ctx.use_spec(utils.spec_from_style("italics")):
-#         render_all(token["children"], ctx)
-#
-#
-# @contrib_first
-# def render_codespan(token, ctx: Context):
-#     """Renders inline code using the pygments renderer. This function also makes
-#     use of the coding style:
-#
-#     .. code-block:: yaml
-#
-#         style: monokai
-#
-#     :returns: list of `urwid Text markup <http://urwid.org/manual/displayattributes.html#text-markup>`_
-#         tuples.
-#     """
-#     spec, text = pygments_render.render_text(" " + token["content"] + " ", plain=True)[0]
-#     with ctx.use_spec(spec):
-#         ctx.inline_push((ctx.spec_text, text))
-#
-#
-# @contrib_first
-# def render_linebreak(token, ctx: Context):
-#     """Renders a line break
-#     """
-#     ctx.inline_push((ctx.spec_general, "\n"))
-#
-#
-# @contrib_first
-# def render_strikethrough(token, ctx: Context):
-#     """Renders strikethrough text (``~~text~~``)
-#     """
-#     with ctx.use_spec(utils.spec_from_style("strikethrough")):
-#         render_all(token["children"], ctx)
-#
-# @contrib_first
-# def render_html_tag(token, ctx: Context):
-#     """
-#     """
-#     style_spec = None
-#     if len(token["style"]) > 0:
-#         style_spec = utils.spec_from_style({
-#             "fg": token["style"].get("color", ""),
-#             "bg": token["style"].get("background-color", ""),
-#         })
-#
-#     fn = getattr(THIS_MOD, "render_html_tag_{}".format(token["tag"]), None)
-#     if fn is None:
-#         fn = render_html_tag_default
-#
-#     with ctx.use_spec(style_spec):
-#         fn(token, ctx)
-#
-# @contrib_first
-# def render_html_tag_default(token, ctx: Context):
-#     """
-#     """
-#     render_all(token["children"], ctx)
-#
-# @contrib_first
-# def render_html_tag_b(token, ctx: Context):
-#     with ctx.use_spec(utils.spec_from_style("bold")):
-#         render_all(token["children"], ctx)
-#
-# @contrib_first
-# def render_html_tag_i(token, ctx: Context):
-#     with ctx.use_spec(utils.spec_from_style("italics")):
-#         render_all(token["children"], ctx)
-#
-# @contrib_first
-# def render_html_tag_blink(token, ctx: Context):
-#     with ctx.use_spec(utils.spec_from_style("blink"), text_only=True):
-#         render_all(token["children"], ctx)
-#
-# @contrib_first
-# def render_html_tag_em(token, ctx: Context):
-#     with ctx.use_spec(utils.spec_from_style("standout"), text_only=True):
-#         render_all(token["children"], ctx)
-#
-# @contrib_first
-# def render_html_tag_u(token, ctx: Context):
-#     with ctx.use_spec(utils.spec_from_style("underline")):
-#         render_all(token["children"], ctx)
-#
-# @contrib_first
-# def render_html_tag_br(token, ctx: Context):
-#     render_text({"text": "\n"}, ctx)
-#
-# @contrib_first
-# def render_html_tag_div(token, ctx: Context):
-#     ctx.inline_flush()
-#     with ctx.use_spec(utils.spec_from_style("underline")):
-#         render_all(token["children"], ctx)
-#
-# @contrib_first
-# def render_html_tag_ul(token, ctx: Context):
-#     token["type"] = "list"
-#     token["ordered"] = False
-#
-#     for li in token["children"]:
-#         if li["tag"] != "li":
-#             continue
-#         li["type"] = "list_item"
-#
-#     import lookatme.render.markdown_block as block
-#
-#     ctx.inline_flush()
-#     with ctx.container_to_inline():
-#         block.render_all([token], ctx)

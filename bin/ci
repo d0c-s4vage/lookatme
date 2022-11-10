@@ -108,6 +108,13 @@ function run_all {
         black
     if [ $? -ne 0 ] ; then
         log "Can't run all, did you forget to use a virtual environment?"
+        log "Run these commands if you did forget:"
+        log
+        log "    python3 -m virtualenv venv3"
+        log "    . venv3/bin/activate"
+        log "    pip install -r requirements.test.txt -r requirements.txt"
+        log
+        log "Then try running bin/ci again!"
         exit 1
     fi
 

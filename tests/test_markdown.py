@@ -37,7 +37,6 @@ def test_heading_defaults(style):
             "|H2|",
             "    ",
             "|H3|",
-            "    ",
         ],
         style_mask=[
             "HHHH",
@@ -45,7 +44,6 @@ def test_heading_defaults(style):
             "hhhh",
             "////",
             "aaaa",
-            "////",
         ],
         styles={
             "H": style["headings"]["default"],
@@ -100,7 +98,6 @@ def test_heading_levels(style):
             ">>H2<<  ",
             "        ",
             "[[[H3]]]",
-            "        ",
         ],
         style_mask=[
             "HHHH////",
@@ -108,7 +105,6 @@ def test_heading_levels(style):
             "hhhhhh//",
             "////////",
             "aaaaaaaa",
-            "////////",
         ],
         styles={
             "H": style["headings"]["1"],
@@ -429,17 +425,17 @@ def test_block_quote(style):
     utils.validate_render(
         md_text="""
             > Quote text
+            >
             > Quote italic text
-            > Quote italic text
-            > Quote italic text
+            >
             > Quote text
         """,
         text=[
             "██━━──               ",
             "┃  Quote text        ",
+            "┃                    ",
             "┃  Quote italic text ",
-            "┃  Quote italic text ",
-            "┃  Quote italic text ",
+            "┃                    ",
             "┃  Quote text        ",
             "██━━──               ",
         ],
@@ -480,20 +476,16 @@ def test_code(styles):
             ```
         """,
         text=[
-            "       ",
             "'Hello'",
             "'Hello'",
             "'Hello'",
             "'Hello'",
-            "       ",
         ],
         style_mask=[
-            "       ",
             "RRRRRRR",
             "RRRRRRR",
             "RRRRRRR",
             "RRRRRRR",
-            "       ",
         ],
         styles={
             "R": {"fg": "#dd8", "bg": "g15"},
@@ -517,16 +509,44 @@ def test_empty_codeblock(style):
         """,
         text=[
             " ",
-            " ",
-            " ",
         ],
         style_mask=[
-            " ",
             "B",
-            " ",
         ],
         styles={
             "B": {"bg": "g15"},
+        },
+    )
+
+
+@override_style(
+    {
+        "code": "monokai",
+    }
+)
+def test_code_preceded_by_text(styles):
+    """Test that code blocks preceded by a line of text render correctly"""
+    utils.validate_render(
+        md_text="""
+            Testing
+
+            ```text
+            a
+            ```
+        """,
+        text=[
+            "Testing",
+            "       ",
+            "a      ",
+        ],
+        style_mask=[
+            "       ",
+            "       ",
+            "B______",
+        ],
+        styles={
+            "B": {"fg": "g93", "bg": "g15"},
+            "_": {"bg": "g15"},
             " ": {},
         },
     )
@@ -551,24 +571,20 @@ def test_code_yaml(styles):
             ```
         """,
         text=[
-            "                      ",
             "test: a value         ",
             'test2: "another value"',
             "array:                ",
             "  - item1             ",
             "  - item2             ",
             "  - item3             ",
-            "                      ",
         ],
         style_mask=[
-            "                      ",
             "KKKK::VVVVVVV_________",
             "KKKKK::SSSSSSSS:SSSSSS",
             "KKKKK:________________",
             "::::VVVVV_____________",
             "::::VVVVV_____________",
             "::::VVVVV_____________",
-            "                      ",
         ],
         styles={
             "K": {"fg": "#f06", "bg": "g15"},
@@ -577,7 +593,6 @@ def test_code_yaml(styles):
             ":": {"fg": "g93", "bg": "g15"},
             "-": {"bg": "g15"},
             "_": {"bg": "g15"},
-            " ": {},
         },
     )
 
@@ -619,18 +634,22 @@ def test_emphasis(styles):
     utils.validate_render(
         md_text="""
             *emphasis*
+
             _emphasis_
         """,
         text=[
             "emphasis",
+            "        ",
             "emphasis",
         ],
         style_mask=[
             "EEEEEEEE",
+            "        ",
             "EEEEEEEE",
         ],
         styles={
             "E": styles["emphasis"],
+            " ": {},
         },
     )
 
@@ -647,18 +666,22 @@ def test_strong_emphasis(styles):
     utils.validate_render(
         md_text="""
             **strong emphasis**
+
             __strong emphasis__
         """,
         text=[
             "strong emphasis",
+            "               ",
             "strong emphasis",
         ],
         style_mask=[
             "EEEEEEEEEEEEEEE",
+            "               ",
             "EEEEEEEEEEEEEEE",
         ],
         styles={
             "E": styles["strong_emphasis"],
+            " ": {},
         },
     )
 
@@ -679,20 +702,29 @@ def test_emphasis_strong_emphasis(styles):
     utils.validate_render(
         md_text="""
             *em **strong emphasis** em*
+
             ***strong emphasis***
+
             _em __strong emphasis__ em_
+
             ___strong emphasis___
         """,
         text=[
             "em strong emphasis em",
+            "                     ",
             "strong emphasis      ",
+            "                     ",
             "em strong emphasis em",
+            "                     ",
             "strong emphasis      ",
         ],
         style_mask=[
             "EEEDDDDDDDDDDDDDDDEEE",
+            "                     ",
             "DDDDDDDDDDDDDDD      ",
+            "                     ",
             "EEEDDDDDDDDDDDDDDDEEE",
+            "                     ",
             "DDDDDDDDDDDDDDD      ",
         ],
         styles={
@@ -775,5 +807,66 @@ def test_image_as_link(styles):
         ],
         styles={
             "L": styles["link"],
+        },
+    )
+
+
+def test_softbreak(tmpdir, mocker):
+    utils.setup_lookatme(tmpdir, mocker)
+    utils.validate_render(
+        md_text="""
+            hello
+            world
+        """,
+        text=[
+            "hello world",
+        ],
+        style_mask=[
+            "XXXXXXXXXXX",
+        ],
+        styles={
+            "X": {},
+        },
+    )
+
+
+def test_softbreak_with_dash_in_word(tmpdir, mocker):
+    utils.setup_lookatme(tmpdir, mocker)
+    utils.validate_render(
+        md_text="""
+            hello-
+            world
+            hello world
+            hello world
+        """,
+        text=[
+            "hello-world hello world hello world",
+        ],
+        style_mask=[
+            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        ],
+        styles={
+            "X": {},
+        },
+    )
+
+
+def test_softbreak_with_dash_with_preceding_space(tmpdir, mocker):
+    utils.setup_lookatme(tmpdir, mocker)
+    utils.validate_render(
+        md_text="""
+            hello -
+            world
+            hello world
+            hello world
+        """,
+        text=[
+            "hello - world hello world hello world",
+        ],
+        style_mask=[
+            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        ],
+        styles={
+            "X": {},
         },
     )
