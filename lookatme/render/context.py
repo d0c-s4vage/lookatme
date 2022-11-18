@@ -3,6 +3,7 @@
 
 
 import contextlib
+import copy
 from dataclasses import dataclass
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
@@ -43,7 +44,7 @@ class TokenIterator:
             if popped["type"] != token["type"]:
                 raise RuntimeError("Mismatched unwind token stack")
 
-    def next(self):
+    def next(self) -> Optional[Dict]:
         token = self.peek()
         if token is not None:
             self.idx += 1
@@ -66,8 +67,9 @@ class Context:
     def __init__(self, loop: Optional[urwid.MainLoop]):
         self.container_stack: List[ContainerInfo] = []
         self.loop = loop
-        self.tag_stack = []
+        self.tag_stack: List[Tuple[str, Dict, bool]] = []
         self.spec_stack = []
+        self.source_stack = []
         self.inline_render_results = []
         self.level = 0
         self.in_new_block = True
@@ -75,6 +77,28 @@ class Context:
         self.token_stack: List[TokenIterator] = []
 
         self._log = lookatme.config.get_log()
+
+    @property
+    def source(self) -> str:
+        """Return the current markdown source"""
+        if not self.source_stack:
+            raise ValueError("No source has been set!")
+        return self.source_stack[-1]
+
+    def source_push(self, new_source: str):
+        """Push new markdown source onto the source stack"""
+        self.source_stack.append(new_source)
+
+    def source_pop(self) -> str:
+        """Pop the latest source off of the source stack"""
+        if not self.source_stack:
+            raise ValueError("Tried to pop off the source_stack one too many times")
+        return self.source_stack.pop()
+
+    def source_get_lines(
+        self, range_start: int, range_end: Optional[int] = None
+    ) -> List[str]:
+        return self.source.split("\n")[range_start:range_end]
 
     @property
     def unwind_tokens(self) -> Iterator[Dict]:
@@ -109,7 +133,7 @@ class Context:
 
     def tokens_push(self, tokens: List[Dict]):
         """ """
-        self.token_stack.append(TokenIterator(tokens))
+        self.token_stack.append(TokenIterator(copy.deepcopy(tokens)))
 
     def tokens_pop(self):
         """ """
@@ -251,23 +275,23 @@ class Context:
     @property
     def is_literal(self):
         # walk the tag_stack backwards and see if we are in any <pre> elements
-        for tag_name in reversed(self.tag_stack):
+        for tag_name, _, _ in reversed(self.tag_stack):
             if tag_name == "pre":
                 return True
         return False
 
-    def tag_push(self, new_tag, spec=None, text_only_spec=False):
+    def tag_push(self, new_tag: str, token: Dict, spec=None, text_only_spec=False):
         """Push a new tag name onto the stack"""
         if spec is not None:
             self.spec_push(spec, text_only=text_only_spec)
-        self.tag_stack.append((new_tag, spec is not None))
+        self.tag_stack.append((new_tag, token, spec is not None))
 
     def tag_pop(self):
         """Pop the most recent tag off of the tag stack"""
         if not self.tag_stack:
             raise ValueError("Tried to pop off the tag stack one too many times")
 
-        popped_tag, had_spec = self.tag_stack.pop()
+        popped_tag, _, had_spec = self.tag_stack.pop()
 
         if had_spec:
             self.spec_pop()
@@ -279,6 +303,12 @@ class Context:
         if self.tag_stack:
             return None
         return self.tag_stack[-1][0]
+
+    @property
+    def tag_token(self) -> Dict:
+        if not self.tag_stack:
+            raise ValueError("Tried to get the token for a non-existent tag")
+        return self.tag_stack[-1][1]
 
     @property
     def meta(self) -> Dict[Any, Any]:

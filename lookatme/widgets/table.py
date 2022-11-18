@@ -285,7 +285,7 @@ class Table(urwid.Pile):
         row_spec_text, row_spec_general = row_specs
         res = []
         for idx, cell_pile in enumerate(row):
-            # add the pdading between columns if we're not the first column
+            # add the padding between columns if we're not the first column
             if idx > 0:
                 padding_text = " " * self.cell_spacing
                 padding_w = urwid.Text((row_spec_general, padding_text))
@@ -329,15 +329,17 @@ class Table(urwid.Pile):
 
         return res
 
-    def calc_column_maxes(self):
+    def calc_column_maxes(self, width: int = 200):
         column_maxes = defaultdict(int)
         # list of urwid.Columns
         for row in self.header_rows + self.body_rows:
             # list of urwid.Piles
             for idx, cell in enumerate(row):
-                rend = cell.render((200,))
+                rend = cell.render((width,))
                 curr_col_width = self._calc_canvas_width(rend)
-                column_maxes[idx] = max(column_maxes[idx], curr_col_width)
+                other_width = utils.packed_widget_width(cell)
+                #column_maxes[idx] = max(column_maxes[idx], curr_col_width)
+                column_maxes[idx] = max(column_maxes[idx], other_width)
 
         return column_maxes
 

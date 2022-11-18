@@ -47,11 +47,16 @@ def _markups_to_vtext(
         text = text.decode()
 
         if spec is None:
-            fg = ""
-            bg = ""
+            fg = "default"
+            bg = "default"
         else:
             fg = spec.foreground
             bg = spec.background
+
+        if fg == "":
+            fg = "default"
+        if bg == "":
+            bg = "default"
 
         if tag_stack[-1][0] == (fg, bg):
             tag_stack[-1][1].append(text)
@@ -108,9 +113,12 @@ def render_widget(
         min_width = 300
         _, orig_rows = w.pack((min_width,))
         curr_rows = orig_rows
-        while min_width > 0 and curr_rows == orig_rows:
-            min_width -= 1
+        seen = set()
+        while min_width not in seen and min_width > 0 and curr_rows == orig_rows:
+            min_width = round(min_width / 2.0)
             _, curr_rows = w.pack((min_width,))
+            if curr_rows != orig_rows:
+                min_width = round(min_width * 1.5)
         width = min_width + 1
 
     return list(w.render((width,), False).content())

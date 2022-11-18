@@ -199,6 +199,118 @@ def test_table_with_no_body(style):
 
 @override_style(
     {
+        "table": {
+            "column_spacing": 1,
+            "header_divider": {"text": "-"},
+            "header": { "bg": "#121212" },
+        }
+    }
+)
+def test_table_surrounded_by_div(style):
+    """Test table surrounded by div"""
+    utils.validate_render(
+        render_width=7,
+        md_text=r"""
+            Before
+
+            <div style="background-color: #ff0000">
+            | H2 | H1 |
+            |----|----|
+            | A  | B  |
+            | C  | D  |
+            </div>
+
+            After
+        """,
+        text=[
+            "Before ",
+            "       ",
+            "┌─────┐",
+            "│H2 H1│",
+            "│-----│",
+            "│A  B │",
+            "│C  D │",
+            "└─────┘",
+            "       ",
+            "After  ",
+        ],
+        style_mask=[
+            "       ",
+            "       ",
+            ".......",
+            ".HHHHH.",
+            ".DDDDD.",
+            ".EEEEE.",
+            ".OOOOO.",
+            ".......",
+            "       ",
+            "       ",
+        ],
+        styles={
+            "H": style["table"]["header"],
+            "D": {
+                "bg": style["table"]["header"]["bg"],
+                "fg": style["table"]["header_divider"]["fg"]
+            },
+            "E": {"bg": "#ff0000", "fg": style["table"]["even_rows"]["fg"]},
+            "O": style["table"]["odd_rows"],
+            ".": {"bg": "#ff0000", "fg": style["table"]["border"]["tl_corner"]["fg"]},
+            " ": {},
+        },
+    )
+
+
+@override_style(
+    {
+        "table": {
+            "column_spacing": 1,
+            "header_divider": {"text": "-"},
+            "header": { "bg": "#121212" },
+        },
+        "bullets": {
+            "1": { "text": "*" },
+        }
+    }
+)
+def test_table_with_embedded_list(style):
+    """Test table with a an html list in a cell"""
+    utils.validate_render(
+        render_width=7,
+        md_text=r"""
+            | H2                   |
+            |----------------------|
+            | <ol><li>a</li></ol>  |
+        """,
+        text=[
+            "┌─────┐",
+            "│H2   │",
+            "│-----│",
+            "│ * a │",
+            "└─────┘",
+        ],
+        style_mask=[
+            ".......",
+            ".HHHHH.",
+            ".DDDDD.",
+            ".EEEEE.",
+            ".......",
+        ],
+        styles={
+            "H": style["table"]["header"],
+            "D": {
+                "bg": style["table"]["header"]["bg"],
+                "fg": style["table"]["header_divider"]["fg"]
+            },
+            "E": {"bg": "#ff0000", "fg": style["table"]["even_rows"]["fg"]},
+            "O": style["table"]["odd_rows"],
+            ".": style["table"]["border"]["tl_corner"],
+            " ": {},
+        },
+    )
+
+
+@override_style(
+    {
         "bullets": {
             "default": {"text": "*", "fg": "#505050"},
             "1": {"text": "-", "fg": "#808080"},

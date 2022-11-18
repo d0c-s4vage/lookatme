@@ -15,6 +15,7 @@ import lookatme.config
 from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
 from lookatme.tutorial import tutor
+import lookatme.utils as utils
 
 
 def md_to_tokens(md_text):
@@ -36,34 +37,6 @@ def is_heading(token):
 
 def is_hrule(token):
     return token["type"] == "hr"
-
-
-def debug_print_tokens(tokens, level=1):
-    """Print the tokens DFS"""
-
-    def indent(x):
-        return "  " * x
-
-    log = lookatme.config.get_log()
-    log.debug(indent(level) + "DEBUG TOKENS")
-    level += 1
-
-    stack = list(reversed(tokens))
-    while len(stack) > 0:
-        token = stack.pop()
-        if "close" in token["type"]:
-            level -= 1
-
-        log.debug(indent(level) + repr(token))
-
-        if "open" in token["type"]:
-            level += 1
-
-        token_children = token.get("children", None)
-        if isinstance(token_children, list):
-            stack.append({"type": "children_close"})
-            stack += list(reversed(token_children))
-            stack.append({"type": "children_open"})
 
 
 class SlideIsolator:
@@ -150,7 +123,7 @@ class Parser(object):
         :returns: tuple of (remaining_data, slide)
         """
         tokens = md_to_tokens(input_data)
-        debug_print_tokens(tokens)
+        utils.debug_print_tokens(tokens)
         num_hrules, hinfo = self._scan_for_smart_split(tokens)
         keep_split_token = True
 

@@ -104,6 +104,12 @@ def render_paragraph_close(token, ctx: Context):
 @contrib_first
 def render_inline(token, ctx: Context):
     """ """
+    # add the map info to all child tokens if None
+    for child_token in token.get("children", []):
+        if child_token["map"] is not None:
+            continue
+        child_token["map"] = token["map"]
+
     with ctx.use_tokens(token.get("children", [])):
         markdown_inline.render_all(ctx)
 
@@ -526,6 +532,27 @@ class TableTokenExtractor:
             self.curr_siblings.append(token)
 
 
+
+def _is_tag_close_with_tag_open_before_line(token: Dict, line_num: int, ctx: Context) -> bool:
+    if token["type"] != "inline":
+        return False
+    if len(token["children"]) != 1:
+        return False
+    
+    inline_child = token["children"][0]
+    if inline_child["type"] != "html_inline":
+        return False
+
+    if not inline_child["content"].startswith("</"):
+        return False
+    
+    # now to see where the current tag open started!
+    if ctx.tag_token["map"][0] < line_num:
+        return True
+
+    return False
+
+
 @tutor(
     "markdown",
     "tables",
@@ -559,18 +586,63 @@ def render_table_open(token: Dict, ctx: Context):
 
     from lookatme.widgets.table import Table
 
+    table_start_line = token["map"][0]
+
     # TODO: are nested tables even possible without using html? let's ignore
     # that edge case for now and assume we're just looking for the first
     # table_close
     table_children = []
+    saw_table_close = False
+    to_inject = None
     # consume the tokens until we see a table_close!
-    for token in ctx.tokens:
-        table_children.append(copy.deepcopy(token))
-        if token["type"] == "table_close":
+    for table_token in ctx.tokens:
+        if _is_tag_close_with_tag_open_before_line(table_token, table_start_line, ctx):
+            # we still have to process the close tag!
+            to_inject = table_token
+
+            # undo the current td and tr and consume the next two tokens as
+            # well
+            utils.check_token_type(table_children.pop(), "td_open")
+            utils.check_token_type(table_children.pop(), "tr_open")
+
+            # the markdown parser will add empty td_open/inline/close tokens
+            # for the number of columns in the table - need to consume and
+            # ignore all of these
+            while True:
+                next_token = ctx.tokens.next()
+                if next_token is None:
+                    break
+                if next_token["type"] in ("td_close", "td_open", "inline"):
+                    continue
+
+                utils.check_token_type(next_token, "tr_close")
+                break
             break
-    # loop completed without breaking
-    else:
-        table_children += list(ctx.unwind_tokens_consumed)
+
+        table_children.append(copy.deepcopy(table_token))
+        if table_token["type"] == "table_close":
+            saw_table_close = True
+            break
+
+    if not saw_table_close:
+        # don't consume them yet! We may still have to iterate through more
+        # tokens in the next for loop in case we bailed out of the table
+        # early b/c of an html element
+        table_children += list(ctx.unwind_tokens)
+
+        # we may break early if we find a an html element that was started
+        # before the table but somehow ended within the table. In that case,
+        # we still need to consume the rest of the table tokens (but discard
+        # them).
+        for token in ctx.tokens:
+            if token["type"] == "table_close":
+                break
+
+        _ = ctx.unwind_tokens_consumed
+
+    if to_inject:
+        token_iter = ctx.tokens
+        token_iter.tokens.insert(token_iter.idx, to_inject)
 
     extractor = TableTokenExtractor()
     extractor.process_tokens(table_children)
