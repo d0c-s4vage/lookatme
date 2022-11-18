@@ -12,53 +12,13 @@ import urwid
 import lookatme.config
 import lookatme.utils as utils
 from lookatme.widgets.clickable_text import ClickableText
+from lookatme.render.token_iterator import TokenIterator
 
 
 @dataclass
 class ContainerInfo:
     container: urwid.Widget
     meta: Dict[str, Any]
-
-
-class TokenIterator:
-    def __init__(self, tokens):
-        self.tokens = tokens
-        self.idx = 0
-
-        self.unwind_stack = []
-
-    def peek(self) -> Optional[Dict]:
-        """Return the next token in the token stream, or None if it does
-        not exist
-        """
-        if self.idx >= len(self.tokens):
-            return None
-        return self.tokens[self.idx]
-
-    def _handle_unwind(self, token: Dict[str, str]):
-        if "_open" in token["type"]:
-            close_token_type = token["type"].replace("open", "close")
-            self.unwind_stack.append({"type": close_token_type})
-        elif "_close" in token["type"]:
-            popped = self.unwind_stack.pop()
-            if popped["type"] != token["type"]:
-                raise RuntimeError("Mismatched unwind token stack")
-
-    def next(self) -> Optional[Dict]:
-        token = self.peek()
-        if token is not None:
-            self.idx += 1
-            self._handle_unwind(token)
-        return token
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        token = self.next()
-        if token is None:
-            raise StopIteration
-        return token
 
 
 class Context:
@@ -111,13 +71,13 @@ class Context:
             yield token
 
     @property
-    def unwind_tokens_consumed(self) -> Iterator[Dict]:
+    def unwind_tokens_consumed(self) -> List[Dict]:
         """Generate a list of unwind (close) tokens from the token iterators
         in the stack
         """
-        for token in self.unwind_tokens:
-            yield token
+        res = list(self.unwind_tokens)
         self.token_stack[-1].unwind_stack.clear()
+        return res
 
     @property
     def tokens(self) -> TokenIterator:

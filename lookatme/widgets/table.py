@@ -338,7 +338,7 @@ class Table(urwid.Pile):
                 rend = cell.render((width,))
                 curr_col_width = self._calc_canvas_width(rend)
                 other_width = utils.packed_widget_width(cell)
-                #column_maxes[idx] = max(column_maxes[idx], curr_col_width)
+                # column_maxes[idx] = max(column_maxes[idx], curr_col_width)
                 column_maxes[idx] = max(column_maxes[idx], other_width)
 
         return column_maxes

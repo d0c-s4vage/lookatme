@@ -55,13 +55,13 @@ def render_all(ctx: Context):
     # there will be some tokens missing from the token stream.
     #
     # this is where we artificially close all open tokens
-    for unwind_token in ctx.unwind_tokens:
+    for unwind_token in ctx.unwind_tokens_consumed:
         ctx.log_debug("Rendering unwind block token: {!r}".format(unwind_token))
         render(unwind_token, ctx)
 
 
 @tutor(
-    "markdown",
+    "markdown block",
     "paragraph",
     r"""
     Paragraphs in markdown are simply text with a full empty line between them:
@@ -171,7 +171,7 @@ def render_list_close(_, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown block",
     "ordered lists",
     r"""
     Ordered lists are lines of text prefixed by a `N. ` or `N)`, where `N` is
@@ -195,7 +195,7 @@ def render_list_close(_, ctx: Context):
     """,
 )
 @tutor(
-    "markdown",
+    "markdown block",
     "unordered lists",
     r"""
     Unordered lists are lines of text starting with either `*`, `+`, or `-`.
@@ -218,7 +218,7 @@ def render_list_close(_, ctx: Context):
     """,
 )
 @tutor(
-    "markdown",
+    "markdown block",
     "lists",
     r"""
     Lists can either be ordered or unordered. You can nest lists by indenting
@@ -297,7 +297,7 @@ def render_list_item_close(_, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown block",
     "headings",
     r"""
     Headings are specified by prefixing text with `#` characters:
@@ -346,7 +346,7 @@ def render_heading_close(token: Dict, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown block",
     "block quote",
     r"""
     Block quotes are lines of markdown prefixed with `> `. Block quotes can
@@ -416,7 +416,7 @@ def render_blockquote_close(token: Dict, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown block",
     "code blocks",
     r"""
     Multi-line code blocks are either surrounded by "fences" (three in a row of
@@ -532,20 +532,21 @@ class TableTokenExtractor:
             self.curr_siblings.append(token)
 
 
-
-def _is_tag_close_with_tag_open_before_line(token: Dict, line_num: int, ctx: Context) -> bool:
+def _is_tag_close_with_tag_open_before_line(
+    token: Dict, line_num: int, ctx: Context
+) -> bool:
     if token["type"] != "inline":
         return False
     if len(token["children"]) != 1:
         return False
-    
+
     inline_child = token["children"][0]
     if inline_child["type"] != "html_inline":
         return False
 
     if not inline_child["content"].startswith("</"):
         return False
-    
+
     # now to see where the current tag open started!
     if ctx.tag_token["map"][0] < line_num:
         return True
@@ -554,7 +555,7 @@ def _is_tag_close_with_tag_open_before_line(token: Dict, line_num: int, ctx: Con
 
 
 @tutor(
-    "markdown",
+    "markdown block",
     "tables",
     r"""
     Rows in tables are defined by separating columns with `|` characters. The
@@ -608,13 +609,9 @@ def render_table_open(token: Dict, ctx: Context):
             # the markdown parser will add empty td_open/inline/close tokens
             # for the number of columns in the table - need to consume and
             # ignore all of these
-            while True:
-                next_token = ctx.tokens.next()
-                if next_token is None:
-                    break
+            for next_token in ctx.tokens:
                 if next_token["type"] in ("td_close", "td_open", "inline"):
                     continue
-
                 utils.check_token_type(next_token, "tr_close")
                 break
             break

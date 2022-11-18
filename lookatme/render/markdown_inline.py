@@ -64,7 +64,7 @@ def render_text(token, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown inline",
     "emphasis",
     r"""
     <TUTOR:EXAMPLE>
@@ -90,7 +90,7 @@ def render_em_close(_, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown inline",
     "strong emphasis",
     r"""
     <TUTOR:EXAMPLE>
@@ -116,7 +116,7 @@ def render_strong_close(_, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown inline",
     "strikethrough",
     r"""
     <TUTOR:EXAMPLE>
@@ -142,7 +142,7 @@ def render_s_close(_, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown inline",
     "links",
     r"""
     Links are inline elements in markdown and have the form `[text](link)`
@@ -173,7 +173,7 @@ def render_link_close(_, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown inline",
     "images",
     r"""
     Vanilla lookatme renders images as links. Some extensions provide ways to
@@ -226,7 +226,7 @@ def render_softbreak(_, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown inline",
     "inline code",
     r"""
     <TUTOR:EXAMPLE>
@@ -245,8 +245,8 @@ def render_code_inline(token, ctx: Context):
 
 
 @tutor(
-    "markdown",
-    "inline html",
+    "markdown inline",
+    "html tags",
     r"""
     Many markdown renderers support a limited set of inline html. So does
     lookatme!
@@ -256,7 +256,6 @@ def render_code_inline(token, ctx: Context):
     |       tag | note                                                    |
     |----------:|---------------------------------------------------------|
     |   `<div>` | Wrap block elements, set background color, etc.         |
-    |  `<span>` | Wrap inline elements, set background color, etc.        |
     |     `<u>` | Underline text                                          |
     |     `<i>` | Italicize text                                          |
     |     `<b>` | Bold text                                               |
@@ -266,6 +265,11 @@ def render_code_inline(token, ctx: Context):
     |    `<ul>` | Begin an unordered list                                 |
     |    `<ol>` | Begin an ordered list                                   |
     |    `<li>` | List item element                                       |
+    |   `<???>` | Treated as an inline element                            |
+
+    Note that all unrecognized tags (include `<span>`) will be treated as
+    inline elements. Style attributes will work, but a new block element
+    will not be created as is done with `<div>`s.
 
     Each tag supports the `style` attribute features below:
 
@@ -316,7 +320,7 @@ def render_html_inline(token, ctx: Context):
 
 @contrib_first
 def render_html_tag_default_open(
-        token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
 ):
     ctx.tag_push(tag.name, token, style_spec)
 
@@ -329,8 +333,8 @@ def render_html_tag_default_close(
 
 
 @tutor(
-    "markdown",
-    "inline html `<u>`",
+    "markdown inline",
+    "html tag `<u>`",
     r"""
     The `<u>` tag can be used to underline all elements within it:
 
@@ -342,7 +346,7 @@ def render_html_tag_default_close(
         * pasta
     </u>
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_html_tag_u_open(
@@ -353,8 +357,8 @@ def render_html_tag_u_open(
 
 
 @tutor(
-    "markdown",
-    "inline html `<i>`",
+    "markdown inline",
+    "html tag `<i>`",
     r"""
     The `<i>` tag can be used to italicize all elements within it:
 
@@ -367,7 +371,7 @@ def render_html_tag_u_open(
     | left   | for you      |
     </i>
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_html_tag_i_open(
@@ -378,8 +382,8 @@ def render_html_tag_i_open(
 
 
 @tutor(
-    "markdown",
-    "inline html `<b>`",
+    "markdown inline",
+    "html tag `<b>`",
     r"""
     The `<b>` tag can be used to bold all elements within it:
 
@@ -390,7 +394,7 @@ def render_html_tag_i_open(
     > just for fun
     </b>
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_html_tag_b_open(
@@ -401,8 +405,8 @@ def render_html_tag_b_open(
 
 
 @tutor(
-    "markdown",
-    "inline html `<em>`",
+    "markdown inline",
+    "html tag `<em>`",
     r"""
     The `<em>` tag can be used to emphasize all elements within it. In
     lookatme this results in inverted colors
@@ -410,7 +414,7 @@ def render_html_tag_b_open(
     <TUTOR:EXAMPLE>
     I j<em>us</em>t <em>n</em>E<em>E</em>d butter<em>!</em>
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_html_tag_em_open(
@@ -421,8 +425,8 @@ def render_html_tag_em_open(
 
 
 @tutor(
-    "markdown",
-    "inline html `<blink>`",
+    "markdown inline",
+    "html tag `<blink>`",
     r"""
     The `<blink>` tag causes all contents to blink. Not all terminals
     support this.
@@ -435,18 +439,19 @@ def render_html_tag_em_open(
     > We can hear you.
     </blink>
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_html_tag_blink_open(
-    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]):
+    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+):
     style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("blink"))
     ctx.tag_push(tag.name, token, style_spec)
 
 
 @tutor(
-    "markdown",
-    "inline html `<br>`",
+    "markdown inline",
+    "html tag `<br>`",
     r"""
     The `<br>` inserts a newline wherever it's at. This can be especially
     useful in tables!
@@ -459,7 +464,7 @@ def render_html_tag_blink_open(
     | line1<br/>line2<br/>line3 | single item               |
     | single item               | line1<br/>line2<br/>line3 |
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_html_tag_br_open(
@@ -470,8 +475,8 @@ def render_html_tag_br_open(
 
 
 @tutor(
-    "markdown",
-    "inline html `<div>`",
+    "markdown inline",
+    "html tag `<div>`",
     r"""
     The `<div>` tag creates a new visual block. `<div>` tags are also the
     best option for setting the background color of entire elements:
@@ -486,7 +491,7 @@ def render_html_tag_br_open(
     | single item | data        |
     </div>
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_html_tag_div_open(
@@ -506,8 +511,8 @@ def render_html_tag_div_close(
 
 
 @tutor(
-    "markdown",
-    "inline html `<ol>`",
+    "markdown inline",
+    "html tag `<ol>`",
     r"""
     The `<ol>` tag creates a new ordered list. Each child `<li>` element will
     be turned into an ordered item in the list.
@@ -520,10 +525,10 @@ def render_html_tag_div_close(
 
     | table                                         | with list  |
     |-----------------------------------------------|------------|
-    | <ul><li>item in table</li><li>item2</li></ul> | other data |
+    | <ol><li>item in table</li><li>item2</li></ol> | other data |
     | cell                                          | data       |
     </TUTOR:EXAMPLE>
-    """
+    """,
 )
 @contrib_first
 def render_html_tag_ol_open(
@@ -541,6 +546,26 @@ def render_html_tag_ol_close(
     markdown_block().render_ordered_list_close({"type": "ordered_list_close"}, ctx)
 
 
+@tutor(
+    "markdown inline",
+    "html tag `<ul>`",
+    r"""
+    The `<ul>` tag creates a new *un*ordered list. Each child `<li>` element will
+    be turned into an item in the list.
+
+    Using `<ul>` is especially handy if you want to embed a list into
+    a table cell!
+
+    <TUTOR:EXAMPLE>
+    <ul><li>item1</li><li>item2</li></ul>
+
+    | table                                         | with list  |
+    |-----------------------------------------------|------------|
+    | <ul><li>item in table</li><li>item2</li></ul> | other data |
+    | cell                                          | data       |
+    </TUTOR:EXAMPLE>
+    """,
+)
 @contrib_first
 def render_html_tag_ul_open(
     token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]

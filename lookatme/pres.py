@@ -49,6 +49,7 @@ class Presentation(object):
         safe=False,
         no_ext_warn=False,
         ignore_ext_failure=False,
+        no_threads=False,
     ):
         """Creates a new Presentation
 
@@ -69,6 +70,7 @@ class Presentation(object):
         self.no_ext_warn = no_ext_warn
         self.ignore_ext_failure = ignore_ext_failure
         self.initial_load_complete = False
+        self.no_threads = no_threads
 
         self.theme_mod = __import__("lookatme.themes." + theme, fromlist=[theme])
 
@@ -162,7 +164,9 @@ class Presentation(object):
 
     def run(self, start_slide=0):
         """Run the presentation!"""
-        self.tui = lookatme.tui.create_tui(self, start_slide=start_slide)
+        self.tui = lookatme.tui.create_tui(
+            self, start_slide=start_slide, no_threads=self.no_threads
+        )
         self.tui.run()
 
     def get_tui(self) -> lookatme.tui.MarkdownTui:

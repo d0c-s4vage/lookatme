@@ -8,6 +8,7 @@ This is the main CLI for lookatme
 import io
 import os
 import tempfile
+import traceback
 
 import click
 import pygments.styles
@@ -142,7 +143,7 @@ def main(
 
     if tutorial:
         if tutorial == "all":
-            tutors = ["general", "markdown"]
+            tutors = ["general", "markdown block", "markdown inline"]
         else:
             tutors = [x.strip() for x in tutorial.split(",")]
 
@@ -171,6 +172,7 @@ def main(
         safe=safe,
         no_ext_warn=no_ext_warn,
         ignore_ext_failure=ignore_ext_failure,
+        no_threads=debug,
     )
 
     if dump_styles:
@@ -183,10 +185,16 @@ def main(
         number = pres.get_tui().curr_slide.number + 1
         click.echo(f"Error rendering slide {number}: {e}")
         if not debug:
-            click.echo("Rerun with --debug to view the full traceback in logs")
+            click.echo(
+                "Rerun with --debug to run with no threads and more details in the logs"
+            )
         else:
-            lookatme.config.get_log().exception(f"Error rendering slide {number}: {e}")
-            click.echo(f"See {log_path} for traceback")
+            click.echo(f"Error rendering slide {number}: {e}")
+            click.echo("")
+            click.echo(
+                "\n".join("    " + line for line in traceback.format_exc().split("\n"))
+            )
+            click.echo(f"See {log_path} for detailed runtime logs")
         raise click.Abort()
 
 

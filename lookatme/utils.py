@@ -10,8 +10,7 @@ from lookatme.widgets.smart_attr_spec import SmartAttrSpec
 
 
 def packed_widget_width(w: urwid.Widget) -> int:
-    """Return the smallest size of the widget without wrapping
-    """
+    """Return the smallest size of the widget without wrapping"""
     if isinstance(w, urwid.Pile):
         if len(w.widget_list) == 0:
             return 0
@@ -87,7 +86,11 @@ def check_token_type(token: Optional[Dict], expected_type: str):
     if token is None:
         return
     if token["type"] != expected_type:
-        raise Exception("Unexpected token type {!r}, expected {!r}".format(token["type"], expected_type))
+        raise Exception(
+            "Unexpected token type {!r}, expected {!r}".format(
+                token["type"], expected_type
+            )
+        )
 
 
 def core_widget(w) -> urwid.Widget:

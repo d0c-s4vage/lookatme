@@ -13,6 +13,7 @@ import urwid
 import lookatme.config
 import lookatme.config as config
 import lookatme.parser
+from lookatme.slide import Slide
 import lookatme.render.markdown_block as markdown_block
 from lookatme.contrib import contrib_first, shutdown_contribs
 from lookatme.render.context import Context
@@ -62,14 +63,12 @@ class SlideRenderer(threading.Thread):
         self.events[slide.number].clear()
         self.queue.put(slide)
 
-    def render_slide(self, slide, force=False):
+    def render_slide(self, slide):
         """Render a slide, blocking until the slide completes. If ``force`` is
         True, rerender the slide even if it is in the cache.
         """
-        if force or slide.number not in self.cache:
-            self.events[slide.number].clear()
-            self.queue.put(slide)
-            self.events[slide.number].wait()
+        if slide.number not in self.cache:
+            self._cache_slide_render(slide)
 
         res = self.cache[slide.number]
         if isinstance(res, Exception):
@@ -87,16 +86,19 @@ class SlideRenderer(threading.Thread):
                 to_render = self.queue.get(timeout=0.05)
             except Empty:
                 continue
+            self._cache_slide_render(to_render)
 
-            slide_num = to_render.number
-
-            try:
-                res = self.do_render(to_render, slide_num)
-                self.cache[slide_num] = res
-            except Exception as e:
-                self.cache[slide_num] = e
-            finally:
-                self.events[slide_num].set()
+    def _cache_slide_render(self, slide: Slide):
+        try:
+            res = self.do_render(slide, slide.number)
+            self.cache[slide.number] = res
+        except Exception as e:
+            if self.is_alive():
+                self.cache[slide.number] = e
+            else:
+                raise e
+        finally:
+            self.events[slide.number].set()
 
     def do_render(self, to_render, slide_num):
         """Perform the actual rendering of a slide. This is done by:
@@ -192,7 +194,7 @@ class SlideRenderer(threading.Thread):
 
 
 class MarkdownTui(urwid.Frame):
-    def __init__(self, pres, start_idx=0):
+    def __init__(self, pres, start_idx=0, no_threads=False):
         """Create a new MarkdownTui"""
         # self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
         self.slide_body = urwid.ListBox(
@@ -226,10 +228,12 @@ class MarkdownTui(urwid.Frame):
             screen=screen,
         )
         self.ctx.loop = self.loop
+        self.no_threads = no_threads
 
         # used to track slides that are being rendered
         self.slide_renderer = SlideRenderer(self.ctx)
-        self.slide_renderer.start()
+        if not no_threads:
+            self.slide_renderer.start()
 
         self.pres = pres
         self.prep_pres(self.pres, start_idx)
@@ -444,10 +448,10 @@ class MarkdownTui(urwid.Frame):
         self.loop.run()
 
 
-def create_tui(pres, start_slide=0):
+def create_tui(pres, start_slide=0, no_threads=False):
     """Run the provided presentation
 
     :param int start_slide: 0-based slide index
     """
-    tui = MarkdownTui(pres, start_slide)
+    tui = MarkdownTui(pres, start_slide, no_threads=no_threads)
     return tui

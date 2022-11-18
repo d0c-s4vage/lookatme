@@ -12,6 +12,7 @@ from lookatme.render.context import Context
 import lookatme.config
 import lookatme.schemas
 import lookatme.parser
+import lookatme.utils as utils
 import lookatme.render.markdown_block as markdown_block
 from lookatme.pres import Presentation
 import lookatme.tui
@@ -110,16 +111,7 @@ def render_widget(
     w: urwid.Widget, width: Optional[int] = None
 ) -> List[List[Tuple[Optional[urwid.AttrSpec], Any, bytes]]]:
     if width is None:
-        min_width = 300
-        _, orig_rows = w.pack((min_width,))
-        curr_rows = orig_rows
-        seen = set()
-        while min_width not in seen and min_width > 0 and curr_rows == orig_rows:
-            min_width = round(min_width / 2.0)
-            _, curr_rows = w.pack((min_width,))
-            if curr_rows != orig_rows:
-                min_width = round(min_width * 1.5)
-        width = min_width + 1
+        width = utils.packed_widget_width(w)
 
     return list(w.render((width,), False).content())
 
