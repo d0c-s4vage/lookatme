@@ -60,8 +60,11 @@ class SlideRenderer(threading.Thread):
 
     def queue_render(self, slide):
         """Queue up a slide to be rendered."""
-        self.events[slide.number].clear()
-        self.queue.put(slide)
+        if self.is_alive():
+            self.events[slide.number].clear()
+            self.queue.put(slide)
+        else:
+            self.render_slide(slide)
 
     def render_slide(self, slide):
         """Render a slide, blocking until the slide completes. If ``force`` is
@@ -93,6 +96,29 @@ class SlideRenderer(threading.Thread):
             res = self.do_render(slide, slide.number)
             self.cache[slide.number] = res
         except Exception as e:
+            self._log.error(f"Error occurred rendering slide {slide.number}")
+
+            try:
+                curr_token = self.ctx.tokens.curr
+            except:
+                curr_token = None
+
+            if curr_token:
+                tmp = dict(**curr_token)
+                if "unwound_token" in tmp:
+                    del tmp["unwound_token"]
+
+                self._log.error("Error occurred with token: {}".format(tmp))
+
+                unwound_token = curr_token.get("unwound_token", {})
+                if unwound_token:
+                    self._log.error("Token resulted from unwinding {}".format(unwound_token))
+                    unwound_context = self.ctx.source_get_token_lines(unwound_token, 10)
+                    self._log.error("Unwound context:\n{}".format("\n".join(unwound_context)))
+
+                source_context = self.ctx.source_get_token_lines(curr_token, 10)
+                self._log.error("Source context:\n{}".format("\n".join(source_context)))
+
             if self.is_alive():
                 self.cache[slide.number] = e
             else:
@@ -149,6 +175,7 @@ class SlideRenderer(threading.Thread):
         self._log.debug("PRE-Render====================================")
         self._log.debug("")
         self._render_tokens(tokens)
+
         self._log.debug("")
         self._log.debug("FINAL-Render====================================")
         self._log.debug("")
@@ -186,9 +213,14 @@ class SlideRenderer(threading.Thread):
     )
     def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
+
+        self.ctx.clean_state_snapshot()
+
         with self.ctx.use_tokens(tokens):
             with self.ctx.use_container(tmp_listbox, is_new_block=True):
-                markdown_block.render_all(self.ctx)
+                markdown_block.render_all(self.ctx, and_unwind=True)
+
+        self.ctx.clean_state_validate()
 
         return tmp_listbox.body
 
@@ -218,8 +250,10 @@ class MarkdownTui(urwid.Frame):
 
         self.root_margins = urwid.Padding(self, left=2, right=2)
         self.root_paddings = urwid.Padding(self.slide_body, left=10, right=10)
+        self.pres = pres
 
         self.ctx = Context(None)
+        self.ctx.source_push(self.pres.no_meta_source)
         self.ctx.spec_push(spec_from_style(config.get_style()["slides"]))
 
         self.root_widget = root_urwid_widget(self.root_margins)
@@ -235,7 +269,6 @@ class MarkdownTui(urwid.Frame):
         if not no_threads:
             self.slide_renderer.start()
 
-        self.pres = pres
         self.prep_pres(self.pres, start_idx)
 
         urwid.Frame.__init__(
@@ -332,7 +365,7 @@ class MarkdownTui(urwid.Frame):
 
         with self.ctx.use_tokens(title):
             with self.ctx.use_spec(spec):
-                markdown_block.render_all(self.ctx)
+                markdown_block.render_all(self.ctx, and_unwind=True)
         self.slide_title.set_text(self.ctx.inline_markup_consumed)
 
     def update_creation(self):

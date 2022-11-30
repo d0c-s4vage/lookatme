@@ -28,22 +28,12 @@ def test_heading_defaults(style):
     utils.validate_render(
         md_text=r"""
             # H1
-            ## H2
-            ### H3
         """,
         text=[
             "|H1|",
-            "    ",
-            "|H2|",
-            "    ",
-            "|H3|",
         ],
         style_mask=[
             "HHHH",
-            "////",
-            "hhhh",
-            "////",
-            "aaaa",
         ],
         styles={
             "H": style["headings"]["default"],

@@ -6,7 +6,7 @@ interface
 
 import re
 import sys
-from typing import Dict, Union
+from typing import Dict, Optional
 
 import urwid
 
@@ -40,10 +40,13 @@ def render(token, ctx: Context):
         return fn(token, ctx)
 
 
-def render_all(ctx: Context):
+def render_all(ctx: Context, and_unwind: bool = False):
     for token in ctx.tokens:
         ctx.log_debug("Rendering inline token: {!r}".format(token))
         render(token, ctx)
+
+    if not and_unwind:
+        return
 
     # normally ctx.unwind_tokens will be empty as every "open" token will have
     # a matching "close" token. However, sometimes (like with progressive slides),
@@ -194,10 +197,12 @@ def render_image(token, ctx: Context):
     attrs = dict(token["attrs"])
     attrs["href"] = attrs.get("src", "")
 
-    render_link_open({"type": "image_open", "attrs": list(attrs.items())}, ctx)
+    fake_token = ctx.fake_token("link_open", attrs = list(attrs.items()))
+    render_link_open(fake_token, ctx)
     with ctx.use_tokens(token["children"]):
         render_all(ctx)
-    render_link_close({}, ctx)
+    fake_token = ctx.fake_token("link_close", attrs = list(attrs.items()))
+    render_link_close(fake_token, ctx)
 
 
 @contrib_first
@@ -205,8 +210,28 @@ def render_image_close(token, ctx: Context):
     return render_link_close(token, ctx)
 
 
+def _prev_token_is_html(ctx: Context) -> bool:
+    prev = ctx.tokens.at_offset(-1)
+    if not prev:
+        return False
+    return prev["type"] == "html_inline"
+
+
+def _next_token_is_html_close(ctx: Context) -> bool:
+    next_token = ctx.tokens.peek()
+    if not next_token:
+        return False
+    return next_token["type"] == "html_inline" and next_token["content"].startswith("</")
+
+
 @contrib_first
 def render_softbreak(_, ctx: Context):
+    # do not add spaces between HTML tags!
+    if _prev_token_is_html(ctx):
+        return
+    if _next_token_is_html_close(ctx):
+        return
+
     markup = ctx.get_inline_markup()
     # if the previous line ended with a dash, don't add a space!
     if len(markup) > 0:
@@ -320,14 +345,14 @@ def render_html_inline(token, ctx: Context):
 
 @contrib_first
 def render_html_tag_default_open(
-    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.tag_push(tag.name, token, style_spec)
 
 
 @contrib_first
 def render_html_tag_default_close(
-    _, _tag: Tag, ctx: Context, _style_spec: Union[None, urwid.AttrSpec]
+    _, _tag: Tag, ctx: Context, _style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.tag_pop()
 
@@ -350,7 +375,7 @@ def render_html_tag_default_close(
 )
 @contrib_first
 def render_html_tag_u_open(
-    token, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("underline"))
     ctx.tag_push(tag.name, token, style_spec, text_only_spec=True)
@@ -375,7 +400,7 @@ def render_html_tag_u_open(
 )
 @contrib_first
 def render_html_tag_i_open(
-    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("italics"))
     ctx.tag_push(tag.name, token, style_spec)
@@ -398,7 +423,7 @@ def render_html_tag_i_open(
 )
 @contrib_first
 def render_html_tag_b_open(
-    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("bold"))
     ctx.tag_push(tag.name, token, style_spec)
@@ -418,7 +443,7 @@ def render_html_tag_b_open(
 )
 @contrib_first
 def render_html_tag_em_open(
-    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("standout"))
     ctx.tag_push(tag.name, token, style_spec, text_only_spec=True)
@@ -443,7 +468,7 @@ def render_html_tag_em_open(
 )
 @contrib_first
 def render_html_tag_blink_open(
-    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("blink"))
     ctx.tag_push(tag.name, token, style_spec)
@@ -468,7 +493,7 @@ def render_html_tag_blink_open(
 )
 @contrib_first
 def render_html_tag_br_open(
-    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.tag_push(tag.name, token, style_spec)
     ctx.inline_push((ctx.spec_text, "\n"))
@@ -495,7 +520,7 @@ def render_html_tag_br_open(
 )
 @contrib_first
 def render_html_tag_div_open(
-    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.ensure_new_block()
     ctx.container_push(urwid.Pile([]), is_new_block=True)
@@ -504,7 +529,7 @@ def render_html_tag_div_open(
 
 @contrib_first
 def render_html_tag_div_close(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    _, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.tag_pop()
     ctx.container_pop()
@@ -532,18 +557,20 @@ def render_html_tag_div_close(
 )
 @contrib_first
 def render_html_tag_ol_open(
-    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.tag_push(tag.name, token, style_spec)
-    markdown_block().render_ordered_list_open({"type": "ordered_list_open"}, ctx)
+    fake_token = ctx.fake_token("ordered_list_open")
+    markdown_block().render_ordered_list_open(fake_token, ctx)
 
 
 @contrib_first
 def render_html_tag_ol_close(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    _, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.tag_pop()
-    markdown_block().render_ordered_list_close({"type": "ordered_list_close"}, ctx)
+    fake_token = ctx.fake_token("ordered_list_close")
+    markdown_block().render_ordered_list_close(fake_token, ctx)
 
 
 @tutor(
@@ -568,33 +595,86 @@ def render_html_tag_ol_close(
 )
 @contrib_first
 def render_html_tag_ul_open(
-    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.tag_push(tag.name, token, style_spec)
-    markdown_block().render_bullet_list_open({"type": "bullet_list_open"}, ctx)
+    fake_token = ctx.fake_token("bullet_list_open")
+    markdown_block().render_bullet_list_open(fake_token, ctx)
 
 
 @contrib_first
 def render_html_tag_ul_close(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    _, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.tag_pop()
-    markdown_block().render_bullet_list_close({"type": "bullet_list_close"}, ctx)
+    fake_token = ctx.fake_token("bullet_list_close")
+    markdown_block().render_bullet_list_close(fake_token, ctx)
 
 
+@tutor(
+    "markdown inline",
+    "html tag `<li>`",
+    r"""
+    The `<li>` tag creates a single list element for both ordered (`<ol>`) and
+    unordered (`<ul>`) lists. When not used as a child of an `<ol>` or `<ul>`
+    tag, the list item will be assumed to be an unordered list item.
+
+    <TUTOR:EXAMPLE>
+    <ol><li>item1</li><li>item2</li></ol>
+
+    Or without the `<ul>`:
+
+    <li>test</li><li>test2</li>
+
+    | table                                | with list  |
+    |--------------------------------------|------------|
+    | <li>item in table</li><li>item2</li> | other data |
+    | cell                                 | data       |
+    </TUTOR:EXAMPLE>
+    """,
+)
 @contrib_first
 def render_html_tag_li_open(
-    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
+    # if we're not within a ul or ol element, then we need to force one of
+    # those to be rendered first
+    if (
+        not ctx.tokens.unwind_has_type("bullet_list_close")
+        and not ctx.tokens.unwind_has_type("ordered_list_close")
+        and not ctx.tag_is_ancestor("ol")
+        and not ctx.tag_is_ancestor("ul")
+    ):
+        ctx.log_debug("rendering bullet list open")
+        fake_token = ctx.fake_token("bullet_list_open")
+        fake_parent_ul = token.setdefault("fake_parent_ul", fake_token)
+        markdown_block().render_bullet_list_open(fake_parent_ul, ctx)
+
+    ctx.log_debug("rendering li open")
     ctx.tag_push(tag.name, token, style_spec)
-    li_token = token.setdefault("translated_li_token", {"type": "list_item_open"})
+    fake_token = ctx.fake_token("list_item_open")
+    li_token = token.setdefault("translated_li_token", fake_token)
     markdown_block().render_list_item_open(li_token, ctx)
 
 
 @contrib_first
 def render_html_tag_li_close(
-    token: Dict, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
+    ctx.log_debug("rendering li close")
     ctx.tag_pop()
-    li_token = token.setdefault("translated_li_token", {"type": "list_item_close"})
+    fake_token = ctx.fake_token("list_item_close")
+    li_token = token.setdefault("translated_li_token", fake_token)
     markdown_block().render_list_item_close(li_token, ctx)
+
+    # if the next token isn't an ol or ul token, then we need to end this
+    # current <li> list
+    next_token = ctx.tokens.peek()
+    if not next_token or (
+        next_token["type"] == "html_inline"
+        and next_token["content"] not in ("</ul>", "</ol>", "</li>", "<li>")
+        and next_token["type"] != "list_item_open"
+    ):
+        ctx.log_debug("rendering bullet list close")
+        fake_token = ctx.fake_token("bullet_list_close")
+        markdown_block().render_bullet_list_close(fake_token, ctx)

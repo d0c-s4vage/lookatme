@@ -112,7 +112,7 @@ class Presentation(object):
                 data = f.read()
 
         parser = Parser(single_slide=self.single_slide)
-        self.meta, self.slides = parser.parse(data)
+        self.meta, self.slides, self.no_meta_source = parser.parse(data)
 
         # only load extensions once! Live editing does not support
         # auto-extension reloading

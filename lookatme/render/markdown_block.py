@@ -45,11 +45,14 @@ def render(token, ctx: Context):
         render_fn(token, ctx)
 
 
-def render_all(ctx: Context):
+def render_all(ctx: Context, and_unwind: bool = False):
     for token in ctx.tokens:
         ctx.log_debug("Rendering block token: {!r}".format(token))
         render(token, ctx)
 
+    if not and_unwind:
+        return
+    
     # normally ctx.unwind_tokens will be empty as every "open" token will have
     # a matching "close" token. However, sometimes (like with progressive slides),
     # there will be some tokens missing from the token stream.
@@ -80,7 +83,7 @@ def render_all(ctx: Context):
 @contrib_first
 def render_paragraph_open(token, ctx: Context):
     """ """
-    next_token = ctx.tokens.peek()
+    next_token = ctx.tokens.at_offset(0)
 
     # don't ensure a new block for paragraphs that contain a single
     # html_inline token!
@@ -104,13 +107,7 @@ def render_paragraph_close(token, ctx: Context):
 @contrib_first
 def render_inline(token, ctx: Context):
     """ """
-    # add the map info to all child tokens if None
-    for child_token in token.get("children", []):
-        if child_token["map"] is not None:
-            continue
-        child_token["map"] = token["map"]
-
-    with ctx.use_tokens(token.get("children", [])):
+    with ctx.use_tokens(token.get("children", []), inline=True):
         markdown_inline.render_all(ctx)
 
 
@@ -328,7 +325,7 @@ def render_heading_open(token: Dict, ctx: Context):
 
     header_spec = utils.spec_from_style(style)
     ctx.spec_push(header_spec)
-    prefix_token = {"type": "text", "content": style["prefix"]}
+    prefix_token = ctx.fake_token("text", content= style["prefix"])
     markdown_inline.render(prefix_token, ctx)
 
 
@@ -339,7 +336,7 @@ def render_heading_close(token: Dict, ctx: Context):
     level = int(token["tag"].replace("h", ""))
     style = config.get_style()["headings"].get(str(level), headings["default"])
 
-    suffix_token = {"type": "text", "content": style["suffix"]}
+    suffix_token = ctx.fake_token("text", content= style["suffix"])
     markdown_inline.render(suffix_token, ctx)
 
     ctx.spec_pop()
@@ -595,8 +592,10 @@ def render_table_open(token: Dict, ctx: Context):
     table_children = []
     saw_table_close = False
     to_inject = None
+    unwind_bookmark = ctx.unwind_bookmark
+
     # consume the tokens until we see a table_close!
-    for table_token in ctx.tokens:
+    for idx, table_token in enumerate(ctx.tokens):
         if _is_tag_close_with_tag_open_before_line(table_token, table_start_line, ctx):
             # we still have to process the close tag!
             to_inject = table_token
@@ -625,7 +624,7 @@ def render_table_open(token: Dict, ctx: Context):
         # don't consume them yet! We may still have to iterate through more
         # tokens in the next for loop in case we bailed out of the table
         # early b/c of an html element
-        table_children += list(ctx.unwind_tokens)
+        table_children += list(ctx.unwind_tokens_from(unwind_bookmark))
 
         # we may break early if we find a an html element that was started
         # before the table but somehow ended within the table. In that case,

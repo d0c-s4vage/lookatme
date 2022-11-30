@@ -24,6 +24,7 @@ from lookatme.schemas import StyleSchema
 
 @click.command("lookatme")
 @click.option("--debug", "debug", is_flag=True, default=False)
+@click.option("--threads", "threads", is_flag=True, default=False)
 @click.option(
     "-l",
     "--log",
@@ -117,6 +118,7 @@ from lookatme.schemas import StyleSchema
 def main(
     tutorial,
     debug,
+    threads,
     log_path,
     theme,
     code_style,
@@ -172,7 +174,7 @@ def main(
         safe=safe,
         no_ext_warn=no_ext_warn,
         ignore_ext_failure=ignore_ext_failure,
-        no_threads=debug,
+        no_threads=(debug and not threads),
     )
 
     if dump_styles:
@@ -188,6 +190,7 @@ def main(
             click.echo(
                 "Rerun with --debug to run with no threads and more details in the logs"
             )
+            lookatme.config.get_log().error(f"Error rendering slide {number}", exc_info=True)
         else:
             click.echo(f"Error rendering slide {number}: {e}")
             click.echo("")

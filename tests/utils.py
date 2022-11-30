@@ -125,8 +125,7 @@ def render_md(
     ctx = Context(None)
     with ctx.use_tokens(tokens):
         with ctx.use_container(root, is_new_block=True):
-            markdown_block.render_all(ctx)
-
+            markdown_block.render_all(ctx, and_unwind=True)
     return render_widget(root, width)
 
 

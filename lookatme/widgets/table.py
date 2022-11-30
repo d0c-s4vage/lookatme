@@ -329,17 +329,14 @@ class Table(urwid.Pile):
 
         return res
 
-    def calc_column_maxes(self, width: int = 200):
+    def calc_column_maxes(self):
         column_maxes = defaultdict(int)
         # list of urwid.Columns
         for row in self.header_rows + self.body_rows:
             # list of urwid.Piles
             for idx, cell in enumerate(row):
-                rend = cell.render((width,))
-                curr_col_width = self._calc_canvas_width(rend)
-                other_width = utils.packed_widget_width(cell)
-                # column_maxes[idx] = max(column_maxes[idx], curr_col_width)
-                column_maxes[idx] = max(column_maxes[idx], other_width)
+                curr_col_width = utils.packed_widget_width(cell)
+                column_maxes[idx] = max(column_maxes[idx], curr_col_width)
 
         return column_maxes
 
@@ -379,10 +376,10 @@ class Table(urwid.Pile):
                 cell_container = urwid.Pile([])
                 cell_container.is_header = header
 
-                with self.ctx.use_container_tmp(cell_container):
-                    with self.ctx.use_spec(row_spec_general, text_only=False):
-                        with self.ctx.use_spec(row_spec_text, text_only=True):
-                            with self.ctx.use_tokens(cell["children"]):
+                with self.ctx.use_tokens(cell["children"]):
+                    with self.ctx.use_container_tmp(cell_container):
+                        with self.ctx.use_spec(row_spec_general, text_only=False):
+                            with self.ctx.use_spec(row_spec_text, text_only=True):
                                 markdown_block.render_all(self.ctx)
 
                 # set alignment for all text widgets

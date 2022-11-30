@@ -9,25 +9,7 @@ import urwid
 from lookatme.widgets.smart_attr_spec import SmartAttrSpec
 
 
-def packed_widget_width(w: urwid.Widget) -> int:
-    """Return the smallest size of the widget without wrapping"""
-    if isinstance(w, urwid.Pile):
-        if len(w.widget_list) == 0:
-            return 0
-        return max(packed_widget_width(x) for x in w.widget_list)
-    elif isinstance(w, urwid.Columns):
-        res = w.dividechars * (len(w.widget_list) - 1)
-        for col_widget, (size_type, size_val, _) in w.contents:
-            if size_type == "given":
-                res += size_val
-            else:
-                res += packed_widget_width(col_widget)
-        return res
-    elif isinstance(w, urwid.AttrMap):
-        return packed_widget_width(w.original_widget)
-    elif isinstance(w, urwid.Text):
-        return max(len(line) for line in w.text.split("\n"))
-
+def _do_get_packed_widget_list(w: urwid.Widget) -> int:
     min_width = 250
     _, orig_rows = w.pack((min_width,))
     curr_rows = orig_rows
@@ -51,6 +33,28 @@ def packed_widget_width(w: urwid.Widget) -> int:
         chunk_size = max(round(chunk_size * 0.5), 1)
 
     return min_width
+
+
+def packed_widget_width(w: urwid.Widget) -> int:
+    """Return the smallest size of the widget without wrapping"""
+    if isinstance(w, urwid.Pile):
+        if len(w.widget_list) == 0:
+            return 0
+        return max(packed_widget_width(x) for x in w.widget_list)
+    elif isinstance(w, urwid.Columns):
+        res = w.dividechars * (len(w.widget_list) - 1)
+        for col_widget, (size_type, size_val, _) in w.contents:
+            if size_type == "given":
+                res += size_val
+            else:
+                res += packed_widget_width(col_widget)
+        return res
+    elif isinstance(w, urwid.AttrMap):
+        return packed_widget_width(w.original_widget)
+    elif isinstance(w, urwid.Text):
+        return max(len(line) for line in w.text.split("\n"))
+
+    return _do_get_packed_widget_list(w)
 
 
 def debug_print_tokens(tokens, level=1):

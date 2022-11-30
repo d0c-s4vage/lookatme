@@ -315,4 +315,8 @@ def get_tutorial_md(groups_or_tutors: List[str]) -> Union[None, str]:
     """
     ).strip()
 
-    return meta + "\n" + "\n\n---\n\n".join(res_slides) + "\n\n---\n\n# End"
+    res = meta + "\n" + "\n\n---\n\n".join(res_slides) + "\n\n---\n\n# End"
+    with open("/tmp/test.md", "w") as f:
+        f.write(res)
+
+    return res
