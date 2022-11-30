@@ -112,9 +112,13 @@ class SlideRenderer(threading.Thread):
 
                 unwound_token = curr_token.get("unwound_token", {})
                 if unwound_token:
-                    self._log.error("Token resulted from unwinding {}".format(unwound_token))
+                    self._log.error(
+                        "Token resulted from unwinding {}".format(unwound_token)
+                    )
                     unwound_context = self.ctx.source_get_token_lines(unwound_token, 10)
-                    self._log.error("Unwound context:\n{}".format("\n".join(unwound_context)))
+                    self._log.error(
+                        "Unwound context:\n{}".format("\n".join(unwound_context))
+                    )
 
                 source_context = self.ctx.source_get_token_lines(curr_token, 10)
                 self._log.error("Source context:\n{}".format("\n".join(source_context)))

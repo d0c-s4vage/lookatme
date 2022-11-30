@@ -197,11 +197,11 @@ def render_image(token, ctx: Context):
     attrs = dict(token["attrs"])
     attrs["href"] = attrs.get("src", "")
 
-    fake_token = ctx.fake_token("link_open", attrs = list(attrs.items()))
+    fake_token = ctx.fake_token("link_open", attrs=list(attrs.items()))
     render_link_open(fake_token, ctx)
     with ctx.use_tokens(token["children"]):
         render_all(ctx)
-    fake_token = ctx.fake_token("link_close", attrs = list(attrs.items()))
+    fake_token = ctx.fake_token("link_close", attrs=list(attrs.items()))
     render_link_close(fake_token, ctx)
 
 
@@ -221,7 +221,9 @@ def _next_token_is_html_close(ctx: Context) -> bool:
     next_token = ctx.tokens.peek()
     if not next_token:
         return False
-    return next_token["type"] == "html_inline" and next_token["content"].startswith("</")
+    return next_token["type"] == "html_inline" and next_token["content"].startswith(
+        "</"
+    )
 
 
 @contrib_first

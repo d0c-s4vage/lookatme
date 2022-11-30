@@ -6,7 +6,7 @@ This module defines the parser for the markdown presentation file
 import re
 from collections import defaultdict
 import copy
-from typing import AnyStr, Callable, Dict, List, Tuple
+from typing import cast, AnyStr, Callable, Dict, List, Tuple
 
 import markdown_it
 import markdown_it.token
@@ -20,7 +20,7 @@ import lookatme.utils as utils
 def _set_map_for_inline(token: Dict):
     start = token["map"][0]
     for child in token["children"]:
-        child["map"] = [start, start+1]
+        child["map"] = [start, start + 1]
         if child["type"] == "softbreak":
             start += 1
 
@@ -29,8 +29,8 @@ def md_to_tokens(md_text):
     md = markdown_it.MarkdownIt("gfm-like").disable("html_block")
     tokens = md.parse(md_text)
     res = []
-    for token in tokens:
-        token = token.as_dict()
+    for token_tmp in tokens:
+        token = cast(Dict, token_tmp.as_dict())
         if token["type"] in ("heading_open", "heading_close"):
             token["level"] = int(token["tag"].replace("h", ""))
         if token["type"] == "inline":
@@ -291,9 +291,9 @@ class Parser(object):
             map_start = first_heading_contents[0]["map"]
             map_end = first_heading_contents[-1]["map"]
             hinfo["title"] = (
-                [{"type": "paragraph_open", "map": [map_start[0], map_start[0]+1]}]
+                [{"type": "paragraph_open", "map": [map_start[0], map_start[0] + 1]}]
                 + first_heading_contents
-                + [{"type": "paragraph_close", "map": [map_end[-1]-1, map_end[-1]]}]
+                + [{"type": "paragraph_close", "map": [map_end[-1] - 1, map_end[-1]]}]
             )
             del hinfo["counts"][first_heading["level"]]
             hinfo["title_level"] = first_heading["level"]

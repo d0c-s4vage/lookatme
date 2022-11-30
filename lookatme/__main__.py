@@ -190,7 +190,9 @@ def main(
             click.echo(
                 "Rerun with --debug to run with no threads and more details in the logs"
             )
-            lookatme.config.get_log().error(f"Error rendering slide {number}", exc_info=True)
+            lookatme.config.get_log().error(
+                f"Error rendering slide {number}", exc_info=True
+            )
         else:
             click.echo(f"Error rendering slide {number}: {e}")
             click.echo("")

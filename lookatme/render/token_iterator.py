@@ -2,14 +2,19 @@
 This module defines the TokenIterator class.
 """
 
-from typing import Callable, List, Dict, Optional, Tuple
+from typing import Any, Callable, List, Dict, Optional, Tuple
 import re
 
 
 class TokenIterator:
     """This clas"""
 
-    def __init__(self, tokens: List[Dict], unwind_tokens: List[Tuple[bool, Dict]], inline: bool = False):
+    def __init__(
+        self,
+        tokens: List[Dict],
+        unwind_tokens: List[Tuple[bool, Dict]],
+        inline: bool = False,
+    ):
         """Create a new TokenIterator instance that can iterate/work with the
         provided list of tokens.
         """
@@ -25,7 +30,7 @@ class TokenIterator:
             if token["type"] == unwind_type:
                 return True
         return False
-    
+
     def at_offset(self, idx_offset: int) -> Optional[Dict]:
         if not self.tokens:
             raise ValueError("No tokens")
@@ -43,7 +48,7 @@ class TokenIterator:
         # we haven't started iterating yet
         if self.idx == 0:
             return self.tokens[self.idx]
-        return self.tokens[self.idx-1]
+        return self.tokens[self.idx - 1]
 
     def peek(self) -> Optional[Dict]:
         if not self.tokens or self.idx >= len(self.tokens):
@@ -87,9 +92,7 @@ class TokenIterator:
         #             for child_token in (token.get("children", []) or []):
         #                 self._handle_unwind(child_token)
 
-        tmp_unwind_token = {
-            "unwound_token": token
-        }
+        tmp_unwind_token: Dict[str, Any] = {"unwound_token": token}
 
         if "_open" in token["type"]:
             close_token_type = token["type"].replace("open", "close")
@@ -121,10 +124,8 @@ class TokenIterator:
                     return
                 del self._unwind_tokens[remove_idx]
             else:
-                tmp_unwind_token.update({
-                    "type": "html_inline",
-                    "content": "</{}>".format(info["tag"]),
-                })
+                tmp_unwind_token["type"] = "html_inline"
+                tmp_unwind_token["content"] = "</{}>".format(info["tag"])
                 self._unwind_tokens.append((self.inline, tmp_unwind_token))
 
     def next(self) -> Optional[Dict]:
@@ -135,7 +136,7 @@ class TokenIterator:
 
         if self.last_map is not None and token.get("map", None) is None:
             # set the missing map value to be the last line of the last_map
-            token["map"] = [self.last_map[0]-1, self.last_map[1]]
+            token["map"] = [self.last_map[0] - 1, self.last_map[1]]
 
         self.last_map = token["map"]
         self.idx += 1

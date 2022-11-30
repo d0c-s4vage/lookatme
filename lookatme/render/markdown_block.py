@@ -52,7 +52,7 @@ def render_all(ctx: Context, and_unwind: bool = False):
 
     if not and_unwind:
         return
-    
+
     # normally ctx.unwind_tokens will be empty as every "open" token will have
     # a matching "close" token. However, sometimes (like with progressive slides),
     # there will be some tokens missing from the token stream.
@@ -325,7 +325,7 @@ def render_heading_open(token: Dict, ctx: Context):
 
     header_spec = utils.spec_from_style(style)
     ctx.spec_push(header_spec)
-    prefix_token = ctx.fake_token("text", content= style["prefix"])
+    prefix_token = ctx.fake_token("text", content=style["prefix"])
     markdown_inline.render(prefix_token, ctx)
 
 
@@ -336,7 +336,7 @@ def render_heading_close(token: Dict, ctx: Context):
     level = int(token["tag"].replace("h", ""))
     style = config.get_style()["headings"].get(str(level), headings["default"])
 
-    suffix_token = ctx.fake_token("text", content= style["suffix"])
+    suffix_token = ctx.fake_token("text", content=style["suffix"])
     markdown_inline.render(suffix_token, ctx)
 
     ctx.spec_pop()
