@@ -6,6 +6,7 @@ This is the main CLI for lookatme
 
 
 import io
+import logging
 import os
 import tempfile
 import traceback
@@ -135,10 +136,11 @@ def main(
 
     See https://lookatme.readthedocs.io/en/v{{VERSION}} for documentation
     """
+    lookatme.config.LOG = lookatme.log.create_log(log_path)
     if debug:
-        lookatme.config.LOG = lookatme.log.create_log(log_path)
+        lookatme.config.LOG.setLevel(logging.DEBUG)
     else:
-        lookatme.config.LOG = lookatme.log.create_null_log()
+        lookatme.config.LOG.setLevel(logging.ERROR)
 
     if len(input_files) == 0:
         input_files = [io.StringIO("")]

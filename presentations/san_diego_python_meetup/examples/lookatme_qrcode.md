@@ -1,8 +1,0 @@
----
-extensions:
-  - qrcode
----
-
-```qrcode
-a
-```

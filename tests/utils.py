@@ -123,9 +123,14 @@ def render_md(
 
     root = urwid.Pile([])
     ctx = Context(None)
+    ctx.clean_state_snapshot()
+
     with ctx.use_tokens(tokens):
         with ctx.use_container(root, is_new_block=True):
             markdown_block.render_all(ctx, and_unwind=True)
+
+    ctx.clean_state_validate()
+
     return render_widget(root, width)
 
 
