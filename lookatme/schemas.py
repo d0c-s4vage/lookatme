@@ -520,8 +520,8 @@ class StyleSchema(Schema):
     padding = fields.Nested(
         SpacingSchema,
         dump_default={
-            "top": 0,
-            "bottom": 0,
+            "top": 1,
+            "bottom": 1,
             "left": 10,
             "right": 10,
         },

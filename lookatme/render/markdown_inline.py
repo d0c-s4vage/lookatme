@@ -6,7 +6,7 @@ interface
 
 import re
 import sys
-from typing import Union
+from typing import Dict, Optional
 
 import urwid
 
@@ -40,10 +40,13 @@ def render(token, ctx: Context):
         return fn(token, ctx)
 
 
-def render_all(ctx: Context):
+def render_all(ctx: Context, and_unwind: bool = False):
     for token in ctx.tokens:
         ctx.log_debug("Rendering inline token: {!r}".format(token))
         render(token, ctx)
+
+    if not and_unwind:
+        return
 
     # normally ctx.unwind_tokens will be empty as every "open" token will have
     # a matching "close" token. However, sometimes (like with progressive slides),
@@ -64,7 +67,7 @@ def render_text(token, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown inline",
     "emphasis",
     r"""
     <TUTOR:EXAMPLE>
@@ -90,7 +93,7 @@ def render_em_close(_, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown inline",
     "strong emphasis",
     r"""
     <TUTOR:EXAMPLE>
@@ -116,7 +119,7 @@ def render_strong_close(_, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown inline",
     "strikethrough",
     r"""
     <TUTOR:EXAMPLE>
@@ -142,7 +145,7 @@ def render_s_close(_, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown inline",
     "links",
     r"""
     Links are inline elements in markdown and have the form `[text](link)`
@@ -173,7 +176,7 @@ def render_link_close(_, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown inline",
     "images",
     r"""
     Vanilla lookatme renders images as links. Some extensions provide ways to
@@ -194,10 +197,12 @@ def render_image(token, ctx: Context):
     attrs = dict(token["attrs"])
     attrs["href"] = attrs.get("src", "")
 
-    render_link_open({"type": "image_open", "attrs": list(attrs.items())}, ctx)
+    fake_token = ctx.fake_token("link_open", attrs=list(attrs.items()))
+    render_link_open(fake_token, ctx)
     with ctx.use_tokens(token["children"]):
         render_all(ctx)
-    render_link_close({}, ctx)
+    fake_token = ctx.fake_token("link_close", attrs=list(attrs.items()))
+    render_link_close(fake_token, ctx)
 
 
 @contrib_first
@@ -205,8 +210,30 @@ def render_image_close(token, ctx: Context):
     return render_link_close(token, ctx)
 
 
+def _prev_token_is_html(ctx: Context) -> bool:
+    prev = ctx.tokens.at_offset(-1)
+    if not prev:
+        return False
+    return prev["type"] == "html_inline"
+
+
+def _next_token_is_html_close(ctx: Context) -> bool:
+    next_token = ctx.tokens.peek()
+    if not next_token:
+        return False
+    return next_token["type"] == "html_inline" and next_token["content"].startswith(
+        "</"
+    )
+
+
 @contrib_first
 def render_softbreak(_, ctx: Context):
+    # do not add spaces between HTML tags!
+    if _prev_token_is_html(ctx):
+        return
+    if _next_token_is_html_close(ctx):
+        return
+
     markup = ctx.get_inline_markup()
     # if the previous line ended with a dash, don't add a space!
     if len(markup) > 0:
@@ -226,7 +253,7 @@ def render_softbreak(_, ctx: Context):
 
 
 @tutor(
-    "markdown",
+    "markdown inline",
     "inline code",
     r"""
     <TUTOR:EXAMPLE>
@@ -244,6 +271,44 @@ def render_code_inline(token, ctx: Context):
         ctx.inline_push((ctx.spec_text, text))
 
 
+@tutor(
+    "markdown inline",
+    "html tags",
+    r"""
+    Many markdown renderers support a limited set of inline html. So does
+    lookatme!
+
+    Lookatme current supports these tags:
+
+    |       tag | note                                                    |
+    |----------:|---------------------------------------------------------|
+    |   `<div>` | Wrap block elements, set background color, etc.         |
+    |     `<u>` | Underline text                                          |
+    |     `<i>` | Italicize text                                          |
+    |     `<b>` | Bold text                                               |
+    |    `<em>` | "em" for emphasis - in lookatme this inverts the colors |
+    | `<blink>` | Make the text blink (not all terminals support this)    |
+    |    `<br>` | Force a newline                                         |
+    |    `<ul>` | Begin an unordered list                                 |
+    |    `<ol>` | Begin an ordered list                                   |
+    |    `<li>` | List item element                                       |
+    |   `<???>` | Treated as an inline element                            |
+
+    Note that all unrecognized tags (including `<span>`) will be treated as
+    inline elements. Style attributes will work, but a new block element
+    will not be created as is done with `<div>`s.
+
+    Each tag supports the `style` attribute features below:
+
+    * `color` - foreground color of the text (`#RRGGBB`)
+    * `background-color` - background color of the text (`#RRGGBB`)
+    * `text-decoration: underline` - underline the text
+    * `font-weight: bold` - bold the text
+    * `font-style: italic` - italicize the text
+
+    See the following slides for specifics and examples of each html element.
+    """,
+)
 @contrib_first
 def render_html_inline(token, ctx: Context):
     tags = Tag.parse(token["content"])
@@ -282,126 +347,336 @@ def render_html_inline(token, ctx: Context):
 
 @contrib_first
 def render_html_tag_default_open(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
-    ctx.tag_push(tag.name, style_spec)
+    ctx.tag_push(tag.name, token, style_spec)
 
 
 @contrib_first
 def render_html_tag_default_close(
-    _, _tag: Tag, ctx: Context, _style_spec: Union[None, urwid.AttrSpec]
+    _, _tag: Tag, ctx: Context, _style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.tag_pop()
 
 
+@tutor(
+    "markdown inline",
+    "html tag `<u>`",
+    r"""
+    The `<u>` tag can be used to underline all elements within it:
+
+    <TUTOR:EXAMPLE>
+    I <u>made</u> too
+
+    <u>
+    * much
+        * pasta
+    </u>
+    </TUTOR:EXAMPLE>
+    """,
+)
 @contrib_first
 def render_html_tag_u_open(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("underline"))
-    ctx.tag_push(tag.name, style_spec, text_only_spec=True)
+    ctx.tag_push(tag.name, token, style_spec, text_only_spec=True)
 
 
+@tutor(
+    "markdown inline",
+    "html tag `<i>`",
+    r"""
+    The `<i>` tag can be used to italicize all elements within it:
+
+    <TUTOR:EXAMPLE>
+    <i>but</i> I was so
+
+    <i>
+    | hungry | there's none |
+    |--------|--------------|
+    | left   | for you      |
+    </i>
+    </TUTOR:EXAMPLE>
+    """,
+)
 @contrib_first
 def render_html_tag_i_open(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("italics"))
-    ctx.tag_push(tag.name, style_spec)
+    ctx.tag_push(tag.name, token, style_spec)
 
 
+@tutor(
+    "markdown inline",
+    "html tag `<b>`",
+    r"""
+    The `<b>` tag can be used to bold all elements within it:
+
+    <TUTOR:EXAMPLE>
+    so I made m<b>ore lasagna</b>
+
+    <b>
+    > just for fun
+    </b>
+    </TUTOR:EXAMPLE>
+    """,
+)
 @contrib_first
 def render_html_tag_b_open(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("bold"))
-    ctx.tag_push(tag.name, style_spec)
+    ctx.tag_push(tag.name, token, style_spec)
 
 
+@tutor(
+    "markdown inline",
+    "html tag `<em>`",
+    r"""
+    The `<em>` tag can be used to emphasize all elements within it. In
+    lookatme this results in inverted colors
+
+    <TUTOR:EXAMPLE>
+    I j<em>us</em>t <em>n</em>E<em>E</em>d butter<em>!</em>
+    </TUTOR:EXAMPLE>
+    """,
+)
 @contrib_first
 def render_html_tag_em_open(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("standout"))
-    ctx.tag_push(tag.name, style_spec, text_only_spec=True)
+    ctx.tag_push(tag.name, token, style_spec, text_only_spec=True)
 
 
+@tutor(
+    "markdown inline",
+    "html tag `<blink>`",
+    r"""
+    The `<blink>` tag causes all contents to blink. Not all terminals
+    support this.
+
+    <TUTOR:EXAMPLE>
+    Can you <blink>hear me</blink> now?
+
+    <blink>
+    > YES.
+    > We can hear you.
+    </blink>
+    </TUTOR:EXAMPLE>
+    """,
+)
 @contrib_first
 def render_html_tag_blink_open(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     style_spec = utils.overwrite_spec(style_spec, utils.spec_from_style("blink"))
-    ctx.tag_push(tag.name, style_spec)
+    ctx.tag_push(tag.name, token, style_spec)
 
 
+@tutor(
+    "markdown inline",
+    "html tag `<br>`",
+    r"""
+    The `<br>` inserts a newline wherever it's at. This can be especially
+    useful in tables!
+
+    <TUTOR:EXAMPLE>
+    Newline inserted<br/>here.
+
+    | table                     | of data                   |
+    |---------------------------|---------------------------|
+    | line1<br/>line2<br/>line3 | single item               |
+    | single item               | line1<br/>line2<br/>line3 |
+    </TUTOR:EXAMPLE>
+    """,
+)
 @contrib_first
 def render_html_tag_br_open(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
-    ctx.tag_push(tag.name, style_spec)
+    ctx.tag_push(tag.name, token, style_spec)
     ctx.inline_push((ctx.spec_text, "\n"))
 
 
+@tutor(
+    "markdown inline",
+    "html tag `<div>`",
+    r"""
+    The `<div>` tag creates a new visual block. `<div>` tags are also the
+    best option for setting the background color of entire elements:
+
+    <TUTOR:EXAMPLE>
+    <div>text1</div><div>text2</div>
+
+    <div style="background-color: #808020">
+    | table       | of data     |
+    |-------------|-------------|
+    | data        | single item |
+    | single item | data        |
+    </div>
+    </TUTOR:EXAMPLE>
+    """,
+)
 @contrib_first
 def render_html_tag_div_open(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.ensure_new_block()
     ctx.container_push(urwid.Pile([]), is_new_block=True)
-    ctx.tag_push(tag.name, style_spec)
+    ctx.tag_push(tag.name, token, style_spec)
 
 
 @contrib_first
 def render_html_tag_div_close(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    _, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
-    ctx.container_pop()
     ctx.tag_pop()
+    ctx.container_pop()
 
 
+@tutor(
+    "markdown inline",
+    "html tag `<ol>`",
+    r"""
+    The `<ol>` tag creates a new ordered list. Each child `<li>` element will
+    be turned into an ordered item in the list.
+
+    Using `<ol>` is especially handy if you want to embed a list into
+    a table cell!
+
+    <TUTOR:EXAMPLE>
+    <ol><li>item1</li><li>item2</li></ol>
+
+    | table                                         | with list  |
+    |-----------------------------------------------|------------|
+    | <ol><li>item in table</li><li>item2</li></ol> | other data |
+    | cell                                          | data       |
+    </TUTOR:EXAMPLE>
+    """,
+)
 @contrib_first
 def render_html_tag_ol_open(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
-    ctx.tag_push(tag.name, style_spec)
-    markdown_block().render_ordered_list_open({"type": "ordered_list_open"}, ctx)
+    ctx.tag_push(tag.name, token, style_spec)
+    fake_token = ctx.fake_token("ordered_list_open")
+    markdown_block().render_ordered_list_open(fake_token, ctx)
 
 
 @contrib_first
 def render_html_tag_ol_close(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    _, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.tag_pop()
-    markdown_block().render_ordered_list_close({"type": "ordered_list_close"}, ctx)
+    fake_token = ctx.fake_token("ordered_list_close")
+    markdown_block().render_ordered_list_close(fake_token, ctx)
 
 
+@tutor(
+    "markdown inline",
+    "html tag `<ul>`",
+    r"""
+    The `<ul>` tag creates a new *un*ordered list. Each child `<li>` element will
+    be turned into an item in the list.
+
+    Using `<ul>` is especially handy if you want to embed a list into
+    a table cell!
+
+    <TUTOR:EXAMPLE>
+    <ul><li>item1</li><li>item2</li></ul>
+
+    | table                                         | with list  |
+    |-----------------------------------------------|------------|
+    | <ul><li>item in table</li><li>item2</li></ul> | other data |
+    | cell                                          | data       |
+    </TUTOR:EXAMPLE>
+    """,
+)
 @contrib_first
 def render_html_tag_ul_open(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
-    ctx.tag_push(tag.name, style_spec)
-    markdown_block().render_bullet_list_open({"type": "bullet_list_open"}, ctx)
+    ctx.tag_push(tag.name, token, style_spec)
+    fake_token = ctx.fake_token("bullet_list_open")
+    markdown_block().render_bullet_list_open(fake_token, ctx)
 
 
 @contrib_first
 def render_html_tag_ul_close(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    _, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
     ctx.tag_pop()
-    markdown_block().render_bullet_list_close({"type": "bullet_list_close"}, ctx)
+    fake_token = ctx.fake_token("bullet_list_close")
+    markdown_block().render_bullet_list_close(fake_token, ctx)
 
 
+@tutor(
+    "markdown inline",
+    "html tag `<li>`",
+    r"""
+    The `<li>` tag creates a single list element for both ordered (`<ol>`) and
+    unordered (`<ul>`) lists. When not used as a child of an `<ol>` or `<ul>`
+    tag, the list item will be assumed to be an unordered list item.
+
+    <TUTOR:EXAMPLE>
+    <ol><li>item1</li><li>item2</li></ol>
+
+    Or without the `<ol>`:
+
+    <li>test</li><li>test2</li>
+
+    | table                                | with list  |
+    |--------------------------------------|------------|
+    | <li>item in table</li><li>item2</li> | other data |
+    | cell                                 | data       |
+    </TUTOR:EXAMPLE>
+    """,
+)
 @contrib_first
 def render_html_tag_li_open(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
-    ctx.tag_push(tag.name, style_spec)
-    markdown_block().render_list_item_open({"type": "list_item_open"}, ctx)
+    # if we're not within a ul or ol element, then we need to force one of
+    # those to be rendered first
+    if (
+        not ctx.tokens.unwind_has_type("bullet_list_close")
+        and not ctx.tokens.unwind_has_type("ordered_list_close")
+        and not ctx.tag_is_ancestor("ol")
+        and not ctx.tag_is_ancestor("ul")
+    ):
+        ctx.log_debug("rendering bullet list open")
+        fake_token = ctx.fake_token("bullet_list_open")
+        fake_parent_ul = token.setdefault("fake_parent_ul", fake_token)
+        markdown_block().render_bullet_list_open(fake_parent_ul, ctx)
+
+    ctx.log_debug("rendering li open")
+    ctx.tag_push(tag.name, token, style_spec)
+    fake_token = ctx.fake_token("list_item_open")
+    li_token = token.setdefault("translated_li_token", fake_token)
+    markdown_block().render_list_item_open(li_token, ctx)
 
 
 @contrib_first
 def render_html_tag_li_close(
-    _, tag: Tag, ctx: Context, style_spec: Union[None, urwid.AttrSpec]
+    token: Dict, tag: Tag, ctx: Context, style_spec: Optional[urwid.AttrSpec]
 ):
+    ctx.log_debug("rendering li close")
     ctx.tag_pop()
-    markdown_block().render_list_item_close({"type": "list_item_close"}, ctx)
+    fake_token = ctx.fake_token("list_item_close")
+    li_token = token.setdefault("translated_li_token", fake_token)
+    markdown_block().render_list_item_close(li_token, ctx)
+
+    # if the next token isn't an ol or ul token, then we need to end this
+    # current <li> list
+    next_token = ctx.tokens.peek()
+    if not next_token or (
+        next_token["type"] == "html_inline"
+        and next_token["content"] not in ("</ul>", "</ol>", "</li>", "<li>")
+        and next_token["type"] != "list_item_open"
+    ):
+        ctx.log_debug("rendering bullet list close")
+        fake_token = ctx.fake_token("bullet_list_close")
+        markdown_block().render_bullet_list_close(fake_token, ctx)

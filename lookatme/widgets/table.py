@@ -285,7 +285,7 @@ class Table(urwid.Pile):
         row_spec_text, row_spec_general = row_specs
         res = []
         for idx, cell_pile in enumerate(row):
-            # add the pdading between columns if we're not the first column
+            # add the padding between columns if we're not the first column
             if idx > 0:
                 padding_text = " " * self.cell_spacing
                 padding_w = urwid.Text((row_spec_general, padding_text))
@@ -335,8 +335,7 @@ class Table(urwid.Pile):
         for row in self.header_rows + self.body_rows:
             # list of urwid.Piles
             for idx, cell in enumerate(row):
-                rend = cell.render((200,))
-                curr_col_width = self._calc_canvas_width(rend)
+                curr_col_width = utils.packed_widget_width(cell)
                 column_maxes[idx] = max(column_maxes[idx], curr_col_width)
 
         return column_maxes
@@ -377,10 +376,10 @@ class Table(urwid.Pile):
                 cell_container = urwid.Pile([])
                 cell_container.is_header = header
 
-                with self.ctx.use_container_tmp(cell_container):
-                    with self.ctx.use_spec(row_spec_general, text_only=False):
-                        with self.ctx.use_spec(row_spec_text, text_only=True):
-                            with self.ctx.use_tokens(cell["children"]):
+                with self.ctx.use_tokens(cell["children"]):
+                    with self.ctx.use_container_tmp(cell_container):
+                        with self.ctx.use_spec(row_spec_general, text_only=False):
+                            with self.ctx.use_spec(row_spec_text, text_only=True):
                                 markdown_block.render_all(self.ctx)
 
                 # set alignment for all text widgets

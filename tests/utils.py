@@ -12,6 +12,7 @@ from lookatme.render.context import Context
 import lookatme.config
 import lookatme.schemas
 import lookatme.parser
+import lookatme.utils as utils
 import lookatme.render.markdown_block as markdown_block
 from lookatme.pres import Presentation
 import lookatme.tui
@@ -47,11 +48,16 @@ def _markups_to_vtext(
         text = text.decode()
 
         if spec is None:
-            fg = ""
-            bg = ""
+            fg = "default"
+            bg = "default"
         else:
             fg = spec.foreground
             bg = spec.background
+
+        if fg == "":
+            fg = "default"
+        if bg == "":
+            bg = "default"
 
         if tag_stack[-1][0] == (fg, bg):
             tag_stack[-1][1].append(text)
@@ -105,13 +111,7 @@ def render_widget(
     w: urwid.Widget, width: Optional[int] = None
 ) -> List[List[Tuple[Optional[urwid.AttrSpec], Any, bytes]]]:
     if width is None:
-        min_width = 300
-        _, orig_rows = w.pack((min_width,))
-        curr_rows = orig_rows
-        while min_width > 0 and curr_rows == orig_rows:
-            min_width -= 1
-            _, curr_rows = w.pack((min_width,))
-        width = min_width + 1
+        width = utils.packed_widget_width(w)
 
     return list(w.render((width,), False).content())
 
@@ -123,9 +123,13 @@ def render_md(
 
     root = urwid.Pile([])
     ctx = Context(None)
+    ctx.clean_state_snapshot()
+
     with ctx.use_tokens(tokens):
         with ctx.use_container(root, is_new_block=True):
-            markdown_block.render_all(ctx)
+            markdown_block.render_all(ctx, and_unwind=True)
+
+    ctx.clean_state_validate()
 
     return render_widget(root, width)
 

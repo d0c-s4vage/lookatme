@@ -51,8 +51,9 @@ def _render_table(
     root = urwid.Pile([])
     table = Table(ctx, thead, tbody)
     padding = urwid.Padding(root, width=table.total_width)
-    with ctx.use_container(root, is_new_block=True):
-        ctx.widget_add(table)
+    with ctx.use_tokens([{}]):
+        with ctx.use_container(root, is_new_block=True):
+            ctx.widget_add(table)
 
     content = list(padding.render((table.total_width,), False).content())
     return table, content

@@ -2,11 +2,99 @@
 """
 
 
-from typing import Dict, Union
+from typing import Dict, Optional
 
 import urwid
 
 from lookatme.widgets.smart_attr_spec import SmartAttrSpec
+
+
+def _do_get_packed_widget_list(w: urwid.Widget) -> int:
+    min_width = 250
+    _, orig_rows = w.pack((min_width,))
+    curr_rows = orig_rows
+    seen = set()
+    chunk_size = round(min_width / 2.0)
+
+    last_was_same = True
+    while min_width not in seen and min_width > 0:
+        _, curr_rows = w.pack((min_width,))
+        seen.add(min_width)
+        if curr_rows != orig_rows:
+            min_width += chunk_size
+            if last_was_same and chunk_size == 1:
+                break
+            last_was_same = False
+        else:
+            if not last_was_same and chunk_size == 1:
+                break
+            min_width -= chunk_size
+            last_was_same = True
+        chunk_size = max(round(chunk_size * 0.5), 1)
+
+    return min_width
+
+
+def packed_widget_width(w: urwid.Widget) -> int:
+    """Return the smallest size of the widget without wrapping"""
+    if isinstance(w, urwid.Pile):
+        if len(w.widget_list) == 0:
+            return 0
+        return max(packed_widget_width(x) for x in w.widget_list)
+    elif isinstance(w, urwid.Columns):
+        res = w.dividechars * (len(w.widget_list) - 1)
+        for col_widget, (size_type, size_val, _) in w.contents:
+            if size_type == "given":
+                res += size_val
+            else:
+                res += packed_widget_width(col_widget)
+        return res
+    elif isinstance(w, urwid.AttrMap):
+        return packed_widget_width(w.original_widget)
+    elif isinstance(w, urwid.Text):
+        return max(len(line) for line in w.text.split("\n"))
+
+    return _do_get_packed_widget_list(w)
+
+
+def debug_print_tokens(tokens, level=1):
+    """Print the tokens DFS"""
+    import lookatme.config
+
+    def indent(x):
+        return "  " * x
+
+    log = lookatme.config.get_log()
+    log.debug(indent(level) + "DEBUG TOKENS")
+    level += 1
+
+    stack = list(reversed(tokens))
+    while len(stack) > 0:
+        token = stack.pop()
+        if "close" in token["type"]:
+            level -= 1
+
+        log.debug(indent(level) + repr(token))
+
+        if "open" in token["type"]:
+            level += 1
+
+        token_children = token.get("children", None)
+        if isinstance(token_children, list):
+            stack.append({"type": "children_close"})
+            stack += list(reversed(token_children))
+            stack.append({"type": "children_open"})
+
+
+def check_token_type(token: Optional[Dict], expected_type: str):
+    if token is None:
+        return
+    if token["type"] != expected_type:
+        raise Exception(
+            "Unexpected token type {!r}, expected {!r}".format(
+                token["type"], expected_type
+            )
+        )
 
 
 def core_widget(w) -> urwid.Widget:
@@ -205,7 +293,7 @@ def _default_filter_fn(_x, _y):
     return True
 
 
-def spec_from_stack(spec_stack: list, filter_fn=None) -> Union[None, urwid.AttrSpec]:
+def spec_from_stack(spec_stack: list, filter_fn=None) -> Optional[urwid.AttrSpec]:
     if len(spec_stack) == 0:
         return SmartAttrSpec("", "")
 

@@ -6,25 +6,35 @@ This module defines the parser for the markdown presentation file
 import re
 from collections import defaultdict
 import copy
-from typing import AnyStr, Callable, Dict, List, Tuple
+from typing import cast, AnyStr, Callable, Dict, List, Tuple
 
 import markdown_it
 import markdown_it.token
 
-import lookatme.config
 from lookatme.schemas import MetaSchema
 from lookatme.slide import Slide
 from lookatme.tutorial import tutor
+import lookatme.utils as utils
+
+
+def _set_map_for_inline(token: Dict):
+    start = token["map"][0]
+    for child in token["children"]:
+        child["map"] = [start, start + 1]
+        if child["type"] == "softbreak":
+            start += 1
 
 
 def md_to_tokens(md_text):
     md = markdown_it.MarkdownIt("gfm-like").disable("html_block")
     tokens = md.parse(md_text)
     res = []
-    for token in tokens:
-        token = token.as_dict()
+    for token_tmp in tokens:
+        token = cast(Dict, token_tmp.as_dict())
         if token["type"] in ("heading_open", "heading_close"):
             token["level"] = int(token["tag"].replace("h", ""))
+        if token["type"] == "inline":
+            _set_map_for_inline(token)
         res.append(token)
 
     return res
@@ -36,34 +46,6 @@ def is_heading(token):
 
 def is_hrule(token):
     return token["type"] == "hr"
-
-
-def debug_print_tokens(tokens, level=1):
-    """Print the tokens DFS"""
-
-    def indent(x):
-        return "  " * x
-
-    log = lookatme.config.get_log()
-    log.debug(indent(level) + "DEBUG TOKENS")
-    level += 1
-
-    stack = list(reversed(tokens))
-    while len(stack) > 0:
-        token = stack.pop()
-        if "close" in token["type"]:
-            level -= 1
-
-        log.debug(indent(level) + repr(token))
-
-        if "open" in token["type"]:
-            level += 1
-
-        token_children = token.get("children", None)
-        if isinstance(token_children, list):
-            stack.append({"type": "children_close"})
-            stack += list(reversed(token_children))
-            stack.append({"type": "children_open"})
 
 
 class SlideIsolator:
@@ -132,25 +114,24 @@ class Parser(object):
         """Create a new Parser instance"""
         self._single_slide = single_slide
 
-    def parse(self, input_data):
+    def parse(self, input_data) -> Tuple[Dict, List[Slide], str]:
         """Parse the provided input data into a Presentation object
 
         :param str input_data: The input markdown presentation to parse
-        :returns: Presentation
         """
-        input_data, meta = self.parse_meta(input_data)
-        input_data, slides = self.parse_slides(meta, input_data)
-        return meta, slides
+        no_meta_input_data, meta = self.parse_meta(input_data)
+        slides = self.parse_slides(meta, no_meta_input_data)
+        return meta, slides, no_meta_input_data
 
-    def parse_slides(self, meta, input_data):
+    def parse_slides(self, meta, input_data) -> List[Slide]:
         """Parse the Slide out of the input data
 
         :param dict meta: The parsed meta values
         :param str input_data: The input data string
-        :returns: tuple of (remaining_data, slide)
+        :returns: List[Slide]
         """
         tokens = md_to_tokens(input_data)
-        debug_print_tokens(tokens)
+        utils.debug_print_tokens(tokens)
         num_hrules, hinfo = self._scan_for_smart_split(tokens)
         keep_split_token = True
 
@@ -192,7 +173,7 @@ class Parser(object):
             tokens, slide_split_check, heading_mod, keep_split_token
         )
 
-        return "", slides
+        return slides
 
     def _split_tokens_into_slides(
         self,
@@ -307,10 +288,12 @@ class Parser(object):
             and isinstance(first_heading_contents, list)
             and hinfo["counts"][first_heading["level"]] == 1
         ):
+            map_start = first_heading_contents[0]["map"]
+            map_end = first_heading_contents[-1]["map"]
             hinfo["title"] = (
-                [{"type": "paragraph_open"}]
+                [{"type": "paragraph_open", "map": [map_start[0], map_start[0] + 1]}]
                 + first_heading_contents
-                + [{"type": "paragraph_close"}]
+                + [{"type": "paragraph_close", "map": [map_end[-1] - 1, map_end[-1]]}]
             )
             del hinfo["counts"][first_heading["level"]]
             hinfo["title_level"] = first_heading["level"]

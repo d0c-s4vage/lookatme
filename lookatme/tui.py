@@ -13,6 +13,7 @@ import urwid
 import lookatme.config
 import lookatme.config as config
 import lookatme.parser
+from lookatme.slide import Slide
 import lookatme.render.markdown_block as markdown_block
 from lookatme.contrib import contrib_first, shutdown_contribs
 from lookatme.render.context import Context
@@ -59,17 +60,18 @@ class SlideRenderer(threading.Thread):
 
     def queue_render(self, slide):
         """Queue up a slide to be rendered."""
-        self.events[slide.number].clear()
-        self.queue.put(slide)
+        if self.is_alive():
+            self.events[slide.number].clear()
+            self.queue.put(slide)
+        else:
+            self.render_slide(slide)
 
-    def render_slide(self, slide, force=False):
+    def render_slide(self, slide):
         """Render a slide, blocking until the slide completes. If ``force`` is
         True, rerender the slide even if it is in the cache.
         """
-        if force or slide.number not in self.cache:
-            self.events[slide.number].clear()
-            self.queue.put(slide)
-            self.events[slide.number].wait()
+        if slide.number not in self.cache:
+            self._cache_slide_render(slide)
 
         res = self.cache[slide.number]
         if isinstance(res, Exception):
@@ -87,16 +89,46 @@ class SlideRenderer(threading.Thread):
                 to_render = self.queue.get(timeout=0.05)
             except Empty:
                 continue
+            self._cache_slide_render(to_render)
 
-            slide_num = to_render.number
+    def _cache_slide_render(self, slide: Slide):
+        try:
+            res = self.do_render(slide, slide.number)
+            self.cache[slide.number] = res
+        except Exception as e:
+            self._log.error(f"Error occurred rendering slide {slide.number}")
 
             try:
-                res = self.do_render(to_render, slide_num)
-                self.cache[slide_num] = res
-            except Exception as e:
-                self.cache[slide_num] = e
-            finally:
-                self.events[slide_num].set()
+                curr_token = self.ctx.tokens.curr
+            except:
+                curr_token = None
+
+            if curr_token:
+                tmp = dict(**curr_token)
+                if "unwound_token" in tmp:
+                    del tmp["unwound_token"]
+
+                self._log.error("Error occurred with token: {}".format(tmp))
+
+                unwound_token = curr_token.get("unwound_token", {})
+                if unwound_token:
+                    self._log.error(
+                        "Token resulted from unwinding {}".format(unwound_token)
+                    )
+                    unwound_context = self.ctx.source_get_token_lines(unwound_token, 10)
+                    self._log.error(
+                        "Unwound context:\n{}".format("\n".join(unwound_context))
+                    )
+
+                source_context = self.ctx.source_get_token_lines(curr_token, 10)
+                self._log.error("Source context:\n{}".format("\n".join(source_context)))
+
+            if self.is_alive():
+                self.cache[slide.number] = e
+            else:
+                raise e
+        finally:
+            self.events[slide.number].set()
 
     def do_render(self, to_render, slide_num):
         """Perform the actual rendering of a slide. This is done by:
@@ -147,6 +179,7 @@ class SlideRenderer(threading.Thread):
         self._log.debug("PRE-Render====================================")
         self._log.debug("")
         self._render_tokens(tokens)
+
         self._log.debug("")
         self._log.debug("FINAL-Render====================================")
         self._log.debug("")
@@ -184,15 +217,20 @@ class SlideRenderer(threading.Thread):
     )
     def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
+
+        self.ctx.clean_state_snapshot()
+
         with self.ctx.use_tokens(tokens):
             with self.ctx.use_container(tmp_listbox, is_new_block=True):
-                markdown_block.render_all(self.ctx)
+                markdown_block.render_all(self.ctx, and_unwind=True)
+
+        self.ctx.clean_state_validate()
 
         return tmp_listbox.body
 
 
 class MarkdownTui(urwid.Frame):
-    def __init__(self, pres, start_idx=0):
+    def __init__(self, pres, start_idx=0, no_threads=False):
         """Create a new MarkdownTui"""
         # self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
         self.slide_body = urwid.ListBox(
@@ -216,8 +254,10 @@ class MarkdownTui(urwid.Frame):
 
         self.root_margins = urwid.Padding(self, left=2, right=2)
         self.root_paddings = urwid.Padding(self.slide_body, left=10, right=10)
+        self.pres = pres
 
         self.ctx = Context(None)
+        self.ctx.source_push(self.pres.no_meta_source)
         self.ctx.spec_push(spec_from_style(config.get_style()["slides"]))
 
         self.root_widget = root_urwid_widget(self.root_margins)
@@ -226,12 +266,13 @@ class MarkdownTui(urwid.Frame):
             screen=screen,
         )
         self.ctx.loop = self.loop
+        self.no_threads = no_threads
 
         # used to track slides that are being rendered
         self.slide_renderer = SlideRenderer(self.ctx)
-        self.slide_renderer.start()
+        if not no_threads:
+            self.slide_renderer.start()
 
-        self.pres = pres
         self.prep_pres(self.pres, start_idx)
 
         urwid.Frame.__init__(
@@ -328,7 +369,7 @@ class MarkdownTui(urwid.Frame):
 
         with self.ctx.use_tokens(title):
             with self.ctx.use_spec(spec):
-                markdown_block.render_all(self.ctx)
+                markdown_block.render_all(self.ctx, and_unwind=True)
         self.slide_title.set_text(self.ctx.inline_markup_consumed)
 
     def update_creation(self):
@@ -444,10 +485,10 @@ class MarkdownTui(urwid.Frame):
         self.loop.run()
 
 
-def create_tui(pres, start_slide=0):
+def create_tui(pres, start_slide=0, no_threads=False):
     """Run the provided presentation
 
     :param int start_slide: 0-based slide index
     """
-    tui = MarkdownTui(pres, start_slide)
+    tui = MarkdownTui(pres, start_slide, no_threads=no_threads)
     return tui

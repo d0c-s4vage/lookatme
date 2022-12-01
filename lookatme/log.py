@@ -9,7 +9,13 @@ import logging
 def create_log(log_path):
     """Create a new log that writes to log_path"""
     logging.basicConfig(filename=log_path, level=logging.DEBUG)
-    return logging.getLogger("lookatme")
+    res = logging.getLogger("lookatme")
+
+    stderr_handler = logging.StreamHandler()
+    stderr_handler.setLevel(logging.ERROR)
+    res.addHandler(stderr_handler)
+
+    return res
 
 
 def create_null_log():

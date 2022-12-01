@@ -85,7 +85,7 @@ code block
 More text
     """
     parser = Parser()
-    _, slides = parser.parse_slides({}, input_data)
+    slides = parser.parse_slides({}, input_data)
     assert len(slides) == 2
 
 
@@ -109,7 +109,7 @@ p2
 More text
     """
     parser = Parser()
-    _, slides = parser.parse_slides({}, input_data)
+    slides = parser.parse_slides({}, input_data)
     assert len(slides) == 4
 
 
@@ -134,7 +134,7 @@ more text
     """
     parser = Parser()
     meta = {"title": ""}
-    _, slides = parser.parse_slides(meta, input_data)
+    slides = parser.parse_slides(meta, input_data)
     assert len(slides) == 4
     # the title should be a list of tokens!
     assert isinstance(meta["title"], list)
@@ -169,6 +169,6 @@ more text
     """
     parser = Parser()
     meta = {"title": ""}
-    _, slides = parser.parse_slides(meta, input_data)
+    slides = parser.parse_slides(meta, input_data)
     assert len(slides) == 3
     assert meta["title"] == ""

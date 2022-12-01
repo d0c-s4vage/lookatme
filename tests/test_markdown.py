@@ -28,22 +28,12 @@ def test_heading_defaults(style):
     utils.validate_render(
         md_text=r"""
             # H1
-            ## H2
-            ### H3
         """,
         text=[
             "|H1|",
-            "    ",
-            "|H2|",
-            "    ",
-            "|H3|",
         ],
         style_mask=[
             "HHHH",
-            "////",
-            "hhhh",
-            "////",
-            "aaaa",
         ],
         styles={
             "H": style["headings"]["default"],
@@ -193,6 +183,114 @@ def test_table_with_no_body(style):
             "H": style["table"]["header"],
             ".": style["table"]["border"]["tl_corner"],
             " ": {},
+        },
+    )
+
+
+@override_style(
+    {
+        "table": {
+            "column_spacing": 1,
+            "header_divider": {"text": "-"},
+            "header": {"bg": "#121212"},
+        }
+    }
+)
+def test_table_surrounded_by_div(style):
+    """Test table surrounded by div"""
+    utils.validate_render(
+        render_width=7,
+        md_text=r"""
+            Before
+
+            <div style="background-color: #ff0000">
+            | H2 | H1 |
+            |----|----|
+            | A  | B  |
+            | C  | D  |
+            </div>
+
+            After
+        """,
+        text=[
+            "Before ",
+            "       ",
+            "┌─────┐",
+            "│H2 H1│",
+            "│-----│",
+            "│A  B │",
+            "│C  D │",
+            "└─────┘",
+            "       ",
+            "After  ",
+        ],
+        style_mask=[
+            "       ",
+            "       ",
+            ".......",
+            ".HHHHH.",
+            ".DDDDD.",
+            ".EEEEE.",
+            ".OOOOO.",
+            ".......",
+            "       ",
+            "       ",
+        ],
+        styles={
+            "H": style["table"]["header"],
+            "D": {
+                "bg": style["table"]["header"]["bg"],
+                "fg": style["table"]["header_divider"]["fg"],
+            },
+            "E": {"bg": "#ff0000", "fg": style["table"]["even_rows"]["fg"]},
+            "O": style["table"]["odd_rows"],
+            ".": {"bg": "#ff0000", "fg": style["table"]["border"]["tl_corner"]["fg"]},
+            " ": {},
+        },
+    )
+
+
+@override_style(
+    {
+        "table": {
+            "column_spacing": 1,
+            "header_divider": {"text": "-"},
+            "header": {"bg": "#121212"},
+        },
+    }
+)
+def test_table_with_embedded_list(style):
+    """Test table with a an html list in a cell"""
+    utils.validate_render(
+        render_width=6,
+        md_text=r"""
+            | H2                   |
+            |----------------------|
+            | <ol><li>a</li></ol>  |
+        """,
+        text=[
+            "┌────┐",
+            "│H2  │",
+            "│----│",
+            "│1. a│",
+            "└────┘",
+        ],
+        style_mask=[
+            "......",
+            ".HHHH.",
+            ".DDDD.",
+            ".LLEE.",
+            "......",
+        ],
+        styles={
+            "H": style["table"]["header"],
+            "D": {
+                "bg": style["table"]["header"]["bg"],
+                "fg": style["table"]["header_divider"]["fg"],
+            },
+            "E": style["table"]["even_rows"],
+            "L": style["numbering"]["1"],
+            ".": style["table"]["border"]["tl_corner"],
         },
     )
 
@@ -431,22 +529,22 @@ def test_block_quote(style):
             > Quote text
         """,
         text=[
-            "██━━──               ",
-            "┃  Quote text        ",
-            "┃                    ",
-            "┃  Quote italic text ",
-            "┃                    ",
-            "┃  Quote text        ",
-            "██━━──               ",
+            "██━━──                ",
+            "┃  Quote text         ",
+            "┃                     ",
+            "┃  Quote italic text  ",
+            "┃                     ",
+            "┃  Quote text         ",
+            "██━━──                ",
         ],
         style_mask=[
-            "TTTTTT_______________",
-            "Liiiiiiiiiiiiiiiiiii_",
-            "Liiiiiiiiiiiiiiiiiii_",
-            "Liiiiiiiiiiiiiiiiiii_",
-            "Liiiiiiiiiiiiiiiiiii_",
-            "Liiiiiiiiiiiiiiiiiii_",
-            "BBBBBB_______________",
+            "TTTTTT________________",
+            "Liiiiiiiiiiiiiiiiiiii_",
+            "Liiiiiiiiiiiiiiiiiiii_",
+            "Liiiiiiiiiiiiiiiiiiii_",
+            "Liiiiiiiiiiiiiiiiiiii_",
+            "Liiiiiiiiiiiiiiiiiiii_",
+            "BBBBBB________________",
         ],
         styles={
             "T": style["quote"]["border"]["tl_corner"],
@@ -502,6 +600,7 @@ def test_code(styles):
 def test_empty_codeblock(style):
     """Test that empty code blocks render correctly"""
     utils.validate_render(
+        render_width=1,
         md_text="""
             ```python
 

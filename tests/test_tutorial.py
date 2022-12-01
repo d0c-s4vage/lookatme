@@ -10,7 +10,8 @@ import lookatme.tutorial as tutorial
 
 def test_real_tutorials_exist():
     assert "general" in tutorial.GROUPED_TUTORIALS
-    assert "markdown" in tutorial.GROUPED_TUTORIALS
+    assert "markdown block" in tutorial.GROUPED_TUTORIALS
+    assert "markdown inline" in tutorial.GROUPED_TUTORIALS
 
 
 def test_tutorial_basic(mocker):

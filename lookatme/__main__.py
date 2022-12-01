@@ -6,8 +6,10 @@ This is the main CLI for lookatme
 
 
 import io
+import logging
 import os
 import tempfile
+import traceback
 
 import click
 import pygments.styles
@@ -23,6 +25,7 @@ from lookatme.schemas import StyleSchema
 
 @click.command("lookatme")
 @click.option("--debug", "debug", is_flag=True, default=False)
+@click.option("--threads", "threads", is_flag=True, default=False)
 @click.option(
     "-l",
     "--log",
@@ -116,6 +119,7 @@ from lookatme.schemas import StyleSchema
 def main(
     tutorial,
     debug,
+    threads,
     log_path,
     theme,
     code_style,
@@ -132,17 +136,18 @@ def main(
 
     See https://lookatme.readthedocs.io/en/v{{VERSION}} for documentation
     """
+    lookatme.config.LOG = lookatme.log.create_log(log_path)
     if debug:
-        lookatme.config.LOG = lookatme.log.create_log(log_path)
+        lookatme.config.LOG.setLevel(logging.DEBUG)
     else:
-        lookatme.config.LOG = lookatme.log.create_null_log()
+        lookatme.config.LOG.setLevel(logging.ERROR)
 
     if len(input_files) == 0:
         input_files = [io.StringIO("")]
 
     if tutorial:
         if tutorial == "all":
-            tutors = ["general", "markdown"]
+            tutors = ["general", "markdown block", "markdown inline"]
         else:
             tutors = [x.strip() for x in tutorial.split(",")]
 
@@ -171,6 +176,7 @@ def main(
         safe=safe,
         no_ext_warn=no_ext_warn,
         ignore_ext_failure=ignore_ext_failure,
+        no_threads=(debug and not threads),
     )
 
     if dump_styles:
@@ -183,10 +189,19 @@ def main(
         number = pres.get_tui().curr_slide.number + 1
         click.echo(f"Error rendering slide {number}: {e}")
         if not debug:
-            click.echo("Rerun with --debug to view the full traceback in logs")
+            click.echo(
+                "Rerun with --debug to run with no threads and more details in the logs"
+            )
+            lookatme.config.get_log().error(
+                f"Error rendering slide {number}", exc_info=True
+            )
         else:
-            lookatme.config.get_log().exception(f"Error rendering slide {number}: {e}")
-            click.echo(f"See {log_path} for traceback")
+            click.echo(f"Error rendering slide {number}: {e}")
+            click.echo("")
+            click.echo(
+                "\n".join("    " + line for line in traceback.format_exc().split("\n"))
+            )
+            click.echo(f"See {log_path} for detailed runtime logs")
         raise click.Abort()
 
 
