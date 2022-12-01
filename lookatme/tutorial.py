@@ -101,15 +101,17 @@ class Tutor:
         if file_name is None:
             return "??"
 
-        relpath = file_name.split("lookatme/", 1)[1]
+        relpath = file_name.rsplit("lookatme/", 1)[1]
         _, lineno = inspect.getsourcelines(self.impl_fn)
 
         version = "v" + lookatme.VERSION
+        if version == "v{{VERSION}}":
+            version = "main"
 
         return "[{module}.{fn_name}]({link})".format(
             module=self.impl_fn.__module__,
             fn_name=self.impl_fn.__qualname__,
-            link="https://github.com/d0c-s4vage/lookatme/blob/{version}/{path}#L{lineno}".format(
+            link="https://github.com/d0c-s4vage/lookatme/blob/{version}/lookatme/{path}#L{lineno}".format(
                 version=version,
                 path=relpath,
                 lineno=lineno,

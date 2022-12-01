@@ -294,7 +294,7 @@ def render_code_inline(token, ctx: Context):
     |    `<li>` | List item element                                       |
     |   `<???>` | Treated as an inline element                            |
 
-    Note that all unrecognized tags (include `<span>`) will be treated as
+    Note that all unrecognized tags (including `<span>`) will be treated as
     inline elements. Style attributes will work, but a new block element
     will not be created as is done with `<div>`s.
 
@@ -624,7 +624,7 @@ def render_html_tag_ul_close(
     <TUTOR:EXAMPLE>
     <ol><li>item1</li><li>item2</li></ol>
 
-    Or without the `<ul>`:
+    Or without the `<ol>`:
 
     <li>test</li><li>test2</li>
 
