@@ -1,6 +1,8 @@
 """
 """
 
+from __future__ import annotations
+
 
 import contextlib
 import copy
@@ -41,6 +43,17 @@ class Context:
         self.in_new_block = True
 
         self._log = lookatme.config.get_log()
+
+    def clone(self) -> Context:
+        """Create a new limited clone of the current context.
+
+        The only data that is actually cloned is the source and spec stacks.
+        """
+        res = Context(self.loop)
+        res.source_stack = list(self.source_stack)
+        res.spec_stack = list(self.spec_stack)
+
+        return res
 
     def _validate_empty_list(self, stack_name: str, stack: List[Any]):
         if len(stack) == 0:
