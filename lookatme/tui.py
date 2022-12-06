@@ -269,7 +269,7 @@ class MarkdownTui(urwid.Frame):
         self.no_threads = no_threads
 
         # used to track slides that are being rendered
-        self.slide_renderer = SlideRenderer(self.ctx)
+        self.slide_renderer = SlideRenderer(self.ctx.clone())
         if not no_threads:
             self.slide_renderer.start()
 
