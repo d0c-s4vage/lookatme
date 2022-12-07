@@ -136,14 +136,9 @@ class Parser(object):
         keep_split_token = True
 
         if self._single_slide:
+            return [Slide(tokens, 0)]
 
-            def slide_split_check(_):  # type: ignore
-                return False
-
-            def heading_mod(_):  # type: ignore
-                pass
-
-        elif num_hrules == 0:
+        if num_hrules == 0:
             if meta.get("title", "") in ["", None]:
                 meta["title"] = hinfo["title"]
 

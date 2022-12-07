@@ -113,6 +113,30 @@ More text
     assert len(slides) == 4
 
 
+def test_parse_slides_with_progressive_stops_and_hrule_splits_and_single_option():
+    """Test that slide parsing works correctly"""
+    input_data = r"""
+# Heading
+
+<!-- stop -->
+
+p1
+
+<!-- stop -->
+
+p2
+
+---
+
+# Slide 2
+
+More text
+    """
+    parser = Parser(single_slide=True)
+    slides = parser.parse_slides({}, input_data)
+    assert len(slides) == 1
+
+
 def test_parse_smart_slides_one_h1():
     """Test that slide smart splitting works correctly"""
     input_data = r"""
