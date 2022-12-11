@@ -42,7 +42,6 @@ class Presentation(object):
         self,
         input_stream,
         theme,
-        style_override=None,
         live_reload=False,
         single_slide=False,
         preload_extensions=None,
@@ -62,7 +61,6 @@ class Presentation(object):
             lookatme.config.SLIDE_SOURCE_DIR = os.path.dirname(input_stream.name)
             self.input_filename = input_stream.name
 
-        self.style_override = style_override
         self.live_reload = live_reload
         self.tui = None
         self.single_slide = single_slide
@@ -71,8 +69,7 @@ class Presentation(object):
         self.ignore_ext_failure = ignore_ext_failure
         self.initial_load_complete = False
         self.no_threads = no_threads
-
-        self.theme_mod = __import__("lookatme.themes." + theme, fromlist=[theme])
+        self.cli_theme = theme
 
         if self.live_reload:
             self.reload_thread = threading.Thread(target=self.reload_watcher)
@@ -133,10 +130,12 @@ class Presentation(object):
                 self.ignore_ext_failure,
             )
 
+        theme = self.meta.get("theme", self.cli_theme or "dark")
+        self.theme_mod = __import__("lookatme.themes." + theme, fromlist=[theme])
+
         self.styles = lookatme.config.set_global_style_with_precedence(
             self.theme_mod,
             self.meta.get("styles", {}),
-            self.style_override,
         )
 
         self.initial_load_complete = True

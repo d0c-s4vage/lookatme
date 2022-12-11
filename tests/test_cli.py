@@ -33,7 +33,7 @@ def _get_dumped_style(
     tmpdir,
     theme: Optional[str] = None,
     md_meta_style: Optional[str] = None,
-    cli_style: Optional[str] = None,
+    # cli_style: Optional[str] = None,
 ) -> str:
     cli_args = ["--dump-styles"]
 
@@ -47,20 +47,23 @@ def _get_dumped_style(
                     [
                         "---",
                         "styles:",
-                        "  style: {}".format(md_meta_style),
+                        "  code:",
+                        "    style: {}".format(md_meta_style),
                         "---",
                     ]
                 )
             )
         cli_args += [str(tmpfile)]
-    if cli_style is not None:
-        cli_args += ["--style", cli_style]
+
+    # # TODO once we have better CLI style processing, add this back in!
+    # if cli_style is not None:
+    #     cli_args += ["--code-style", cli_style]
 
     res = run_cmd(*cli_args)
     assert res.exit_code == 0
 
     yaml_data = yaml.safe_load(res.output)
-    return yaml_data["style"]
+    return yaml_data["code"]["style"]
 
 
 def test_style_override_precedence_dark(tmpdir):
@@ -68,18 +71,14 @@ def test_style_override_precedence_dark(tmpdir):
     default_style = _get_dumped_style(tmpdir)
     themed_style = _get_dumped_style(tmpdir, theme="dark")
     themed_and_md = _get_dumped_style(tmpdir, theme="dark", md_meta_style="emacs")
-    themed_and_md_and_cli = _get_dumped_style(
-        tmpdir, theme="dark", md_meta_style="emacs", cli_style="zenburn"
-    )
 
     default = lookatme.schemas.MetaSchema().dump(None)
-    assert default_style == default["styles"]["style"]
+    assert default_style == default["styles"]["code"]["style"]
 
     dark_theme_styles = lookatme.schemas.StyleSchema().dump(dark_theme.theme)
-    assert themed_style == dark_theme_styles["style"]  # type: ignore
+    assert themed_style == dark_theme_styles["code"]["style"]  # type: ignore
 
     assert themed_and_md == "emacs"
-    assert themed_and_md_and_cli == "zenburn"
 
 
 def test_style_override_precedence_light(tmpdir):
@@ -87,18 +86,14 @@ def test_style_override_precedence_light(tmpdir):
     default_style = _get_dumped_style(tmpdir)
     themed_style = _get_dumped_style(tmpdir, theme="light")
     themed_and_md = _get_dumped_style(tmpdir, theme="light", md_meta_style="emacs")
-    themed_and_md_and_cli = _get_dumped_style(
-        tmpdir, theme="light", md_meta_style="emacs", cli_style="zenburn"
-    )
 
     default = lookatme.schemas.MetaSchema().dump(None)
-    assert default_style == default["styles"]["style"]
+    assert default_style == default["styles"]["code"]["style"]
 
     light_theme_styles = lookatme.schemas.StyleSchema().dump(light_theme.theme)
-    assert themed_style == light_theme_styles["style"]  # type: ignore
+    assert themed_style == light_theme_styles["code"]["style"]  # type: ignore
 
     assert themed_and_md == "emacs"
-    assert themed_and_md_and_cli == "zenburn"
 
 
 def test_version():

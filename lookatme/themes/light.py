@@ -13,8 +13,8 @@ theme = {
         "bg": "",
     },
     "slides": {
-        "fg": "#f20,bold",
-        "bg": "",
+        "fg": "#000000",
+        "bg": "#ffffff",
     },
     "quote": {
         "style": {

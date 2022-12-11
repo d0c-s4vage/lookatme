@@ -559,7 +559,9 @@ def test_block_quote(style):
 
 @override_style(
     {
-        "code": "monokai",
+        "code": {
+            "style": "monokai",
+        }
     }
 )
 def test_code(styles):
@@ -586,7 +588,7 @@ def test_code(styles):
             "RRRRRRR",
         ],
         styles={
-            "R": {"fg": "#dd8", "bg": "g15"},
+            "R": {"fg": "#e6db74", "bg": "#272822"},
             " ": {},
         },
     )
@@ -594,7 +596,53 @@ def test_code(styles):
 
 @override_style(
     {
-        "code": "monokai",
+        "code": {
+            "style": "monokai",
+        }
+    }
+)
+def test_code_with_highlight_and_numbers(styles):
+    """Test code block rendering"""
+    utils.validate_render(
+        md_text="""
+            ```python {.numberLines startFrom=3 hllines=3-4,6}
+            'Hello'
+            'Hello'
+            'Hello'
+            'Hello'
+            'Hello'
+            ```
+        """,
+        text=[
+            " 3 │ 'Hello'",
+            " 4 │ 'Hello'",
+            " 5 │ 'Hello'",
+            " 6 │ 'Hello'",
+            " 7 │ 'Hello'",
+        ],
+        style_mask=[
+            "lllllrrrrrrr",  # highlighted
+            "lllllrrrrrrr",  # highlighted
+            "LLLLLRRRRRRR",
+            "lllllrrrrrrr",  # highlighted
+            "LLLLLRRRRRRR",
+        ],
+        styles={
+            # normal lines
+            "R": {"fg": "#e6db74", "bg": "#272822"},
+            "L": {"fg": "#75715e", "bg": "#272822"},
+            # highlightled lines
+            "r": {"fg": "#e6db74,bold", "bg": "#474843"},
+            "l": {"fg": "#75715e,bold", "bg": "#474843"},
+        },
+    )
+
+
+@override_style(
+    {
+        "code": {
+            "style": "monokai",
+        },
     }
 )
 def test_empty_codeblock(style):
@@ -613,14 +661,16 @@ def test_empty_codeblock(style):
             "B",
         ],
         styles={
-            "B": {"bg": "g15"},
+            "B": {"bg": "#272822"},
         },
     )
 
 
 @override_style(
     {
-        "code": "monokai",
+        "code": {
+            "style": "monokai",
+        }
     }
 )
 def test_code_preceded_by_text(styles):
@@ -644,8 +694,8 @@ def test_code_preceded_by_text(styles):
             "B______",
         ],
         styles={
-            "B": {"fg": "g93", "bg": "g15"},
-            "_": {"bg": "g15"},
+            "B": {"fg": "#f8f8f2", "bg": "#272822"},
+            "_": {"bg": "#272822"},
             " ": {},
         },
     )
@@ -653,7 +703,9 @@ def test_code_preceded_by_text(styles):
 
 @override_style(
     {
-        "code": "monokai",
+        "code": {
+            "style": "monokai",
+        }
     }
 )
 def test_code_yaml(styles):
@@ -686,12 +738,12 @@ def test_code_yaml(styles):
             "::::VVVVV_____________",
         ],
         styles={
-            "K": {"fg": "#f06", "bg": "g15"},
-            "S": {"fg": "#dd8", "bg": "g15"},
-            "V": {"fg": "#a8f", "bg": "g15"},
-            ":": {"fg": "g93", "bg": "g15"},
-            "-": {"bg": "g15"},
-            "_": {"bg": "g15"},
+            "K": {"fg": "#f92672", "bg": "#272822"},
+            "S": {"fg": "#e6db74", "bg": "#272822"},
+            "V": {"fg": "#ae81ff", "bg": "#272822"},
+            ":": {"fg": "#f8f8f2", "bg": "#272822"},
+            "-": {"bg": "#272822"},
+            "_": {"bg": "#272822"},
         },
     )
 

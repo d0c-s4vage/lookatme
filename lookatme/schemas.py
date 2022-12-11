@@ -7,6 +7,7 @@ import datetime
 from typing import cast, Dict
 
 import pygments.styles
+import pygments.lexers
 import yaml
 from marshmallow import INCLUDE, RAISE, Schema, fields, validate
 
@@ -398,6 +399,15 @@ class HeadingsSchema(Schema):
         }
 
 
+class CodeSchema(Schema):
+    style = fields.Str(
+        dump_default="monokai",
+        validate=validate.OneOf(list(pygments.styles.get_all_styles())),
+    )
+    bg_override = fields.Str(dump_default="")
+    inline_lang = fields.Str(dump_default="text")
+
+
 table_border_default = cast(Dict, BorderBoxSchema().dump(None))
 for k, v in table_border_default.items():
     table_border_default[k]["fg"] = "bold,#c0c0c0"
@@ -468,11 +478,6 @@ class StyleSchema(Schema):
         render_module = YamlRender
         unknown = RAISE
 
-    style = fields.Str(
-        dump_default="monokai",
-        validate=validate.OneOf(list(pygments.styles.get_all_styles())),
-    )
-
     title = fields.Nested(
         StyleFieldSchema,
         dump_default={
@@ -497,8 +502,8 @@ class StyleSchema(Schema):
     slides = fields.Nested(
         StyleFieldSchema,
         dump_default={
-            "fg": "default",
-            "bg": "default",
+            "fg": "#ffffff",
+            "bg": "#000000",
         },
     )
     slide_number = fields.Nested(
@@ -526,12 +531,12 @@ class StyleSchema(Schema):
             "right": 10,
         },
     )
-
     headings = fields.Nested(HeadingsSchema, dump_default=HeadingsSchema().dump(None))
     bullets = fields.Nested(BulletsSchema, dump_default=BulletsSchema().dump(None))
     numbering = fields.Nested(
         NumberingSchema, dump_default=NumberingSchema().dump(None)
     )
+    code = fields.Nested(CodeSchema, dump_default=CodeSchema().dump(None))
     table = fields.Nested(TableSchema, dump_default=TableSchema().dump(None))
     quote = fields.Nested(BlockQuoteSchema, dump_default=BlockQuoteSchema().dump(None))
     hrule = fields.Nested(HruleSchema, dump_default=HruleSchema().dump(None))
@@ -578,6 +583,7 @@ class MetaSchema(Schema):
         load_default=datetime.datetime.now().strftime("%Y-%m-%d"),
     )
     author = fields.Str(dump_default="", load_default="")
+    theme = fields.Str(dump_default="dark", load_default="dark")
     styles = fields.Nested(
         StyleSchema,
         dump_default=StyleSchema().dump(None),

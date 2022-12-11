@@ -46,23 +46,23 @@ class Tutor:
     def get_md(self, rendered_example=True) -> str:
         """Get the tutor's markdown text after resolving any special markup
         contained in it.
-            opts. Dict[str, Any]
-              slides. Current can include `{
         """
         slides_md = self.slides_md
         if self.lazy_formatting is not None:
             slides_md = slides_md.format(**self.lazy_formatting())
 
         tag_handlers = {
-            "EXAMPLE": lambda contents: self._handle_show_and_render(
-                contents, rendered_example
+            "EXAMPLE": lambda contents, attrs: self._handle_show_and_render(
+                contents, attrs, rendered_example
             ),
             "STYLE": self._handle_style_yaml,
         }
 
         res_md = []
         last_idx = 0
-        regex = "<(?P<tag>TUTOR:(?P<type>[A-Z_]+))>(?P<inner>.*)</(?P=tag)>"
+        regex = (
+            r"<(?P<tag>TUTOR:(?P<type>[A-Z_]+))(?P<attrs>.*)>(?P<inner>.*)</(?P=tag)>"
+        )
         for match in re.finditer(regex, slides_md, re.MULTILINE | re.DOTALL):
             res_md.append(slides_md[last_idx : match.start()])
             match_groups = match.groupdict()
@@ -73,7 +73,7 @@ class Tutor:
                         match_groups["type"]
                     )
                 )
-            res_md.append(handler(match_groups["inner"]))
+            res_md.append(handler(match_groups["inner"], match_groups["attrs"]))
             last_idx = match.end()
 
         res_md.append(slides_md[last_idx:])
@@ -118,12 +118,14 @@ class Tutor:
             ),
         )
 
-    def _handle_show_and_render(self, contents, rendered_example: bool = True) -> str:
+    def _handle_show_and_render(
+        self, contents, attrs: str, rendered_example: bool = True
+    ) -> str:
         contents = contents.strip()
 
         markdown_example = "\n".join(
             [
-                "~~~markdown",
+                "~~~markdown{}".format(attrs),
                 contents,
                 "~~~",
             ]
@@ -143,11 +145,12 @@ class Tutor:
 
         return "\n\n".join(res)
 
-    def _handle_style_yaml(self, contents: str) -> str:
+    def _handle_style_yaml(self, contents: str, attrs: str) -> str:
         contents = contents.strip()
         style = config.get_style()[contents]
         style = {"styles": {contents: style}}
-        return "```yaml\n---\n{style_yaml}---\n```".format(
+        return "```yaml{attrs}\n---\n{style_yaml}---\n```".format(
+            attrs=attrs,
             style_yaml=yaml.dump(style).encode().decode("unicode-escape"),
         )
 

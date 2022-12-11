@@ -44,7 +44,7 @@ def test_tutor(mocker):
         "group",
         "\n".join(
             [
-                "<TUTOR:EXAMPLE>contents</TUTOR:EXAMPLE>",
+                "<TUTOR:EXAMPLE {hllines=1}>contents</TUTOR:EXAMPLE>",
                 "<TUTOR:STYLE>test</TUTOR:STYLE>",
             ]
         ),
@@ -54,7 +54,7 @@ def test_tutor(mocker):
 
     md_text = tutor.get_md()
 
-    md_example = "> ~~~markdown\n> contents\n> ~~~"
+    md_example = "> ~~~markdown {hllines=1}\n> contents\n> ~~~"
     assert md_example in md_text
 
     md_rendered = "\ncontents"
