@@ -7,7 +7,6 @@ import pytest
 
 import lookatme.config
 import lookatme.contrib.file_loader
-import lookatme.render.pygments
 import tests.utils as utils
 from tests.utils import override_style
 
@@ -50,7 +49,7 @@ def test_file_loader(tmpdir, _):
             "SSSSSSS",
         ],
         styles={
-            "S": {"fg": "g93", "bg": "g15"},
+            "S": {"fg": "#f8f8f2", "bg": "#272822"},
         },
     )
 
@@ -89,7 +88,7 @@ Apples1
             "TTTTTTT",
         ],
         styles={
-            "T": {"fg": "g93", "bg": "g15"},
+            "T": {"fg": "#f8f8f2", "bg": "#272822"},
         },
     )
 
@@ -114,7 +113,7 @@ def test_file_loader_relative(tmpdir, _):
             "SSSSSSS",
         ],
         styles={
-            "S": {"fg": "g93", "bg": "g15"},
+            "S": {"fg": "#f8f8f2", "bg": "#272822"},
         },
     )
 
@@ -135,6 +134,6 @@ def test_file_loader_not_found(_):
             "TTTTTTTTTTTTTT",
         ],
         styles={
-            "T": {"fg": "g93", "bg": "g15"},
+            "T": {"fg": "#f8f8f2", "bg": "#272822"},
         },
     )

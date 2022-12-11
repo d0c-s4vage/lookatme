@@ -188,6 +188,14 @@ def get_fg_bg_styles(style):
         raise ValueError("Unsupported style value {!r}".format(style))
 
 
+def extract_hexcolor(spec_style: str) -> str:
+    for part in spec_style.split(","):
+        if part.startswith("#"):
+            return part
+    # TODO
+    return "#ffffff"
+
+
 def overwrite_style(
     orig_style: Dict[str, str], new_style: Dict[str, str]
 ) -> Dict[str, str]:

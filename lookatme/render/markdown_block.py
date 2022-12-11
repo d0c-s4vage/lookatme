@@ -7,19 +7,20 @@ representations
 import copy
 import pygments
 import pygments.styles
+import pygments.lexers
 import re
 import sys
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Any, Dict, List, Tuple, Optional, Union
 
 import urwid
 
 import lookatme.config as config
 import lookatme.render.markdown_inline as markdown_inline
-import lookatme.render.pygments as pygments_render
 from lookatme.contrib import contrib_first
 from lookatme.render.context import Context
 from lookatme.tutorial import tutor
 from lookatme.widgets.fancy_box import FancyBox
+import lookatme.widgets.codeblock as codeblock
 import lookatme.utils as utils
 
 THIS_MOD = sys.modules[__name__]
@@ -412,6 +413,122 @@ def render_blockquote_close(token: Dict, ctx: Context):
     ctx.container_pop()
 
 
+def _parse_hl_lines(values) -> List:
+    """Parse comma-separated lists of line ranges to highlight"""
+    res = []
+    matches = re.finditer(
+        r"""
+            ,?\s*
+            (
+                (?P<rangeStart>[0-9]+)
+                (\.\.|-)
+                (?P<rangeEnd>[0-9]+)
+                |
+                (?P<singleLine>[0-9]+)
+            )
+        \s*""",
+        values,
+        re.VERBOSE,
+    )
+
+    for match in matches:
+        info = match.groupdict()
+        if info["singleLine"]:
+            val = int(info["singleLine"])
+            res.append(range(val, val + 1))
+        elif info["rangeStart"]:
+            res.append(
+                range(
+                    int(info["rangeStart"]),
+                    int(info["rangeEnd"]) + 1,
+                )
+            )
+
+    return res
+
+
+def _parse_curly_extra(data: str) -> Dict[str, Any]:
+    res = {}
+
+    matches = re.finditer(
+        r"""\s*
+        (
+            (?P<attr>[a-zA-Z-_]+)
+                \s*=\s*
+                (
+                    "(?P<doubleQuoteVal>[^"]*)"
+                    |
+                    '(?P<singleQuoteVal>[^']*)'
+                    |
+                    (?P<plainVal>[a-zA-Z0-9-_,]+)
+                )
+            |
+            (?P<class>\.)?
+            (?P<id>\.)?
+            (?P<classOrIdName>[a-zA-Z0-9-_]+)
+        )
+        \s*
+        """,
+        data,
+        re.VERBOSE,
+    )
+
+    for match in matches:
+        info = match.groupdict()
+
+        if info["classOrIdName"]:
+            val = info["classOrIdName"].lower()
+            if val in codeblock.supported_langs():
+                res["lang"] = info["classOrIdName"]
+            elif val in (
+                "numberlines",
+                "number_lines",
+                "numbers",
+                "line_numbers",
+                "linenumbers",
+                "line_numbers",
+            ):
+                res["line_numbers"] = True
+        elif info["attr"]:
+            attr = info["attr"].lower()
+            val = info["plainVal"] or info["doubleQuoteVal"] or info["singleQuoteVal"]
+            if attr in ("startfrom", "start_from", "line_numberstart", "startlineno"):
+                res["start_line_number"] = int(val)
+            elif attr in ("hl_lines", "hllines", "highlight", "highlight_lines"):
+                res["hl_lines"] = _parse_hl_lines(val)
+
+    return res
+
+
+@tutor(
+    "markdown block",
+    "code blocks - extra attributes",
+    r"""
+    Code blocks can also have additional attributes defined by using curly braces.
+    Values within the curly brace are either css class names or ids (start with a `.`
+    or `#`), or have the form `key=value`.
+
+    The attributes below have specific meanings - all other attributes will be
+    ignored:
+
+    * `.language` - use `language` as the syntax highlighting language
+    * `.numberLines` - add line numbers
+    * `startFrom=X` - start the line numbers from the line `X`
+    * `hllines=ranges` - highlight the line ranges. This should be a comma separated
+      list of either single line numbers, or a line range (e.g. `4-5`).
+
+    <TUTOR:EXAMPLE>
+    ```{.python .numberLines hllines=4-5,7 startFrom="3"}
+    def hello_world():
+        print("Hello, world!\n")
+        print("Hello, world!\n")
+        print("Hello, world!\n")
+        print("Hello, world!\n")
+        print("Hello, world!\n")
+    ```
+    </TUTOR:EXAMPLE>
+    """,
+)
 @tutor(
     "markdown block",
     "code blocks",
@@ -419,7 +536,8 @@ def render_blockquote_close(token: Dict, ctx: Context):
     Multi-line code blocks are either surrounded by "fences" (three in a row of
     either `\`` or `~`), or are lines of text indented at least four spaces.
 
-    Fenced codeblocks let you specify the language of the code:
+    Fenced codeblocks let you specify the language of the code. (See the next
+    slide about additional attributes)
 
     <TUTOR:EXAMPLE>
     ```python
@@ -431,16 +549,15 @@ def render_blockquote_close(token: Dict, ctx: Context):
     ## Style
 
     The syntax highlighting style used to highlight the code block can be
-    specified in the markdown metadata:
+    specified in the markdown metadata, as well as an override for the
+    background color, and the language to use for inline code.
 
-    <TUTOR:STYLE>style</TUTOR:STYLE>
+    <TUTOR:STYLE {{hllines=4,6}}>code</TUTOR:STYLE>
 
     Valid values for the `style` field come directly from pygments. In the
     version of pygments being used as you read this, the list of valid values is:
 
     {pygments_values}
-
-    > **NOTE** This style name is confusing and will be renamed in lookatme v3.0+
     """.format(
         pygments_values=" ".join(pygments.styles.get_all_styles()),
     ),
@@ -455,12 +572,60 @@ def render_fence(token: Dict, ctx: Context):
     ctx.ensure_new_block()
 
     info = token.get("info", None) or "text"
-    lang = info.split()[0]
-    # TODO support line highlighting, etc?
-    text = token["content"]
-    res = pygments_render.render_text(text, lang=lang)
 
-    ctx.widget_add(res)
+    match = re.match(r"^(?P<lang>[^{\s]+)?\s*(\{(?P<curly_extra>[^{]+)\})?", info)
+    lang = "text"
+    line_numbers = False
+    start_line_number = 1
+    hl_lines = []
+
+    if match is not None:
+        full_info = match.groupdict()
+        if full_info["lang"] is not None:
+            lang = full_info["lang"]
+        if full_info["curly_extra"] is not None:
+            curly_extra = _parse_curly_extra(full_info["curly_extra"])
+            lang = curly_extra.get("lang", lang)
+            line_numbers = curly_extra.get("line_numbers", line_numbers)
+            start_line_number = curly_extra.get("start_line_number", start_line_number)
+            hl_lines = curly_extra.get("hl_lines", [])
+
+    curr_spec = ctx.spec_text
+    default_fg = "default"
+    bg_override = config.get_style()["code"]["bg_override"]
+    if curr_spec:
+        default_fg = (
+            default_fg
+            or utils.overwrite_style({"fg": curr_spec.foreground}, {"fg": default_fg})[
+                "fg"
+            ]
+        )
+
+    code = codeblock.CodeBlock(
+        source=token["content"],
+        lang=lang,
+        style_name=config.get_style()["code"]["style"],
+        line_numbers=line_numbers,
+        start_line_number=start_line_number,
+        hl_lines=hl_lines,
+        default_fg=default_fg,
+        bg_override=bg_override,
+    )
+
+    ctx.widget_add(code)
+
+
+#
+#    text = token["content"]
+#    res = pygments_render.render_text(
+#        text,
+#        lang=lang,
+#        line_numbers=line_numbers,
+#        start_line_number=start_line_number,
+#        hl_lines=hl_lines,
+#    )
+#
+#    ctx.widget_add(res)
 
 
 class TableTokenExtractor:

@@ -50,13 +50,7 @@ from lookatme.schemas import StyleSchema
     "--theme",
     "theme",
     type=click.Choice(["dark", "light"]),
-    default="dark",
-)
-@click.option(
-    "--style",
-    "code_style",
     default=None,
-    type=click.Choice(list(pygments.styles.get_all_styles())),
 )
 @click.option(
     "--dump-styles",
@@ -122,7 +116,6 @@ def main(
     threads,
     log_path,
     theme,
-    code_style,
     dump_styles,
     input_files,
     live_reload,
@@ -151,11 +144,12 @@ def main(
         else:
             tutors = [x.strip() for x in tutorial.split(",")]
 
+        if theme is None:
+            theme = "dark"
         theme_mod = __import__("lookatme.themes." + theme, fromlist=[theme])
         lookatme.config.set_global_style_with_precedence(
             theme_mod,
             {},
-            code_style,
         )
         tutorial_md = lookatme.tutorial.get_tutorial_md(tutors)
         if tutorial_md is None:
@@ -169,7 +163,6 @@ def main(
     pres = Presentation(
         input_files[0],
         theme,
-        code_style,
         live_reload=live_reload,
         single_slide=single_slide,
         preload_extensions=preload_exts,

@@ -20,6 +20,7 @@ from lookatme.render.context import Context
 from lookatme.tutorial import tutor
 from lookatme.utils import spec_from_style
 from lookatme.widgets.clickable_text import ClickableText
+import lookatme.widgets.codeblock as codeblock
 
 
 def text(style, data, align="left"):
@@ -96,7 +97,9 @@ class SlideRenderer(threading.Thread):
             res = self.do_render(slide, slide.number)
             self.cache[slide.number] = res
         except Exception as e:
-            self._log.error(f"Error occurred rendering slide {slide.number}")
+            self._log.error(
+                f"Error occurred rendering slide {slide.number}", exc_info=True
+            )
 
             try:
                 curr_token = self.ctx.tokens.curr
@@ -256,9 +259,7 @@ class MarkdownTui(urwid.Frame):
         self.root_paddings = urwid.Padding(self.slide_body, left=10, right=10)
         self.pres = pres
 
-        self.ctx = Context(None)
-        self.ctx.source_push(self.pres.no_meta_source)
-        self.ctx.spec_push(spec_from_style(config.get_style()["slides"]))
+        self.init_ctx()
 
         self.root_widget = root_urwid_widget(self.root_margins)
         self.loop = urwid.MainLoop(
@@ -430,8 +431,18 @@ class MarkdownTui(urwid.Frame):
         self.update_creation()
         self.update_body()
 
+    def init_ctx(self):
+        self.ctx = Context(None)
+        self.ctx.source_push(self.pres.no_meta_source)
+        self.ctx.spec_push(spec_from_style(config.get_style()["slides"]))
+
     def reload(self):
         """Reload the input, keeping the current slide in focus"""
+        self.init_ctx()
+        self.slide_renderer.ctx = self.ctx
+
+        codeblock.clear_cache()
+
         curr_slide_idx = self.curr_slide.number
         self.slide_renderer.flush_cache()
         self.pres.reload()

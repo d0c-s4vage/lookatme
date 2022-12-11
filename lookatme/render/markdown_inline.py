@@ -11,13 +11,14 @@ from typing import Dict, Optional
 import urwid
 
 import lookatme.config as config
-import lookatme.render.pygments as pygments_render
 import lookatme.utils as utils
 from lookatme.contrib import contrib_first
 from lookatme.render.context import Context
 from lookatme.render.markdown_html import Tag
 from lookatme.tutorial import tutor
 from lookatme.widgets.clickable_text import LinkIndicatorSpec
+import lookatme.widgets.codeblock as codeblock
+
 
 THIS_MOD = sys.modules[__name__]
 
@@ -260,15 +261,47 @@ def render_softbreak(_, ctx: Context):
     The `OddOne` class accepts `Table` instances, converts them to raw pointers,
     forces garbage collection to run.
     </TUTOR:EXAMPLE>
+
+    ## Style
+
+    The default language used for syntax highlighting of inline code blocks
+    can be controlled through the markdown metadata. See the
+    `styles.code.inline_lang` option:
+
+    <TUTOR:STYLE {hllines=5}>code</TUTOR:STYLE>
     """,
 )
 @contrib_first
 def render_code_inline(token, ctx: Context):
-    # TODO: add a style for the default programming language for inline text
-    # blocks
-    spec, text = pygments_render.render_text(token["content"], plain=True)[0]
-    with ctx.use_spec(spec):
-        ctx.inline_push((ctx.spec_text, text))
+    inline_lang = config.get_style()["code"]["inline_lang"]
+    code_style = config.get_style()["code"]["style"]
+
+    default_fg = "default"
+    bg_override = config.get_style()["code"]["bg_override"]
+    curr_spec = ctx.spec_text
+    if curr_spec:
+        default_fg = (
+            default_fg
+            or utils.overwrite_style({"fg": curr_spec.foreground}, {"fg": default_fg})[
+                "fg"
+            ]
+        )
+
+    lexer = codeblock.get_lexer(inline_lang)
+    style = codeblock.get_style_cache(
+        default_fg=default_fg, bg_override=bg_override
+    ).get_style(code_style)
+
+    tokens = list(lexer.get_tokens(token["content"]))
+    # split the tokens into distinct lines, and only keep the first line
+    # of tokens
+    tokens = codeblock.tokens_to_lines(tokens)[0]
+
+    markups = codeblock.tokens_to_markup(tokens, style)  # type: ignore
+
+    for spec, text in markups:
+        spec = ctx.spec_text_with(spec)
+        ctx.inline_push((spec, text))
 
 
 @tutor(
