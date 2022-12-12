@@ -72,3 +72,20 @@ def test_tutor(mocker):
     """
     ).strip()
     assert style_yaml in md_text
+
+
+def test_tutor_with_gt_in_example():
+    tutor = tutorial.Tutor(
+        "name",
+        "group",
+        "<TUTOR:EXAMPLE>> test</TUTOR:EXAMPLE>",
+        impl_fn=lambda _: 10,
+        order=99999,
+    )
+    md_text = tutor.get_md()
+
+    md_example = "> ~~~markdown\n> > test\n> ~~~"
+    assert md_example in md_text
+
+    md_rendered = "\n> test"
+    assert md_rendered in md_text

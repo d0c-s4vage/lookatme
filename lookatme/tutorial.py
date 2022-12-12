@@ -61,7 +61,7 @@ class Tutor:
         res_md = []
         last_idx = 0
         regex = (
-            r"<(?P<tag>TUTOR:(?P<type>[A-Z_]+))(?P<attrs>.*)>(?P<inner>.*)</(?P=tag)>"
+            r"<(?P<tag>TUTOR:(?P<type>[A-Z_]+))(?P<attrs>[^>]*)>(?P<inner>.*)</(?P=tag)>"
         )
         for match in re.finditer(regex, slides_md, re.MULTILINE | re.DOTALL):
             res_md.append(slides_md[last_idx : match.start()])
