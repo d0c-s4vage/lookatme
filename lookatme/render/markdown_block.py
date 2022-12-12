@@ -361,8 +361,6 @@ def render_heading_close(token: Dict, ctx: Context):
     > space chips
     </TUTOR:EXAMPLE>
 
-
-
     ## Style
 
     Block quotes can be styled with slide metadata. This is the default style:
