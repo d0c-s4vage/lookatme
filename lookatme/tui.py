@@ -21,6 +21,8 @@ from lookatme.tutorial import tutor
 from lookatme.utils import spec_from_style
 from lookatme.widgets.clickable_text import ClickableText
 import lookatme.widgets.codeblock as codeblock
+from lookatme.widgets.scrollbar import Scrollbar
+from lookatme.widgets.scroll_monitor import ScrollMonitor
 
 
 def text(style, data, align="left"):
@@ -53,7 +55,7 @@ class SlideRenderer(threading.Thread):
         self._log = lookatme.config.get_log().getChild("RENDER")
 
     def flush_cache(self):
-        """Clea everything out of the queue and the cache."""
+        """Clear everything out of the queue and the cache."""
         # clear all pending items
         with self.queue.mutex:
             self.queue.queue.clear()
@@ -239,6 +241,7 @@ class MarkdownTui(urwid.Frame):
         self.slide_body = urwid.ListBox(
             urwid.SimpleFocusListWalker([urwid.Text("test")])
         )
+        self.slide_body_scrollbar = Scrollbar(self.slide_body)
         self.slide_title = ClickableText([""], align="center")
         self.top_spacing = urwid.Filler(self.slide_title, top=0, bottom=0)
         self.top_spacing_box = urwid.BoxAdapter(self.top_spacing, 1)
@@ -256,7 +259,9 @@ class MarkdownTui(urwid.Frame):
         screen.set_terminal_properties(colors=256)
 
         self.root_margins = urwid.Padding(self, left=2, right=2)
-        self.root_paddings = urwid.Padding(self.slide_body, left=10, right=10)
+        self.root_paddings = ScrollMonitor(
+            urwid.Padding(self.slide_body, left=10, right=10), self.slide_body_scrollbar
+        )
         self.pres = pres
 
         self.init_ctx()
@@ -268,6 +273,8 @@ class MarkdownTui(urwid.Frame):
         )
         self.ctx.loop = self.loop
         self.no_threads = no_threads
+
+        self._slide_focus_cache = {}
 
         # used to track slides that are being rendered
         self.slide_renderer = SlideRenderer(self.ctx.clone())
@@ -396,18 +403,33 @@ class MarkdownTui(urwid.Frame):
     def update_body(self):
         """Render the provided slide body"""
         rendered = self.slide_renderer.render_slide(self.curr_slide)
+
         self.slide_body.body = rendered
+
+        offset_rows, focus_pos = self._slide_focus_cache.setdefault(
+            self.curr_slide.number, (0, 0)
+        )
+        self.slide_body.set_focus(focus_pos)
+        self.slide_body.offset_rows = offset_rows
+
+        scroll_style = config.get_style()["scrollbar"]
+        self.slide_body.scrollbar_gutter_spec = spec_from_style(scroll_style["gutter"])
+        self.slide_body.scrollbar_gutter_fill = scroll_style["gutter"]["text"]
+        self.slide_body.scrollbar_slider_spec = spec_from_style(scroll_style["slider"])
+        self.slide_body.scrollbar_slider_fill = scroll_style["slider"]["text"]
 
     def update_slide_settings(self):
         """Update the slide margins and paddings"""
+        style = config.get_style()
+
         # reset the base spec from the slides settings
         self.ctx.spec_pop()
-        self.ctx.spec_push(spec_from_style(config.get_style()["slides"]))
+        self.ctx.spec_push(spec_from_style(style["slides"]))
         # re-wrap the root widget with the new styles
         self.loop.widget = self.ctx.wrap_widget(self.root_widget)
 
-        margin = config.get_style()["margin"]
-        padding = config.get_style()["padding"]
+        margin = style["margin"]
+        padding = style["padding"]
 
         self.root_margins.left = margin["left"]
         self.root_margins.right = margin["right"]
@@ -479,6 +501,10 @@ class MarkdownTui(urwid.Frame):
         if new_slide_num == self.curr_slide.number:
             return
 
+        self._slide_focus_cache[self.curr_slide.number] = (
+            self.slide_body.offset_rows,
+            self.slide_body.focus_position,
+        )
         self.curr_slide = self.pres.slides[new_slide_num]
         self.update()
 

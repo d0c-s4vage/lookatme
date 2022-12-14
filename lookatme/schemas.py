@@ -471,6 +471,31 @@ class TableSchema(Schema):
     )
 
 
+class ScrollbarSchema(Schema):
+    """Schema for the scroll bar"""
+
+    gutter = fields.Nested(
+        TextStyleFieldSchema,
+        dump_default=TextStyleFieldSchema().dump(
+            {
+                "text": "▐",
+                "fg": "#0a0a0a",
+                "bg": "",
+            }
+        ),
+    )
+    slider = fields.Nested(
+        TextStyleFieldSchema,
+        dump_default=TextStyleFieldSchema().dump(
+            {
+                "text": "▐",
+                "fg": "#242424",
+                "bg": "",
+            }
+        ),
+    )
+
+
 class StyleSchema(Schema):
     """Styles schema for themes and style overrides within presentations"""
 
@@ -567,6 +592,9 @@ class StyleSchema(Schema):
             "fg": "strikethrough",
             "bg": "default",
         },
+    )
+    scrollbar = fields.Nested(
+        ScrollbarSchema, dump_default=ScrollbarSchema().dump(None)
     )
 
 
