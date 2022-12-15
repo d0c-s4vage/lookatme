@@ -471,29 +471,29 @@ class TableSchema(Schema):
     )
 
 
+class ScrollbarGutterSchema(Schema):
+    """Schema for the slider on the scrollbar
+    """
+    fill = fields.Str(dump_default="▕")
+    fg = fields.Str(dump_default="#2c2c2c")
+    bg = fields.Str(dump_default="")
+
+
+class ScrollbarSliderSchema(Schema):
+    """Schema for the slider on the scrollbar
+    """
+    top_chars = fields.List(fields.Str(), dump_default=["⡀", "⣀", "⣠", "⣤", "⣦", "⣶", "⣾", "⣿"])
+    fill = fields.Str(dump_default="⣿")
+    bottom_chars = fields.List(fields.Str(), dump_default=["⠈", "⠉", "⠋", "⠛", "⠻", "⠿", "⡿", "⣿"])
+    fg = fields.Str(dump_default="#4c4c4c")
+    bg = fields.Str(dump_default="")
+
+
 class ScrollbarSchema(Schema):
     """Schema for the scroll bar"""
 
-    gutter = fields.Nested(
-        TextStyleFieldSchema,
-        dump_default=TextStyleFieldSchema().dump(
-            {
-                "text": "▐",
-                "fg": "#0a0a0a",
-                "bg": "",
-            }
-        ),
-    )
-    slider = fields.Nested(
-        TextStyleFieldSchema,
-        dump_default=TextStyleFieldSchema().dump(
-            {
-                "text": "▐",
-                "fg": "#242424",
-                "bg": "",
-            }
-        ),
-    )
+    gutter = fields.Nested(ScrollbarGutterSchema, dump_default=ScrollbarGutterSchema().dump(None))
+    slider = fields.Nested(ScrollbarSliderSchema, dump_default=ScrollbarSliderSchema().dump(None))
 
 
 class StyleSchema(Schema):

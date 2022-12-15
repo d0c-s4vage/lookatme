@@ -27,7 +27,7 @@ class Tutor:
         group: str,
         slides_md: str,
         impl_fn: Callable,
-        order: int,
+        order: float,
         lazy_formatting: Optional[Callable] = None,
     ):
         """Create a new Tutor
@@ -202,7 +202,7 @@ def tutor(
     group: str,
     name: str,
     slides_md: str,
-    order: int = 99999,
+    order: float = 99999.0,
     lazy_formatting: Optional[Callable] = None,
 ):
     """Define tutorial slides by using this as a decorator on a function!"""

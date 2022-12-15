@@ -205,7 +205,7 @@ class SlideRenderer(threading.Thread):
         |----------------------------------:|---------------------|
         |                            Tables | Footnotes           |
         |                          Headings | *Images             |
-        |                        Paragraphs | Inline HTML         |
+        |                        Paragraphs |                     |
         |                      Block quotes |                     |
         |                     Ordered lists |                     |
         |                   Unordered lists |                     |
@@ -214,6 +214,7 @@ class SlideRenderer(threading.Thread):
         |                   Double emphasis |                     |
         |                   Single Emphasis |                     |
         |                     Strikethrough |                     |
+        |                       Inline HTML |                     |
         |                             Links |                     |
 
         \*Images may be supported through extensions
@@ -329,8 +330,6 @@ class MarkdownTui(urwid.Frame):
         contents
         ```
 
-        <!-- stop -->
-
         ## 2. Metadata
 
         Set the title explicitly through YAML metadata at the start of the slide:
@@ -344,8 +343,6 @@ class MarkdownTui(urwid.Frame):
 
         Slide contents
         ```
-
-        <!-- stop -->
 
         > **NOTE** Metadata and styling will be covered later in this tutorial
         >
@@ -406,17 +403,17 @@ class MarkdownTui(urwid.Frame):
 
         self.slide_body.body = rendered
 
-        offset_rows, focus_pos = self._slide_focus_cache.setdefault(
-            self.curr_slide.number, (0, 0)
-        )
-        self.slide_body.set_focus(focus_pos)
-        self.slide_body.offset_rows = offset_rows
+        self._restore_slide_scroll_state()
 
         scroll_style = config.get_style()["scrollbar"]
-        self.slide_body.scrollbar_gutter_spec = spec_from_style(scroll_style["gutter"])
-        self.slide_body.scrollbar_gutter_fill = scroll_style["gutter"]["text"]
-        self.slide_body.scrollbar_slider_spec = spec_from_style(scroll_style["slider"])
-        self.slide_body.scrollbar_slider_fill = scroll_style["slider"]["text"]
+
+        self.slide_body_scrollbar.gutter_spec = spec_from_style(scroll_style["gutter"])
+        self.slide_body_scrollbar.gutter_fill_char = scroll_style["gutter"]["fill"]
+
+        self.slide_body_scrollbar.slider_top_chars = scroll_style["slider"]["top_chars"]
+        self.slide_body_scrollbar.slider_bottom_chars = scroll_style["slider"]["bottom_chars"]
+        self.slide_body_scrollbar.slider_spec = spec_from_style(scroll_style["slider"])
+        self.slide_body_scrollbar.slider_fill_char = scroll_style["slider"]["fill"]
 
     def update_slide_settings(self):
         """Update the slide margins and paddings"""
@@ -460,6 +457,8 @@ class MarkdownTui(urwid.Frame):
 
     def reload(self):
         """Reload the input, keeping the current slide in focus"""
+        self._cache_slide_scroll_state()
+
         self.init_ctx()
         self.slide_renderer.ctx = self.ctx
 
@@ -471,6 +470,22 @@ class MarkdownTui(urwid.Frame):
         self.prep_pres(self.pres, curr_slide_idx)
         self.update()
 
+    @tutor(
+        "general",
+        "Navigation and Keybindings",
+        r"""
+        Slides are navigated using vim direction keys, arrow keys, and page up/page down:
+
+        |                key(s) | action                  |
+        |----------------------:|-------------------------|
+        | `l` `j` `right arrow` | Next slide              |
+        |  `h` `k` `left arrow` | Previous slide          |
+        |      up / down arrows | Scroll by line          |
+        |   page up / page down | Scroll by pages         |
+        |                   `r` | Reload                  |
+        """,
+        order=0.1,
+    )
     def keypress(self, size, key):
         """Handle keypress events"""
         self._log.debug(f"KEY: {key}")
@@ -501,12 +516,22 @@ class MarkdownTui(urwid.Frame):
         if new_slide_num == self.curr_slide.number:
             return
 
+        self._cache_slide_scroll_state()
+        self.curr_slide = self.pres.slides[new_slide_num]
+        self.update()
+
+    def _cache_slide_scroll_state(self):
         self._slide_focus_cache[self.curr_slide.number] = (
             self.slide_body.offset_rows,
             self.slide_body.focus_position,
         )
-        self.curr_slide = self.pres.slides[new_slide_num]
-        self.update()
+    
+    def _restore_slide_scroll_state(self):
+        offset_rows, focus_pos = self._slide_focus_cache.setdefault(
+            self.curr_slide.number, (0, 0)
+        )
+        self.slide_body.set_focus(focus_pos)
+        self.slide_body.offset_rows = offset_rows
 
     def _get_key(self, size, key):
         """Resolve the key that was pressed."""
