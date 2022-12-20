@@ -33,7 +33,7 @@ class Scrollbar(urwid.Widget):
         self.gutter_spec = SmartAttrSpec("#2c2c2c", "")
 
         self._listbox_widget_size_cache: Optional[
-            Tuple[List[int], Tuple, bool, int]
+            Tuple[List[Tuple[int, int, int]], Tuple, bool, int]
         ] = None
 
         self.listbox = listbox
@@ -75,7 +75,7 @@ class Scrollbar(urwid.Widget):
             slider_height + (total_chars - slider_height) * scroll_percent
         )
         slider_end_val = slider_end_idx_f - math.floor(slider_end_idx_f)
-        
+
         if slider_end_val == 0.0:
             slider_end_char = ""
         else:

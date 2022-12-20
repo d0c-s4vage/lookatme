@@ -21,7 +21,9 @@ from lookatme.tutorial import tutor
     Try scrolling through the numbers 0-49 below:
 
     {numbers}
-    """.format(numbers="\n\n    ".join(str(n) for n in range(50))),
+    """.format(
+        numbers="\n\n    ".join(str(n) for n in range(50))
+    ),
     order=0.2,
 )
 class ScrollMonitor(urwid.Frame):

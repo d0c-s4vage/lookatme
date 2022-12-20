@@ -238,7 +238,6 @@ class SlideRenderer(threading.Thread):
 class MarkdownTui(urwid.Frame):
     def __init__(self, pres, start_idx=0, no_threads=False):
         """Create a new MarkdownTui"""
-        # self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
         self.slide_body = urwid.ListBox(
             urwid.SimpleFocusListWalker([urwid.Text("test")])
         )
@@ -260,8 +259,9 @@ class MarkdownTui(urwid.Frame):
         screen.set_terminal_properties(colors=256)
 
         self.root_margins = urwid.Padding(self, left=2, right=2)
-        self.root_paddings = ScrollMonitor(
-            urwid.Padding(self.slide_body, left=10, right=10), self.slide_body_scrollbar
+        self.root_paddings = urwid.Padding(self.slide_body, left=10, right=10)
+        self.scrolled_root_paddings = ScrollMonitor(
+            self.root_paddings, self.slide_body_scrollbar
         )
         self.pres = pres
 
@@ -286,7 +286,7 @@ class MarkdownTui(urwid.Frame):
 
         urwid.Frame.__init__(
             self,
-            self.root_paddings,
+            self.scrolled_root_paddings,
             self.top_spacing_box,
             self.bottom_spacing_box,
         )
@@ -411,7 +411,9 @@ class MarkdownTui(urwid.Frame):
         self.slide_body_scrollbar.gutter_fill_char = scroll_style["gutter"]["fill"]
 
         self.slide_body_scrollbar.slider_top_chars = scroll_style["slider"]["top_chars"]
-        self.slide_body_scrollbar.slider_bottom_chars = scroll_style["slider"]["bottom_chars"]
+        self.slide_body_scrollbar.slider_bottom_chars = scroll_style["slider"][
+            "bottom_chars"
+        ]
         self.slide_body_scrollbar.slider_spec = spec_from_style(scroll_style["slider"])
         self.slide_body_scrollbar.slider_fill_char = scroll_style["slider"]["fill"]
 
@@ -525,7 +527,7 @@ class MarkdownTui(urwid.Frame):
             self.slide_body.offset_rows,
             self.slide_body.focus_position,
         )
-    
+
     def _restore_slide_scroll_state(self):
         offset_rows, focus_pos = self._slide_focus_cache.setdefault(
             self.curr_slide.number, (0, 0)

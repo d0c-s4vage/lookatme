@@ -228,6 +228,11 @@ def _next_token_is_html_close(ctx: Context) -> bool:
 
 
 @contrib_first
+def render_hardbreak(_, ctx: Context):
+    ctx.inline_push((ctx.spec_text, "\n"))
+
+
+@contrib_first
 def render_softbreak(_, ctx: Context):
     # do not add spaces between HTML tags!
     if _prev_token_is_html(ctx):
