@@ -4,6 +4,7 @@ Defines Presentation specific objects
 
 
 import os
+import sys
 import threading
 import time
 
@@ -29,9 +30,7 @@ from lookatme.tutorial import tutor
      |-----------------------|-----------------|--------------------------------|
      | basic markdown slides | in the terminal | anywhere with markdown support |
 
-    > **NOTE** `l | j | right arrow` advance the slides
-    >
-    > **NOTE** `q` quits
+    Press `l`, `j`, or `right arrow` to go to the next slide, or `q` to quit.
     """,
     order=0,
 )

@@ -21,6 +21,8 @@ from lookatme.tutorial import tutor
 from lookatme.utils import spec_from_style
 from lookatme.widgets.clickable_text import ClickableText
 import lookatme.widgets.codeblock as codeblock
+from lookatme.widgets.scrollbar import Scrollbar
+from lookatme.widgets.scroll_monitor import ScrollMonitor
 
 
 def text(style, data, align="left"):
@@ -53,7 +55,7 @@ class SlideRenderer(threading.Thread):
         self._log = lookatme.config.get_log().getChild("RENDER")
 
     def flush_cache(self):
-        """Clea everything out of the queue and the cache."""
+        """Clear everything out of the queue and the cache."""
         # clear all pending items
         with self.queue.mutex:
             self.queue.queue.clear()
@@ -203,7 +205,7 @@ class SlideRenderer(threading.Thread):
         |----------------------------------:|---------------------|
         |                            Tables | Footnotes           |
         |                          Headings | *Images             |
-        |                        Paragraphs | Inline HTML         |
+        |                        Paragraphs |                     |
         |                      Block quotes |                     |
         |                     Ordered lists |                     |
         |                   Unordered lists |                     |
@@ -212,6 +214,7 @@ class SlideRenderer(threading.Thread):
         |                   Double emphasis |                     |
         |                   Single Emphasis |                     |
         |                     Strikethrough |                     |
+        |                       Inline HTML |                     |
         |                             Links |                     |
 
         \*Images may be supported through extensions
@@ -235,10 +238,10 @@ class SlideRenderer(threading.Thread):
 class MarkdownTui(urwid.Frame):
     def __init__(self, pres, start_idx=0, no_threads=False):
         """Create a new MarkdownTui"""
-        # self.slide_body = urwid.Pile(urwid.SimpleListWalker([urwid.Text("test")]))
         self.slide_body = urwid.ListBox(
             urwid.SimpleFocusListWalker([urwid.Text("test")])
         )
+        self.slide_body_scrollbar = Scrollbar(self.slide_body)
         self.slide_title = ClickableText([""], align="center")
         self.top_spacing = urwid.Filler(self.slide_title, top=0, bottom=0)
         self.top_spacing_box = urwid.BoxAdapter(self.top_spacing, 1)
@@ -257,6 +260,9 @@ class MarkdownTui(urwid.Frame):
 
         self.root_margins = urwid.Padding(self, left=2, right=2)
         self.root_paddings = urwid.Padding(self.slide_body, left=10, right=10)
+        self.scrolled_root_paddings = ScrollMonitor(
+            self.root_paddings, self.slide_body_scrollbar
+        )
         self.pres = pres
 
         self.init_ctx()
@@ -269,6 +275,8 @@ class MarkdownTui(urwid.Frame):
         self.ctx.loop = self.loop
         self.no_threads = no_threads
 
+        self._slide_focus_cache = {}
+
         # used to track slides that are being rendered
         self.slide_renderer = SlideRenderer(self.ctx.clone())
         if not no_threads:
@@ -278,7 +286,7 @@ class MarkdownTui(urwid.Frame):
 
         urwid.Frame.__init__(
             self,
-            self.root_paddings,
+            self.scrolled_root_paddings,
             self.top_spacing_box,
             self.bottom_spacing_box,
         )
@@ -322,8 +330,6 @@ class MarkdownTui(urwid.Frame):
         contents
         ```
 
-        <!-- stop -->
-
         ## 2. Metadata
 
         Set the title explicitly through YAML metadata at the start of the slide:
@@ -337,8 +343,6 @@ class MarkdownTui(urwid.Frame):
 
         Slide contents
         ```
-
-        <!-- stop -->
 
         > **NOTE** Metadata and styling will be covered later in this tutorial
         >
@@ -396,18 +400,35 @@ class MarkdownTui(urwid.Frame):
     def update_body(self):
         """Render the provided slide body"""
         rendered = self.slide_renderer.render_slide(self.curr_slide)
+
         self.slide_body.body = rendered
+
+        self._restore_slide_scroll_state()
+
+        scroll_style = config.get_style()["scrollbar"]
+
+        self.slide_body_scrollbar.gutter_spec = spec_from_style(scroll_style["gutter"])
+        self.slide_body_scrollbar.gutter_fill_char = scroll_style["gutter"]["fill"]
+
+        self.slide_body_scrollbar.slider_top_chars = scroll_style["slider"]["top_chars"]
+        self.slide_body_scrollbar.slider_bottom_chars = scroll_style["slider"][
+            "bottom_chars"
+        ]
+        self.slide_body_scrollbar.slider_spec = spec_from_style(scroll_style["slider"])
+        self.slide_body_scrollbar.slider_fill_char = scroll_style["slider"]["fill"]
 
     def update_slide_settings(self):
         """Update the slide margins and paddings"""
+        style = config.get_style()
+
         # reset the base spec from the slides settings
         self.ctx.spec_pop()
-        self.ctx.spec_push(spec_from_style(config.get_style()["slides"]))
+        self.ctx.spec_push(spec_from_style(style["slides"]))
         # re-wrap the root widget with the new styles
         self.loop.widget = self.ctx.wrap_widget(self.root_widget)
 
-        margin = config.get_style()["margin"]
-        padding = config.get_style()["padding"]
+        margin = style["margin"]
+        padding = style["padding"]
 
         self.root_margins.left = margin["left"]
         self.root_margins.right = margin["right"]
@@ -438,6 +459,8 @@ class MarkdownTui(urwid.Frame):
 
     def reload(self):
         """Reload the input, keeping the current slide in focus"""
+        self._cache_slide_scroll_state()
+
         self.init_ctx()
         self.slide_renderer.ctx = self.ctx
 
@@ -449,6 +472,22 @@ class MarkdownTui(urwid.Frame):
         self.prep_pres(self.pres, curr_slide_idx)
         self.update()
 
+    @tutor(
+        "general",
+        "Navigation and Keybindings",
+        r"""
+        Slides are navigated using vim direction keys, arrow keys, and page up/page down:
+
+        |                key(s) | action                  |
+        |----------------------:|-------------------------|
+        | `l` `j` `right arrow` | Next slide              |
+        |  `h` `k` `left arrow` | Previous slide          |
+        |      up / down arrows | Scroll by line          |
+        |   page up / page down | Scroll by pages         |
+        |                   `r` | Reload                  |
+        """,
+        order=0.1,
+    )
     def keypress(self, size, key):
         """Handle keypress events"""
         self._log.debug(f"KEY: {key}")
@@ -479,8 +518,22 @@ class MarkdownTui(urwid.Frame):
         if new_slide_num == self.curr_slide.number:
             return
 
+        self._cache_slide_scroll_state()
         self.curr_slide = self.pres.slides[new_slide_num]
         self.update()
+
+    def _cache_slide_scroll_state(self):
+        self._slide_focus_cache[self.curr_slide.number] = (
+            self.slide_body.offset_rows,
+            self.slide_body.focus_position,
+        )
+
+    def _restore_slide_scroll_state(self):
+        offset_rows, focus_pos = self._slide_focus_cache.setdefault(
+            self.curr_slide.number, (0, 0)
+        )
+        self.slide_body.set_focus(focus_pos)
+        self.slide_body.offset_rows = offset_rows
 
     def _get_key(self, size, key):
         """Resolve the key that was pressed."""

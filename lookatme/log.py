@@ -15,6 +15,8 @@ def create_log(log_path):
     stderr_handler.setLevel(logging.ERROR)
     res.addHandler(stderr_handler)
 
+    logging.getLogger("markdown_it").setLevel(logging.CRITICAL)
+
     return res
 
 
