@@ -632,8 +632,8 @@ def test_code_with_highlight_and_numbers(styles):
             "R": {"fg": "#e6db74", "bg": "#272822"},
             "L": {"fg": "#75715e", "bg": "#272822"},
             # highlightled lines
-            "r": {"fg": "#e6db74,bold", "bg": "#474843"},
-            "l": {"fg": "#75715e,bold", "bg": "#474843"},
+            "r": {"fg": "#e6db74,bold", "bg": "#3c3d38"},
+            "l": {"fg": "#75715e,bold", "bg": "#3c3d38"},
         },
     )
 

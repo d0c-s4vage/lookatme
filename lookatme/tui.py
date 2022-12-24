@@ -7,6 +7,7 @@ import threading
 import time
 from collections import defaultdict
 from queue import Queue, Empty
+from typing import Tuple
 
 import urwid
 
@@ -291,6 +292,11 @@ class MarkdownTui(urwid.Frame):
             self.bottom_spacing_box,
         )
 
+    def set_slide_idx(self, slide_idx: int) -> Slide:
+        self.curr_slide = self.pres.slides[slide_idx]
+        self.update()
+        return self.curr_slide
+
     def prep_pres(self, pres, start_idx=0):
         """Prepare the presentation for displaying/use"""
         self.curr_slide = self.pres.slides[start_idx]
@@ -407,14 +413,18 @@ class MarkdownTui(urwid.Frame):
 
         scroll_style = config.get_style()["scrollbar"]
 
-        self.slide_body_scrollbar.gutter_spec = spec_from_style(scroll_style["gutter"])
+        self.slide_body_scrollbar.gutter_spec = self.ctx.spec_text_with(
+            spec_from_style(scroll_style["gutter"])
+        )
         self.slide_body_scrollbar.gutter_fill_char = scroll_style["gutter"]["fill"]
 
         self.slide_body_scrollbar.slider_top_chars = scroll_style["slider"]["top_chars"]
         self.slide_body_scrollbar.slider_bottom_chars = scroll_style["slider"][
             "bottom_chars"
         ]
-        self.slide_body_scrollbar.slider_spec = spec_from_style(scroll_style["slider"])
+        self.slide_body_scrollbar.slider_spec = self.ctx.spec_text_with(
+            spec_from_style(scroll_style["slider"])
+        )
         self.slide_body_scrollbar.slider_fill_char = scroll_style["slider"]["fill"]
 
     def update_slide_settings(self):
@@ -547,6 +557,22 @@ class MarkdownTui(urwid.Frame):
 
     def run(self):
         self.loop.run()
+
+    def render_without_scrollbar(self, width: int) -> Tuple:
+        """Return a tuple of three canvases: (header, body, footer)"""
+        padding_amt = self.root_paddings.left + self.root_paddings.right
+        content_width = width - padding_amt
+
+        content_size = 0
+        for widget in self.slide_body.body:
+            _, rows = widget.pack((content_width,), True)
+            content_size += rows
+
+        header_canvas = self.get_header().render((width,), False)
+        body_canvas = self.get_body().render((width, content_size), True)
+        footer_canvas = self.get_footer().render((width,), False)
+
+        return header_canvas, body_canvas, footer_canvas
 
 
 def create_tui(pres, start_slide=0, no_threads=False):

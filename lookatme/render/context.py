@@ -525,6 +525,12 @@ class Context:
             raise ValueError("Tried to pop off the spec stack one too many times")
         return self.spec_stack.pop()
 
+    def spec_peek(self) -> urwid.AttrSpec:
+        """Return the most recent spec, or None"""
+        if not self.spec_stack:
+            raise ValueError("Tried to pop off the spec stack one too many times")
+        return self.spec_stack[-1][0]
+
     @property
     def spec_general(self) -> Union[None, urwid.AttrSpec]:
         """Return the current fully resolved current AttrSpec"""

@@ -10,9 +10,9 @@ import logging
 import os
 import tempfile
 import traceback
+from typing import Optional
 
 import click
-import pygments.styles
 
 import lookatme
 import lookatme.config
@@ -21,6 +21,9 @@ import lookatme.tui
 import lookatme.tutorial
 from lookatme.pres import Presentation
 from lookatme.schemas import StyleSchema
+
+
+TO_HTML_DEFAULT_VALUE = "USE_THE_SLIDE_SOURCE_WITH_HTML_EXTENSION"
 
 
 @click.command("lookatme")
@@ -104,6 +107,17 @@ from lookatme.schemas import StyleSchema
     is_flag=True,
     default=False,
 )
+@click.option(
+    "--to-html",
+    "html_output_dir",
+    metavar="OUTPUT_DIR",
+    is_flag=False,
+    flag_value=TO_HTML_DEFAULT_VALUE,
+    help="Render the provided slide source to OUTPUT_DIR. Using this as a"
+    " flag wil modify the input file name to be the directory name "
+    "(slides.md -> slides_html)",
+    required=False,
+)
 @click.version_option(lookatme.__version__)
 @click.argument(
     "input_files",
@@ -124,6 +138,7 @@ def main(
     safe,
     no_ext_warn,
     ignore_ext_failure,
+    html_output_dir: Optional[str],
 ):
     """lookatme - An interactive, terminal-based markdown presentation tool.
 
@@ -174,6 +189,28 @@ def main(
 
     if dump_styles:
         print(StyleSchema().dumps(pres.styles))
+        return 0
+
+    if html_output_dir == TO_HTML_DEFAULT_VALUE:
+        input_name = getattr(input_files[0], "name", "slides.md")
+        html_output_dir = os.path.splitext(input_name)[0] + "_html"
+
+    if html_output_dir is not None:
+        if not os.path.exists(html_output_dir):
+            try:
+                os.makedirs(html_output_dir)
+            except Exception as e:
+                lookatme.config.get_log().error(
+                    "Could not create output directory: {}".format(e)
+                )
+                return 1
+
+        if not os.path.isdir(html_output_dir):
+            lookatme.config.get_log().error(
+                "Html output path is not a directory! {!r}".format(html_output_dir)
+            )
+
+        pres.to_html(html_output_dir)
         return 0
 
     try:

@@ -3,7 +3,7 @@ Setup for lookatme
 """
 
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 import os
 
 
@@ -27,8 +27,9 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     python_requires=">=3.6",
-    packages=find_packages(exclude=["docs", ".gitignore", "README.md", "tests"]),
+    packages=find_namespace_packages(exclude=["docs", ".gitignore", "README.md", "tests"]),
     install_requires=required,
+    include_package_data=True,
     classifiers=[
         "Environment :: Console",
         "Environment :: Plugins",

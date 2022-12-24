@@ -16,12 +16,13 @@ from lookatme.widgets.smart_attr_spec import SmartAttrSpec
 class LinkIndicatorSpec(SmartAttrSpec):
     """Used to track a link within an urwid.Text instance"""
 
-    def __init__(self, link_target, orig_spec):
+    def __init__(self, link_target, orig_spec, link_type: str = "link"):
         """Create a new LinkIndicator spec from an existing urwid.AttrSpec
 
         :param str link_target: The target url for the link
         """
         self.link_target = link_target
+        self.link_type = link_type
 
         super().__init__(orig_spec.foreground, orig_spec.background)
 
@@ -29,7 +30,7 @@ class LinkIndicatorSpec(SmartAttrSpec):
         """Create a new LinkIndicatorSpec with the same link information but
         new AttrSpec
         """
-        return LinkIndicatorSpec(self.link_target, new_spec)
+        return LinkIndicatorSpec(self.link_target, new_spec, self.link_type)
 
 
 class ClickableText(urwid.Text):
