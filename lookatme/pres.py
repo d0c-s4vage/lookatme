@@ -9,7 +9,7 @@ import os
 import sys
 import threading
 import time
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 import urwid
@@ -24,6 +24,12 @@ import lookatme.tui
 from lookatme.parser import Parser
 from lookatme.tutorial import tutor
 import lookatme.render.html as html
+
+
+DEFAULT_HTML_OPTIONS = {
+    "width": 100,
+    "title_delim": ":",
+}
 
 
 @tutor(
@@ -168,14 +174,17 @@ class Presentation(object):
             print("Bailing due to unacceptance of source-required extensions")
             exit(1)
 
-    def to_html(self, html_output_dir: str, width: int = 150):
-        slides_html, slides_titles = self._create_html(width)
+    def to_html(self, html_output_dir: str, options: Optional[Dict] = None):
+        _options = {}
+        _options.update(DEFAULT_HTML_OPTIONS)
+        _options.update(options or {})
+        slides_html, slides_titles = self._create_html(_options["width"])
 
         html.create_html_output(
             output_dir=html_output_dir,
             slides_html=slides_html,
             slides_titles=slides_titles,
-            title_category_delim=":",
+            title_category_delim=_options["title_delim"],
         )
 
     def _create_html(
@@ -193,7 +202,7 @@ class Presentation(object):
             titles.append(slide.get_title(self.tui.ctx))
             self.tui.set_slide_idx(slide_idx)
 
-            header, body, footer = self.tui.render_without_scrollbar(100)
+            header, body, footer = self.tui.render_without_scrollbar(width)
             classname = "slide"
             if slide_idx != 0:
                 classname += " hidden"

@@ -113,7 +113,7 @@ def css_filter(value: str) -> str:
 
 
 def highlight_filter(value: str) -> str:
-    return colors.get_highlight_color(value)
+    return colors.get_highlight_color(value, 0.2)
 
 
 def comma_append(val, new_val):

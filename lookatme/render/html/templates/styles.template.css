@@ -132,6 +132,11 @@ body {
     box-sizing: border-box;
     overflow: hidden;
     border-right: 1px solid #303030;
+    padding: 15px;
+}
+
+.nav ul {
+    padding-left: 15px;
 }
 
 .nav-inner {

@@ -10,7 +10,7 @@ import logging
 import os
 import tempfile
 import traceback
-from typing import Optional
+from typing import Dict, Optional, List
 
 import click
 
@@ -19,7 +19,7 @@ import lookatme.config
 import lookatme.log
 import lookatme.tui
 import lookatme.tutorial
-from lookatme.pres import Presentation
+from lookatme.pres import Presentation, DEFAULT_HTML_OPTIONS
 from lookatme.schemas import StyleSchema
 
 
@@ -118,6 +118,17 @@ TO_HTML_DEFAULT_VALUE = "USE_THE_SLIDE_SOURCE_WITH_HTML_EXTENSION"
     "(slides.md -> slides_html)",
     required=False,
 )
+@click.option(
+    "--html-option",
+    "html_options",
+    metavar="HTML_OPTION",
+    required=False,
+    help=(
+        "Provide a specific option to the html rendered with "
+        "'--html-option key=value'. Available options are: {option_keys}"
+    ).format(option_keys=", ".join(DEFAULT_HTML_OPTIONS.keys())),
+    multiple=True,
+)
 @click.version_option(lookatme.__version__)
 @click.argument(
     "input_files",
@@ -139,6 +150,7 @@ def main(
     no_ext_warn,
     ignore_ext_failure,
     html_output_dir: Optional[str],
+    html_options: List[str],
 ):
     """lookatme - An interactive, terminal-based markdown presentation tool.
 
@@ -210,7 +222,8 @@ def main(
                 "Html output path is not a directory! {!r}".format(html_output_dir)
             )
 
-        pres.to_html(html_output_dir)
+        parsed_options = _parse_html_options(html_options, DEFAULT_HTML_OPTIONS)
+        pres.to_html(html_output_dir, options=parsed_options)
         return 0
 
     try:
@@ -233,6 +246,21 @@ def main(
             )
             click.echo(f"See {log_path} for detailed runtime logs")
         raise click.Abort()
+
+
+def _parse_html_options(options: List[str], default: Dict):
+    res = {}
+    for option_str in options:
+        parts = [x.strip() for x in option_str.split("=", 1)]
+        if len(parts) != 2:
+            continue
+        key, val = parts
+        if key not in default:
+            continue
+        if isinstance(default[key], int):
+            val = int(val)
+        res[key] = val
+    return res
 
 
 if __name__ == "__main__":

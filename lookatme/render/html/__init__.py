@@ -177,9 +177,6 @@ def _create_slide_nav(
     nav["__children__"] = OrderedDict()
 
     for slide_idx, (title_text, title_canvas) in enumerate(titles):
-        if not title_text or not title_canvas:
-            continue
-
         if category_delim is not None:
             categories = [x.strip() for x in title_text.split(category_delim)]
         else:
@@ -187,9 +184,12 @@ def _create_slide_nav(
 
         curr_nav = nav
         for idx, category in enumerate(categories):
-            ctx = HtmlContext()
-            canvas_to_html(ctx, title_canvas, only_keep=category)
-            html_title = ctx.get_html().strip()
+            if title_canvas is None:
+                html_title = "<span>" + title_text + "</span>"
+            else:
+                ctx = HtmlContext()
+                canvas_to_html(ctx, title_canvas, only_keep=category)
+                html_title = ctx.get_html().strip()
 
             children = curr_nav.setdefault("__children__", OrderedDict())
             cat_info = children.get(category, None)

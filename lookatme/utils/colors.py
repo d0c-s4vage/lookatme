@@ -77,11 +77,11 @@ def increase_brightness(color: str, percent: float) -> str:
     return "#{:02x}{:02x}{:02x}".format(int(red), int(green), int(blue))
 
 
-def get_highlight_color(bg_color: str) -> str:
+def get_highlight_color(bg_color: str, percent: float = 0.1) -> str:
     bg_luminance = luminance(bg_color)
     if bg_luminance > 0.5:
-        hl_color = increase_brightness(bg_color, -0.1)
+        hl_color = increase_brightness(bg_color, -percent)
     else:
-        hl_color = increase_brightness(bg_color, 0.1)
+        hl_color = increase_brightness(bg_color, percent)
 
     return hl_color
