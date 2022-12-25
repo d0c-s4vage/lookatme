@@ -52,6 +52,8 @@ class Context:
         res = Context(self.loop)
         res.source_stack = list(self.source_stack)
         res.spec_stack = list(self.spec_stack)
+        res.token_stack = list(self.token_stack)
+        res.container_stack = list(self.container_stack)
 
         return res
 

@@ -48,7 +48,7 @@ class SlideRenderer(threading.Thread):
 
     def __init__(self, ctx: Context):
         threading.Thread.__init__(self)
-        self.events = defaultdict(threading.Event)
+        self.locks = defaultdict(threading.Lock)
         self.keep_running = threading.Event()
         self.queue = Queue()
         self.ctx = ctx
@@ -60,12 +60,18 @@ class SlideRenderer(threading.Thread):
         # clear all pending items
         with self.queue.mutex:
             self.queue.queue.clear()
+
+        for _, lock in self.locks.items():
+            lock.acquire()
         self.cache.clear()
+        for _, lock in self.locks.items():
+            lock.release()
 
     def queue_render(self, slide):
         """Queue up a slide to be rendered."""
+        # just make sure it has been initialized
+        self.locks[slide.number]
         if self.is_alive():
-            self.events[slide.number].clear()
             self.queue.put(slide)
         else:
             self.render_slide(slide)
@@ -74,16 +80,22 @@ class SlideRenderer(threading.Thread):
         """Render a slide, blocking until the slide completes. If ``force`` is
         True, rerender the slide even if it is in the cache.
         """
-        if slide.number not in self.cache:
-            self._cache_slide_render(slide)
+        res = None
+        with self.locks[slide.number]:
+            if slide.number not in self.cache:
+                self._cache_slide_render(slide)
+            res = self.cache[slide.number]
 
-        res = self.cache[slide.number]
         if isinstance(res, Exception):
             raise res
         return res
 
     def stop(self):
         self.keep_running.clear()
+        # wait for all rendering to finish
+        for _, lock in self.locks.items():
+            lock.acquire()
+            lock.release()
 
     def run(self):
         """Run the main render thread"""
@@ -93,12 +105,16 @@ class SlideRenderer(threading.Thread):
                 to_render = self.queue.get(timeout=0.05)
             except Empty:
                 continue
-            self._cache_slide_render(to_render)
+            with self.locks[to_render.number]:
+                if to_render.number not in self.cache:
+                    self._cache_slide_render(to_render)
 
     def _cache_slide_render(self, slide: Slide):
         try:
+            self._log.debug("Rendering slide number {}".format(slide.number))
             res = self.do_render(slide, slide.number)
             self.cache[slide.number] = res
+            self._log.debug("Done rendering slide number {}".format(slide.number))
         except Exception as e:
             self._log.error(
                 f"Error occurred rendering slide {slide.number}", exc_info=True
@@ -133,8 +149,6 @@ class SlideRenderer(threading.Thread):
                 self.cache[slide.number] = e
             else:
                 raise e
-        finally:
-            self.events[slide.number].set()
 
     def do_render(self, to_render, slide_num):
         """Perform the actual rendering of a slide. This is done by:
