@@ -9,7 +9,7 @@ import glob
 import inspect
 import os
 import shutil
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, OrderedDict, Tuple
 
 
 import urwid
@@ -173,7 +173,7 @@ def _create_slide_nav(
     titles: List[Tuple[str, Optional[urwid.Canvas]]],
     category_delim: Optional[str] = None,
 ) -> str:
-    nav = OrderedDict()
+    nav: OrderedDict[str, Any] = OrderedDict()
     nav["__children__"] = OrderedDict()
 
     for slide_idx, (title_text, title_canvas) in enumerate(titles):
@@ -192,7 +192,7 @@ def _create_slide_nav(
                 html_title = ctx.get_html().strip()
 
             children = curr_nav.setdefault("__children__", OrderedDict())
-            cat_info = children.get(category, None)
+            cat_info = children.get(category, None)  # type: ignore
             if not cat_info:
                 cat_info = children[category] = OrderedDict(
                     {"__slide__": None, "__html__": html_title}
@@ -201,7 +201,7 @@ def _create_slide_nav(
             # only keep the first slide (main use case here is progressive
             # slides that all have the same title)
             if idx == len(categories) - 1 and not cat_info["__slide__"]:
-                cat_info["__slide__"] = slide_idx
+                cat_info["__slide__"] = slide_idx  # type: ignore
             else:
                 curr_nav = cat_info
 

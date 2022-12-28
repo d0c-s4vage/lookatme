@@ -542,7 +542,7 @@ class Context:
         )
 
     @property
-    def spec_text(self):
+    def spec_text(self) -> urwid.AttrSpec:
         """ """
         return utils.spec_from_stack(
             self.spec_stack,
@@ -550,9 +550,7 @@ class Context:
             lambda s, text_only: True,
         )
 
-    def spec_text_with(
-        self, other_spec: Union[None, urwid.AttrSpec]
-    ) -> Union[None, urwid.AttrSpec]:
+    def spec_text_with(self, other_spec: Union[None, urwid.AttrSpec]) -> urwid.AttrSpec:
         if other_spec is None:
             return self.spec_text
 
