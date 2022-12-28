@@ -54,7 +54,7 @@ class Presentation(object):
     def __init__(
         self,
         input_stream,
-        theme,
+        theme: str = "dark",
         live_reload=False,
         single_slide=False,
         preload_extensions=None,
