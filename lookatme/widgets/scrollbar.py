@@ -28,9 +28,9 @@ class Scrollbar(urwid.Widget):
         self.slider_bottom_chars = ["⠈", "⠉", "⠋", "⠛", "⠻", "⠿", "⡿", "⣿"]
 
         self.slider_fill_char = "⣿"
-        self.slider_spec = SmartAttrSpec("#4c4c4c", "")
+        self.slider_spec: urwid.AttrSpec = SmartAttrSpec("#4c4c4c", "")
         self.gutter_fill_char = "▕"
-        self.gutter_spec = SmartAttrSpec("#2c2c2c", "")
+        self.gutter_spec: urwid.AttrSpec = SmartAttrSpec("#2c2c2c", "")
 
         self._listbox_widget_size_cache: Optional[
             Tuple[List[Tuple[int, int, int]], Tuple, bool, int]

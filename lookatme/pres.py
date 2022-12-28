@@ -3,10 +3,17 @@ Defines Presentation specific objects
 """
 
 
+from collections import OrderedDict
+import inspect
 import os
 import sys
 import threading
 import time
+from typing import Dict, List, Optional, Tuple
+
+
+import urwid
+
 
 import lookatme.ascii_art
 import lookatme.config
@@ -16,6 +23,13 @@ import lookatme.themes
 import lookatme.tui
 from lookatme.parser import Parser
 from lookatme.tutorial import tutor
+import lookatme.render.html as html
+
+
+DEFAULT_HTML_OPTIONS = {
+    "width": 100,
+    "title_delim": ":",
+}
 
 
 @tutor(
@@ -40,7 +54,7 @@ class Presentation(object):
     def __init__(
         self,
         input_stream,
-        theme,
+        theme: str = "dark",
         live_reload=False,
         single_slide=False,
         preload_extensions=None,
@@ -159,6 +173,52 @@ class Presentation(object):
         if not lookatme.prompt.yes("Are you ok with attempting to load them?"):
             print("Bailing due to unacceptance of source-required extensions")
             exit(1)
+
+    def to_html(self, html_output_dir: str, options: Optional[Dict] = None):
+        _options = {}
+        _options.update(DEFAULT_HTML_OPTIONS)
+        _options.update(options or {})
+        slides_html, slides_titles = self._create_html(_options["width"])
+
+        html.create_html_output(
+            output_dir=html_output_dir,
+            slides_html=slides_html,
+            slides_titles=slides_titles,
+            title_category_delim=_options["title_delim"],
+        )
+
+    def _create_html(
+        self, width: int = 150
+    ) -> Tuple[List[Tuple[str, str, str]], List[Tuple[str, Optional[urwid.Canvas]]]]:
+        self.tui = lookatme.tui.create_tui(self, start_slide=0, no_threads=True)
+        self.tui.update()
+        ctx = html.HtmlContext()
+
+        # header, body, footer contents, not wrapped in divs with classes
+        # yet
+        raw_slides_html: List[Tuple[str, str, str]] = []
+        titles: List[Tuple[str, Optional[urwid.Canvas]]] = []
+        for slide_idx, slide in enumerate(self.slides):
+            titles.append(slide.get_title(self.tui.ctx))
+            self.tui.set_slide_idx(slide_idx)
+
+            header, body, footer = self.tui.render_without_scrollbar(width)
+            classname = "slide"
+            if slide_idx != 0:
+                classname += " hidden"
+
+            html.canvas_to_html(ctx, header)
+            header_html = ctx.get_html_consumed()
+
+            html.canvas_to_html(ctx, body)
+            body_html = ctx.get_html_consumed()
+
+            html.canvas_to_html(ctx, footer)
+            footer_html = ctx.get_html_consumed()
+
+            raw_slides_html.append((header_html, body_html, footer_html))
+
+        return raw_slides_html, titles
 
     def run(self, start_slide=0):
         """Run the presentation!"""

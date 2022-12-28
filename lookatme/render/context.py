@@ -52,6 +52,8 @@ class Context:
         res = Context(self.loop)
         res.source_stack = list(self.source_stack)
         res.spec_stack = list(self.spec_stack)
+        res.token_stack = list(self.token_stack)
+        res.container_stack = list(self.container_stack)
 
         return res
 
@@ -525,6 +527,12 @@ class Context:
             raise ValueError("Tried to pop off the spec stack one too many times")
         return self.spec_stack.pop()
 
+    def spec_peek(self) -> urwid.AttrSpec:
+        """Return the most recent spec, or None"""
+        if not self.spec_stack:
+            raise ValueError("Tried to pop off the spec stack one too many times")
+        return self.spec_stack[-1][0]
+
     @property
     def spec_general(self) -> Union[None, urwid.AttrSpec]:
         """Return the current fully resolved current AttrSpec"""
@@ -534,7 +542,7 @@ class Context:
         )
 
     @property
-    def spec_text(self):
+    def spec_text(self) -> urwid.AttrSpec:
         """ """
         return utils.spec_from_stack(
             self.spec_stack,
@@ -542,9 +550,7 @@ class Context:
             lambda s, text_only: True,
         )
 
-    def spec_text_with(
-        self, other_spec: Union[None, urwid.AttrSpec]
-    ) -> Union[None, urwid.AttrSpec]:
+    def spec_text_with(self, other_spec: Union[None, urwid.AttrSpec]) -> urwid.AttrSpec:
         if other_spec is None:
             return self.spec_text
 

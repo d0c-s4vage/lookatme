@@ -1,0 +1,244 @@
+/* REMOVE ME: (all lines with "REMOVE ME" will be removed by the templating code)
+ * REMOVE ME: This template CSS uses a basic jinja templating syntax:
+ * REMOVE ME:
+ * REMOVE ME: \{\{VARIABLE\}\}
+   REMOVE ME: */
+
+/* 
+ * ---------------------------------------------------------------------------
+ * From https://www.joshwcomeau.com/css/custom-css-reset/
+ * Wayback Machine: https://web.archive.org/web/20221211044346/https://www.joshwcomeau.com/css/custom-css-reset/
+ * ---------------------------------------------------------------------------
+ */
+
+/*
+  1. Use a more-intuitive box-sizing model.
+*/
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+/*
+  2. Remove default margin
+*/
+* {
+  margin: 0;
+}
+/*
+  3. Allow percentage-based heights in the application
+*/
+html, body {
+  height: 100%;
+}
+/*
+  Typographic tweaks!
+  4. Add accessible line-height
+  5. Improve text rendering
+*/
+body {
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+/*
+  6. Improve media defaults
+*/
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+/*
+  7. Remove built-in form typography styles
+*/
+input, button, textarea, select {
+  font: inherit;
+}
+/*
+  8. Avoid text overflows
+*/
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+/*
+  9. Create a root stacking context
+*/
+#root, #__next {
+  isolation: isolate;
+}
+
+/* 
+ * ---------------------------------------------------------------------------
+ * ---------------------------------------------------------------------------
+ */
+
+@font-face {
+    font-family: "DejaVu Sans Mono for Powerline";
+    src: url("./static/fonts/DejaVu/DejaVu Sans Mono for Powerline.ttf") format("truetype");
+    font-style: normal;
+    unicode-range: U+00-FFFF;
+}
+@font-face {
+    font-family: "DejaVu Sans Mono for Powerline";
+    src: url("./static/fonts/DejaVu/DejaVu Sans Mono for Powerline.ttf") format("truetype");
+    font-style: italic;
+    unicode-range: U+00-FFFF;
+}
+@font-face {
+    font-family: "DejaVu Sans Mono for Powerline";
+    src: url("./static/fonts/DejaVu/DejaVu Sans Mono Bold for Powerline.ttf") format("truetype");
+    font-weight: bold;
+    unicode-range: U+00-FFFF;
+}
+@font-face {
+    font-family: "DejaVu Sans Mono for Powerline";
+    src: url("./static/fonts/DejaVu/DejaVu Sans Mono Bold for Powerline.ttf") format("truetype");
+    font-weight: bold;
+    font-style: italic;
+    unicode-range: U+00-FFFF;
+}
+@font-face {
+    font-family: "DejaVu Sans Mono for Powerline";
+    src: url("./static/fonts/DejaVu/DejaVu Sans Mono Oblique for Powerline.ttf") format("truetype");
+    font-style: oblique;
+    unicode-range: U+00-FFFF;
+}
+@font-face {
+    font-family: "DejaVu Sans Mono for Powerline";
+    src: url("./static/fonts/DejaVu/DejaVu Sans Mono Bold Oblique for Powerline.ttf") format("truetype");
+    font-style: oblique;
+    font-weight: bold;
+    unicode-range: U+00-FFFF;
+}
+
+* {
+    font-family: "DejaVu Sans Mono for Powerline", monospace;
+}
+
+body {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-basis: 0;
+    font-size: 1.0em;
+    line-height: 1.13;
+    background-color: {{styles.slides.bg}};
+    {{styles.slides.fg|css}}
+}
+
+.nav {
+    font-size: 0.8em;
+    flex-shrink: 1;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-right: 1px solid #303030;
+    padding: 15px;
+}
+
+.nav ul {
+    padding-left: 15px;
+}
+
+.nav-inner {
+    height: 100%;
+    width: 100%;
+    padding-right: 35px;
+    box-sizing: content-box;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    overflow-wrap: break-word;
+    position: relative;
+}
+
+.navitem {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.nav-active, .nav-active > * {
+    background-color: {{styles.slides.bg|highlight}} !important;
+}
+
+.navitem-slide {
+    cursor: pointer;
+    position: relative;
+}
+
+.slide-deck {
+    flex: 1;
+    box-sizing: border-box;
+    height: calc(100vh - 10px - 10px);
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+}
+
+.slide {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.slide-header {
+    flex-shrink: 0;
+    flex-grow: 0;
+}
+
+.slide-body {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.slide-body-inner {
+    overflow-x: hidden;
+    overflow-y: scroll;
+    box-sizing: content-box;
+    width: 100%;
+    height: 100%;
+    padding-right: 20px;
+    position: relative;
+}
+
+.slide-body-inner-inner {
+    width: fit-content;
+}
+
+.slide-body-inner:focus, .slide-body-inner:focus-visible {
+    outline: none;
+    border: none;
+}
+
+.slide-footer {
+    flex-shrink: 0;
+    flex-grow: 0;
+}
+
+.hidden {
+    display: none;
+}
+
+.blink {
+  animation: blinker 1.5s step-start infinite;
+}
+
+.scrollbar-gutter {
+    position: absolute;
+    top: 0;
+    color: #2c2c2c;
+    background-color: {{styles.scrollbar.gutter.bg}};
+}
+
+.scrollbar-slider {
+    position: absolute;
+    top: 0;
+    z-index: 200;
+    color: #4c4c4c;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}

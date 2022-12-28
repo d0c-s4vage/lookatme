@@ -168,7 +168,7 @@ def render_link_open(token, ctx: Context):
     href = attrs.get("href", "")
 
     plain_spec = utils.spec_from_style(config.get_style()["link"])
-    ctx.spec_push(LinkIndicatorSpec(href, plain_spec))
+    ctx.spec_push(LinkIndicatorSpec(href, plain_spec, link_type="link"))
 
 
 @contrib_first
@@ -200,6 +200,7 @@ def render_image(token, ctx: Context):
 
     fake_token = ctx.fake_token("link_open", attrs=list(attrs.items()))
     render_link_open(fake_token, ctx)
+    ctx.spec_peek().link_type = "image"
     with ctx.use_tokens(token["children"]):
         render_all(ctx)
     fake_token = ctx.fake_token("link_close", attrs=list(attrs.items()))
@@ -366,8 +367,10 @@ def render_html_inline(token, ctx: Context):
         style_spec = None
         if len(tag.style) > 0:
             fg = [tag.style.get("color", "")]
-            if "underscore" in tag.style.get("text-decoration", ""):
+            if "underline" in tag.style.get("text-decoration", ""):
                 fg.append("underline")
+            if "line-through" in tag.style.get("text-decoration", ""):
+                fg.append("strikethrough")
             if "bold" in tag.style.get("font-weight", ""):
                 fg.append("bold")
             if "italic" in tag.style.get("font-style", ""):

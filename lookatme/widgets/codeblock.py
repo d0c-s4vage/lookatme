@@ -4,7 +4,6 @@ This module defines an urwid Widget that renders a codeblock
 
 
 import itertools
-import math
 import re
 from typing import Dict, List, Mapping, Optional, Set, Tuple
 
@@ -22,6 +21,7 @@ import urwid
 from lookatme.widgets.smart_attr_spec import SmartAttrSpec
 from lookatme.widgets.line_fill import LineFill
 import lookatme.utils as utils
+import lookatme.utils.colors as colors
 
 
 AVAILABLE_LEXERS = set()
@@ -77,11 +77,7 @@ class SyntaxHlStyle:
 
         bg_color = self.bg_override or self.pygments_style.background_color
         self.bg_spec = SmartAttrSpec(fg="", bg=bg_color)
-        bg_luminance = self._luminance(bg_color)
-        if bg_luminance > 0.5:
-            hl_color = self._increase_brightness(bg_color, -0.15)
-        else:
-            hl_color = self._increase_brightness(bg_color, 0.15)
+        hl_color = colors.get_highlight_color(bg_color)
         self.highlight_spec = SmartAttrSpec("bold", hl_color)
 
         if self.bg_override:
@@ -143,70 +139,9 @@ class SyntaxHlStyle:
                 {"fg": spec.foreground}, {"fg": self.default_fg}
             )["fg"]
 
-        self._ensure_contrast(spec)
+        colors.ensure_contrast(spec)
 
         return spec
-
-    def _ensure_contrast(self, spec: urwid.AttrSpec):
-        luminance_fg = self._luminance(utils.extract_hexcolor(spec.foreground))
-        luminance_bg = self._luminance(utils.extract_hexcolor(spec.background))
-
-        if luminance_fg > luminance_bg:
-            contrast_ratio = (luminance_fg + 0.05) / (luminance_bg + 0.05)
-        else:
-            contrast_ratio = (luminance_bg + 0.05) / (luminance_fg + 0.05)
-
-        # w3c recommends a contrast >= 4.5, but most coding color schemes don't
-        # fit this
-        if contrast_ratio >= 3.0:
-            return
-
-        if luminance_bg < 0.5:
-            new_fg = "#ffffff"
-        else:
-            new_fg = "#000000"
-
-        tmp_spec = utils.overwrite_style(
-            {"fg": spec.foreground},
-            {"fg": new_fg},
-        )
-        spec.foreground = tmp_spec["fg"]
-
-    def _luminance(self, color: str) -> float:
-        color = color.strip("#")
-        if len(color) != 6:
-            return 0.0
-
-        red, green, blue = [int(x, 16) for x in re.findall("..", color)]
-        red = math.pow(red / 255.0, 2.2)
-        green = math.pow(green / 255.0, 2.2)
-        blue = math.pow(blue / 255.0, 2.2)
-
-        return red * 0.2126 + green * 0.7152 + blue * 0.0722
-
-    def _increase_brightness(self, color: str, percent: float) -> str:
-        color = color.strip("#")
-        red, green, blue = [int(x, 16) for x in re.findall("..", color)]
-
-        if percent > 0:
-            red += (255.0 - red) * percent
-            green += (255.0 - green) * percent
-            blue += (255.0 - blue) * percent
-        else:
-            red += red * percent
-            green += green * percent
-            blue += blue * percent
-
-        if percent < 0:
-            red = max(0, red)
-            green = max(0, green)
-            blue = max(0, blue)
-        else:
-            red = min(255, red)
-            green = min(255, green)
-            blue = min(255, blue)
-
-        return "#{:02x}{:02x}{:02x}".format(int(red), int(green), int(blue))
 
 
 class StyleCache:

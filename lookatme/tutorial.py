@@ -313,9 +313,11 @@ def get_tutorial_md(groups_or_tutors: List[str]) -> Union[None, str]:
         """
         ---
         title: lookatme Tutorial
-        author: lookatme devs
+        author: lookatme {version}
         ---
-    """
+    """.format(
+            version=lookatme.VERSION
+        )
     ).strip()
 
     res = meta + "\n" + "\n\n---\n\n".join(res_slides) + "\n\n---\n\n# End"

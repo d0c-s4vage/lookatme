@@ -7,6 +7,7 @@ import threading
 import time
 from collections import defaultdict
 from queue import Queue, Empty
+from typing import Tuple
 
 import urwid
 
@@ -47,7 +48,7 @@ class SlideRenderer(threading.Thread):
 
     def __init__(self, ctx: Context):
         threading.Thread.__init__(self)
-        self.events = defaultdict(threading.Event)
+        self.locks = defaultdict(threading.Lock)
         self.keep_running = threading.Event()
         self.queue = Queue()
         self.ctx = ctx
@@ -59,12 +60,18 @@ class SlideRenderer(threading.Thread):
         # clear all pending items
         with self.queue.mutex:
             self.queue.queue.clear()
+
+        for _, lock in self.locks.items():
+            lock.acquire()
         self.cache.clear()
+        for _, lock in self.locks.items():
+            lock.release()
 
     def queue_render(self, slide):
         """Queue up a slide to be rendered."""
+        # just make sure it has been initialized
+        self.locks[slide.number]
         if self.is_alive():
-            self.events[slide.number].clear()
             self.queue.put(slide)
         else:
             self.render_slide(slide)
@@ -73,16 +80,22 @@ class SlideRenderer(threading.Thread):
         """Render a slide, blocking until the slide completes. If ``force`` is
         True, rerender the slide even if it is in the cache.
         """
-        if slide.number not in self.cache:
-            self._cache_slide_render(slide)
+        res = None
+        with self.locks[slide.number]:
+            if slide.number not in self.cache:
+                self._cache_slide_render(slide)
+            res = self.cache[slide.number]
 
-        res = self.cache[slide.number]
         if isinstance(res, Exception):
             raise res
         return res
 
     def stop(self):
         self.keep_running.clear()
+        # wait for all rendering to finish
+        for _, lock in self.locks.items():
+            lock.acquire()
+            lock.release()
 
     def run(self):
         """Run the main render thread"""
@@ -92,12 +105,16 @@ class SlideRenderer(threading.Thread):
                 to_render = self.queue.get(timeout=0.05)
             except Empty:
                 continue
-            self._cache_slide_render(to_render)
+            with self.locks[to_render.number]:
+                if to_render.number not in self.cache:
+                    self._cache_slide_render(to_render)
 
     def _cache_slide_render(self, slide: Slide):
         try:
+            self._log.debug("Rendering slide number {}".format(slide.number))
             res = self.do_render(slide, slide.number)
             self.cache[slide.number] = res
+            self._log.debug("Done rendering slide number {}".format(slide.number))
         except Exception as e:
             self._log.error(
                 f"Error occurred rendering slide {slide.number}", exc_info=True
@@ -132,8 +149,6 @@ class SlideRenderer(threading.Thread):
                 self.cache[slide.number] = e
             else:
                 raise e
-        finally:
-            self.events[slide.number].set()
 
     def do_render(self, to_render, slide_num):
         """Perform the actual rendering of a slide. This is done by:
@@ -291,6 +306,11 @@ class MarkdownTui(urwid.Frame):
             self.bottom_spacing_box,
         )
 
+    def set_slide_idx(self, slide_idx: int) -> Slide:
+        self.curr_slide = self.pres.slides[slide_idx]
+        self.update()
+        return self.curr_slide
+
     def prep_pres(self, pres, start_idx=0):
         """Prepare the presentation for displaying/use"""
         self.curr_slide = self.pres.slides[start_idx]
@@ -407,14 +427,18 @@ class MarkdownTui(urwid.Frame):
 
         scroll_style = config.get_style()["scrollbar"]
 
-        self.slide_body_scrollbar.gutter_spec = spec_from_style(scroll_style["gutter"])
+        self.slide_body_scrollbar.gutter_spec = self.ctx.spec_text_with(
+            spec_from_style(scroll_style["gutter"])
+        )
         self.slide_body_scrollbar.gutter_fill_char = scroll_style["gutter"]["fill"]
 
         self.slide_body_scrollbar.slider_top_chars = scroll_style["slider"]["top_chars"]
         self.slide_body_scrollbar.slider_bottom_chars = scroll_style["slider"][
             "bottom_chars"
         ]
-        self.slide_body_scrollbar.slider_spec = spec_from_style(scroll_style["slider"])
+        self.slide_body_scrollbar.slider_spec = self.ctx.spec_text_with(
+            spec_from_style(scroll_style["slider"])
+        )
         self.slide_body_scrollbar.slider_fill_char = scroll_style["slider"]["fill"]
 
     def update_slide_settings(self):
@@ -547,6 +571,22 @@ class MarkdownTui(urwid.Frame):
 
     def run(self):
         self.loop.run()
+
+    def render_without_scrollbar(self, width: int) -> Tuple:
+        """Return a tuple of three canvases: (header, body, footer)"""
+        padding_amt = self.root_paddings.left + self.root_paddings.right
+        content_width = width - padding_amt
+
+        content_size = 0
+        for widget in self.slide_body.body:
+            _, rows = widget.pack((content_width,), True)
+            content_size += rows
+
+        header_canvas = self.get_header().render((width,), False)
+        body_canvas = self.get_body().render((width, content_size), True)
+        footer_canvas = self.get_footer().render((width,), False)
+
+        return header_canvas, body_canvas, footer_canvas
 
 
 def create_tui(pres, start_slide=0, no_threads=False):

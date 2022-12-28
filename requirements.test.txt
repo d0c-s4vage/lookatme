@@ -8,3 +8,4 @@ isort
 flake8
 autopep8
 six
+selenium

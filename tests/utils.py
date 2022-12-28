@@ -3,6 +3,7 @@ Defines utilities for testing lookatme
 """
 
 
+from functools import wraps
 import inspect
 from six.moves import StringIO  # type: ignore
 from typing import cast, Any, Dict, List, Optional, Tuple, Union
@@ -199,6 +200,15 @@ def precise_update(full_style, new_style):
             full_style[k] = v
 
 
+def create_style(new_style: Dict, complete: bool = False):
+    full_style = cast(Dict, lookatme.schemas.StyleSchema().dump(None))
+    if complete:
+        full_style.update(new_style)
+    else:
+        precise_update(full_style, new_style)
+    return full_style
+
+
 def override_style(new_style: Dict, complete=False, pass_tmpdir=False):
     """Override the style settings for lookatme. By default a precise update
     will be performed where nested subkeys will be specifically updated if
@@ -209,11 +219,7 @@ def override_style(new_style: Dict, complete=False, pass_tmpdir=False):
     """
 
     def outer(fn):
-        full_style = cast(Dict, lookatme.schemas.StyleSchema().dump(None))
-        if complete:
-            full_style.update(new_style)
-        else:
-            precise_update(full_style, new_style)
+        full_style = create_style(new_style, complete)
         fn.style = full_style
 
         def inner(tmpdir, mocker):

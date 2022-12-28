@@ -315,7 +315,6 @@ def render_list_item_close(_, ctx: Context):
     """,
 )
 @contrib_first
-@contrib_first
 def render_heading_open(token: Dict, ctx: Context):
     """ """
     ctx.ensure_new_block()
