@@ -40,6 +40,11 @@ pip install --upgrade lookatme
 lookatme --tutorial
 ```
 
+**NOTE**: [lookatme 3.0](https://github.com/d0c-s4vage/lookatme/milestone/1) is nearing completion! Check out the latest release
+candidate with: `pip install --upgrade --pre lookatme`. Be warned, version 3.0
+may not be as stable and contains breaking changes (mostly with styles) from
+previous major versions.
+
 General tour
 
 ![lookatme_tour](docs/source/_static/lookatme_tour.gif)
