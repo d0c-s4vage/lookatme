@@ -1,8 +1,19 @@
 name: Publish to PyPI
 on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: false
+        default: "${{ github.ref }}"
+      ref_name:
+        type: string
+        required: false
+        default: "${{ github.ref_name }}"
   push:
     tags:
       - 'v*.*.*'
+      - '!*-grape'
 
 jobs:
   build-and-publish:
@@ -10,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: "${{ inputs.ref_name }}"
       - name: Setup Python 3.10
         uses: actions/setup-python@v4
         with:
@@ -18,12 +31,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Fill placeholders
-        run: |
-          version_num="${{github.ref_name}}"
-          # strip the leading v
-          version_num=${version_num#v}
-          bin/fill_placeholders "$version_num"
       - name: Install pypa/build
         run: python -m pip install build --user
       - name: Build binary wheel + tarball
@@ -32,3 +39,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
+
