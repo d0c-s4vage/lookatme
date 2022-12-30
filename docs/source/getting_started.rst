@@ -20,7 +20,42 @@ The ``lookatme`` CLI has a few options to control it's behavior:
 
 .. code-block:: text
 
-{{LOOKATME_HELP_OUTPUT_INDENTED}}
+    Usage: python -m lookatme [OPTIONS] [INPUT_FILES]...
+    
+      lookatme - An interactive, terminal-based markdown presentation tool.
+    
+      See https://lookatme.readthedocs.io/en/v3.0.0rc1 for documentation
+    
+    Options:
+      --debug
+      --threads
+      -l, --log PATH
+      --tutorial TEXT            As a flag: show all tutorials. With a
+                                 value/comma-separated values: show the specific
+                                 tutorials. Use the value 'help' for more help
+      -t, --theme [dark|light]
+      --dump-styles              Dump the resolved styles that will be used with
+                                 the presentation to stdout
+      --live, --live-reload      Watch the input filename for modifications and
+                                 automatically reload
+      -s, --safe                 Do not load any new extensions specified in the
+                                 source markdown. Extensions specified via env var
+                                 or -e are still loaded
+      --no-ext-warn              Load new extensions specified in the source
+                                 markdown without warning
+      -i, --ignore-ext-failure   Ignore load failures of extensions
+      -e, --exts TEXT            A comma-separated list of extension names to
+                                 automatically load (LOOKATME_EXTS)
+      --single, --one            Render the source as a single slide
+      --to-html OUTPUT_DIR       Render the provided slide source to OUTPUT_DIR.
+                                 Using this as a flag wil modify the input file
+                                 name to be the directory name (slides.md ->
+                                 slides_html)
+      --html-option HTML_OPTION  Provide a specific option to the html rendered
+                                 with '--html-option key=value'. Available options
+                                 are: width, title_delim
+      --version                  Show the version and exit.
+      --help                     Show this message and exit.
 
 ``--live`` / ``--live-reload``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
