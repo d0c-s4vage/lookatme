@@ -1,6 +1,6 @@
 # Changelog
 
-- [v2.5.1](#v251)
+- [v2.5.1](#v255)
 - [v2.5.0](#v250)
 - [v2.4.1](#v241)
 - [v2.4.0](#v240)
@@ -24,7 +24,7 @@
 - [v0.1.0](#v010)
 
 
-## v2.5.1
+## v2.5.5
 
 Updates lookatme's CI (GitHub Actions) to use grapevine tagging
 
