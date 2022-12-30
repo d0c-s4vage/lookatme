@@ -1,5 +1,6 @@
 # Changelog
 
+- [v2.5.1](#v251)
 - [v2.5.0](#v250)
 - [v2.4.1](#v241)
 - [v2.4.0](#v240)
@@ -21,6 +22,15 @@
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+
+## v2.5.1
+
+Updates lookatme's CI (GitHub Actions) to use grapevine tagging
+
+|    type | PR/ticket                                                | author                                       | description                               |
+|--------:|----------------------------------------------------------|----------------------------------------------|-------------------------------------------|
+| feature | [#198](https://github.com/d0c-s4vage/lookatme/issue/198) | [@d0c-s4vage](https://github.com/d0c-s4vage) | Adds grapevine tagging to CI              |
 
 ## v2.5.0
 
