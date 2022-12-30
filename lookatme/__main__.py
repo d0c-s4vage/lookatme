@@ -118,7 +118,7 @@ def main(tutorial, debug, log_path, theme, code_style, dump_styles,
          ignore_ext_failure):
     """lookatme - An interactive, terminal-based markdown presentation tool.
 
-    See https://lookatme.readthedocs.io/en/v{{VERSION}} for documentation
+    See https://lookatme.readthedocs.io/en/v2.5.5 for documentation
     """
     if debug:
         lookatme.config.LOG = lookatme.log.create_log(log_path)

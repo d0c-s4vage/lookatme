@@ -47,7 +47,7 @@ author = "James 'd0c-s4vage' Johnson"
 
 
 # The full version, including alpha/beta/rc tags
-release = os.environ.get("READTHEDOCS_VERSION", '{{VERSION}}')
+release = os.environ.get("READTHEDOCS_VERSION", '2.5.5')
 
 
 # -- General configuration ---------------------------------------------------

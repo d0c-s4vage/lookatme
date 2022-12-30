@@ -70,7 +70,7 @@ Usage: lookatme [OPTIONS] [INPUT_FILES]...
 
   lookatme - An interactive, terminal-based markdown presentation tool.
 
-  See https://lookatme.readthedocs.io/en/v{{VERSION}} for documentation
+  See https://lookatme.readthedocs.io/en/v2.5.5 for documentation
 
 Options:
   --debug
