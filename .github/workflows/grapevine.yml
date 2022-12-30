@@ -1,0 +1,79 @@
+name: Grapevine Tagging
+on:
+  create:
+    tags:
+      - 'v*.*.*-grape'
+
+jobs:
+  create-grape:
+    name: Make a new grape
+    runs-on: ubuntu-latest
+    outputs:
+      VERSION_NO_GRAPE: "${{ steps.vars.outputs.VERSION_NO_GRAPE }}"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ github.token }}
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+        # make some environment variables available for all steps
+      - name: Define variables
+        id: vars
+        run: |
+          version_num="${{ github.ref_name }}"
+          echo "VERSION_RAW=$version_num" >> "$GITHUB_ENV"
+          # strip the trailing "-grape"
+          version_no_grape=${version_num%-grape}
+          echo "VERSION_NO_GRAPE=$version_no_grape" >> "$GITHUB_ENV"
+          echo "VERSION_NO_GRAPE=$version_no_grape" >> "$GITHUB_OUTPUT"
+          # strip the leading v
+          version_plain=${version_no_grape#v}
+          echo "VERSION_PLAIN=$version_plain" >> "$GITHUB_ENV"
+
+      - name: Fill placeholders
+        run: |
+          bin/fill_placeholders "$VERSION_PLAIN"
+
+      - name: Generate Changelog
+        run: |
+          echo "Generating changelog (TODO)"
+
+      - name: Commit and tag grape
+        run: |
+          # get into a detached HEAD state by checking out the latest commit
+          # directly
+          git checkout $(git rev-parse HEAD)
+
+          git config --global user.name "James Johnson"
+          git config --global user.email "d0c-s4vage@users.noreply.github.com"
+
+          git commit -am "Commit for $VERSION_NO_GRAPE"
+          git tag "$VERSION_NO_GRAPE"
+          git push --tags
+
+      - name: Delete grape tag
+        run: |
+          git push --delete origin "$VERSION_RAW"
+
+      - name: run other workflow
+        run: |
+          ls -la .github/workflows/
+
+
+  run_main_version_workflow:
+    needs: create-grape
+    # directly trigger the "pypi_publish" workflow
+    uses: ./.github/workflows/pypi_publish.yml
+    secrets: inherit
+    with:
+      ref: "${{ needs.create-grape.outputs.VERSION_NO_GRAPE }}"
+      ref_name: "${{ needs.create-grape.outputs.VERSION_NO_GRAPE }}"
