@@ -73,6 +73,7 @@ jobs:
     needs: create-grape
     # directly trigger the "pypi_publish" workflow
     uses: ./.github/workflows/pypi_publish.yml
+    secrets: inherit
     with:
       ref: "${{ needs.create-grape.outputs.VERSION_NO_GRAPE }}"
       ref_name: "${{ needs.create-grape.outputs.VERSION_NO_GRAPE }}"
