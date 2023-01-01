@@ -71,8 +71,8 @@ jobs:
 
   run_main_version_workflow:
     needs: create-grape
-    # directly trigger the "pypi_publish" workflow
-    uses: ./.github/workflows/pypi_publish.yml
+    # directly trigger the "new_release" workflow
+    uses: ./.github/workflows/new_release.yml
     secrets: inherit
     with:
       ref: "${{ needs.create-grape.outputs.VERSION_NO_GRAPE }}"
