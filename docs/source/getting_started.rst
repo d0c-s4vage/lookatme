@@ -20,7 +20,7 @@ The ``lookatme`` CLI has a few options to control it's behavior:
 
 .. code-block:: text
 
-{{LOOKATME_HELP_OUTPUT_INDENTED}}
+    
 
 ``--live`` / ``--live-reload``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

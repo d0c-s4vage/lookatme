@@ -103,7 +103,7 @@ class Tutor:
         _, lineno = inspect.getsourcelines(self.impl_fn)
 
         version = "v" + lookatme.VERSION
-        if version == "v{{VERSION}}":
+        if version == "vfeature-203-screenshot_png_gif":
             version = "main"
 
         return "[{module}.{fn_name}]({link})".format(

@@ -1,1 +1,1 @@
-VERSION = __version__ = "{{VERSION}}"
+VERSION = __version__ = "feature-203-screenshot_png_gif"
