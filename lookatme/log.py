@@ -12,7 +12,7 @@ def create_log(log_path):
     res = logging.getLogger("lookatme")
 
     stderr_handler = logging.StreamHandler()
-    stderr_handler.setLevel(logging.ERROR)
+    stderr_handler.setLevel(logging.INFO)
     res.addHandler(stderr_handler)
 
     logging.getLogger("markdown_it").setLevel(logging.CRITICAL)

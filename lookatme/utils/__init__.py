@@ -2,11 +2,23 @@
 """
 
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import urwid
 
 from lookatme.widgets.smart_attr_spec import SmartAttrSpec
+
+import lookatme.utils.fs as fs
+
+
+def flatten_dict(tree_dict: Dict, flat_dict: Dict, prefixes: Optional[List] = None):
+    prefixes = prefixes or []
+    for k, v in tree_dict.items():
+        if isinstance(v, dict):
+            flatten_dict(v, flat_dict, prefixes + [k])
+            continue
+        flat_k = ".".join(prefixes + [k])
+        flat_dict[flat_k] = v
 
 
 def _do_get_packed_widget_list(w: urwid.Widget) -> int:

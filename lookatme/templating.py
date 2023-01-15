@@ -12,12 +12,8 @@ from typing import Dict
 import lookatme.utils.colors as colors
 
 
-TEMPLATE_DIR = os.path.join(os.path.realpath(os.path.dirname(__file__)), "templates")
-
-
-def get_template_data(template_name: str) -> str:
+def get_template_data(template_path: str) -> str:
     """Return the template data or raise an error."""
-    template_path = os.path.join(TEMPLATE_DIR, template_name)
     if not os.path.exists(template_path) and os.path.isfile(template_path):
         raise ValueError("Template {!r} doesn't exist".format(template_path))
 

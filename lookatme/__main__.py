@@ -21,6 +21,7 @@ import lookatme.tui
 import lookatme.tutorial
 from lookatme.pres import Presentation, DEFAULT_HTML_OPTIONS
 from lookatme.schemas import StyleSchema
+import lookatme.output
 
 
 TO_HTML_DEFAULT_VALUE = "USE_THE_SLIDE_SOURCE_WITH_HTML_EXTENSION"
@@ -108,25 +109,34 @@ TO_HTML_DEFAULT_VALUE = "USE_THE_SLIDE_SOURCE_WITH_HTML_EXTENSION"
     default=False,
 )
 @click.option(
-    "--to-html",
-    "html_output_dir",
-    metavar="OUTPUT_DIR",
-    is_flag=False,
-    flag_value=TO_HTML_DEFAULT_VALUE,
-    help="Render the provided slide source to OUTPUT_DIR. Using this as a"
-    " flag wil modify the input file name to be the directory name "
-    "(slides.md -> slides_html)",
+    "-f",
+    "--format",
+    "output_format",
+    required=False,
+    default=None,
+    metavar="FORMAT",
+    show_default=True,
+    type=click.Choice(lookatme.output.get_all_formats()),
+    help="The output format to convert the markdown to. See also --output and "
+    "--opt. Additional dependencies may be required"
+)
+@click.option(
+    "-o",
+    "--output",
+    "output_path",
+    metavar="OUTPUT_PATH",
+    help="Output the markdown slides in a specific --format to this path",
     required=False,
 )
 @click.option(
-    "--html-option",
-    "html_options",
-    metavar="HTML_OPTION",
+    "--opt",
+    "output_options",
+    metavar="OPTION",
     required=False,
     help=(
-        "Provide a specific option to the html rendered with "
-        "'--html-option key=value'. Available options are: {option_keys}"
-    ).format(option_keys=", ".join(DEFAULT_HTML_OPTIONS.keys())),
+        "Provide a specific option for the output format in the form "
+        "key=value. Use 'help' or 'list' to see all output options."
+    ),
     multiple=True,
 )
 @click.version_option(lookatme.__version__)
@@ -149,8 +159,9 @@ def main(
     safe,
     no_ext_warn,
     ignore_ext_failure,
-    html_output_dir: Optional[str],
-    html_options: List[str],
+    output_path: Optional[str],
+    output_options: List[str],
+    output_format: str = "html",
 ):
     """lookatme - An interactive, terminal-based markdown presentation tool.
 
@@ -160,7 +171,7 @@ def main(
     if debug:
         lookatme.config.LOG.setLevel(logging.DEBUG)
     else:
-        lookatme.config.LOG.setLevel(logging.ERROR)
+        lookatme.config.LOG.setLevel(logging.INFO)
 
     if len(input_files) == 0:
         input_files = [io.StringIO("")]
@@ -202,28 +213,14 @@ def main(
     if dump_styles:
         print(StyleSchema().dumps(pres.styles))
         return 0
-
-    if html_output_dir == TO_HTML_DEFAULT_VALUE:
-        input_name = getattr(input_files[0], "name", "slides.md")
-        html_output_dir = os.path.splitext(input_name)[0] + "_html"
-
-    if html_output_dir is not None:
-        if not os.path.exists(html_output_dir):
-            try:
-                os.makedirs(html_output_dir)
-            except Exception as e:
-                lookatme.config.get_log().error(
-                    "Could not create output directory: {}".format(e)
-                )
-                return 1
-
-        if not os.path.isdir(html_output_dir):
-            lookatme.config.get_log().error(
-                "Html output path is not a directory! {!r}".format(html_output_dir)
-            )
-
-        parsed_options = _parse_html_options(html_options, DEFAULT_HTML_OPTIONS)
-        pres.to_html(html_output_dir, options=parsed_options)
+    
+    if len(output_options) == 1 and output_options[0] in ("help", "list"):
+        lookatme.output.print_output_options_help()
+        return 1
+    
+    if output_path is not None:
+        parsed_out_opts = lookatme.output.parse_options(output_options)
+        lookatme.output.output_pres(pres, output_path, output_format, parsed_out_opts)
         return 0
 
     try:
@@ -257,8 +254,12 @@ def _parse_html_options(options: List[str], default: Dict):
         key, val = parts
         if key not in default:
             continue
-        if isinstance(default[key], int):
+        if isinstance(default[key], bool):
+            val = (val.lower() == "true")
+        elif isinstance(default[key], int):
             val = int(val)
+        elif isinstance(default[key], list):
+            val = val.split(",")
         res[key] = val
     return res
 

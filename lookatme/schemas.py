@@ -88,7 +88,7 @@ class BulletsSchema(Schema):
                 TextStyleFieldSchema(),
                 dump_default=TextStyleFieldSchema().dump(
                     {
-                        "text": "⁃",
+                        "text": "‣",
                         "fg": "bold",
                         "bg": "",
                     }
@@ -118,7 +118,7 @@ class BulletsSchema(Schema):
                 TextStyleFieldSchema(),
                 dump_default=TextStyleFieldSchema().dump(
                     {
-                        "text": "⁃",
+                        "text": "‣",
                         "fg": "bold",
                         "bg": "",
                     }

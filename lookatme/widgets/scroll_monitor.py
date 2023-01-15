@@ -33,7 +33,7 @@ class ScrollMonitor(urwid.Frame):
         super().__init__(self.main_widget)
 
     def render(self, size, focus: bool = True):
-        if not self.scrollbar.should_display(size):
+        if not self.scrollbar.should_display((size[0]-1, size[1])):
             return super().render(size, focus)
 
         width, height = size
