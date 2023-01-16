@@ -10,7 +10,7 @@ import logging
 import os
 import tempfile
 import traceback
-from typing import Dict, Optional, List
+from typing import Optional, List
 
 import click
 
@@ -19,12 +19,9 @@ import lookatme.config
 import lookatme.log
 import lookatme.tui
 import lookatme.tutorial
-from lookatme.pres import Presentation, DEFAULT_HTML_OPTIONS
+from lookatme.pres import Presentation
 from lookatme.schemas import StyleSchema
 import lookatme.output
-
-
-TO_HTML_DEFAULT_VALUE = "USE_THE_SLIDE_SOURCE_WITH_HTML_EXTENSION"
 
 
 @click.command("lookatme")
@@ -114,11 +111,9 @@ TO_HTML_DEFAULT_VALUE = "USE_THE_SLIDE_SOURCE_WITH_HTML_EXTENSION"
     "output_format",
     required=False,
     default=None,
-    metavar="FORMAT",
-    show_default=True,
     type=click.Choice(lookatme.output.get_all_formats()),
     help="The output format to convert the markdown to. See also --output and "
-    "--opt. Additional dependencies may be required"
+    f"--opt.{lookatme.output.get_available_to_install_msg()}",
 )
 @click.option(
     "-o",
@@ -178,7 +173,7 @@ def main(
 
     if tutorial:
         if tutorial == "all":
-            tutors = ["general", "markdown block", "markdown inline"]
+            tutors = ["general", "markdown block", "markdown inline", "output"]
         else:
             tutors = [x.strip() for x in tutorial.split(",")]
 
@@ -213,11 +208,11 @@ def main(
     if dump_styles:
         print(StyleSchema().dumps(pres.styles))
         return 0
-    
+
     if len(output_options) == 1 and output_options[0] in ("help", "list"):
-        lookatme.output.print_output_options_help()
+        print(lookatme.output.get_output_options_help())
         return 1
-    
+
     if output_path is not None:
         parsed_out_opts = lookatme.output.parse_options(output_options)
         lookatme.output.output_pres(pres, output_path, output_format, parsed_out_opts)
@@ -243,25 +238,6 @@ def main(
             )
             click.echo(f"See {log_path} for detailed runtime logs")
         raise click.Abort()
-
-
-def _parse_html_options(options: List[str], default: Dict):
-    res = {}
-    for option_str in options:
-        parts = [x.strip() for x in option_str.split("=", 1)]
-        if len(parts) != 2:
-            continue
-        key, val = parts
-        if key not in default:
-            continue
-        if isinstance(default[key], bool):
-            val = (val.lower() == "true")
-        elif isinstance(default[key], int):
-            val = int(val)
-        elif isinstance(default[key], list):
-            val = val.split(",")
-        res[key] = val
-    return res
 
 
 if __name__ == "__main__":

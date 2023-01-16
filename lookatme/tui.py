@@ -590,7 +590,7 @@ class MarkdownTui(urwid.Frame):
         footer_canvas = self.get_footer().render((width,), False)
 
         return header_canvas, body_canvas, footer_canvas
-    
+
     def get_num_slide_body_lines(self, size: Tuple[int, int]) -> int:
         width, height = size
 

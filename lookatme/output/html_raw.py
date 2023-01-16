@@ -66,11 +66,11 @@ class KeypressEmulator(KeypressEmulatorBase):
 class HtmlRawScreenshotOutputFormat(BaseOutputFormat):
     NAME = "html_raw"
     DEFAULT_OPTIONS = {
-        "width": 100,
-        "height": 30,
+        "cols": 100,
+        "rows": 30,
         "keys": ["show-all"],
         "render_images": False,
-        "delay_default": 500,
+        "delay_default": 1000,
         "delay_scroll": 100,
     }
 
@@ -92,8 +92,8 @@ class HtmlRawScreenshotOutputFormat(BaseOutputFormat):
         pres.tui.loop.screen = HtmlScreenshotScreen(
             self.draw_screen_callback,
             keys=KeypressEmulator(keys, pres, self.opt("delay_default")),
-            width=self.opt("width"),
-            height=self.opt("height"),
+            cols=self.opt("cols"),
+            rows=self.opt("rows"),
         )
         pres.tui.run()
 
@@ -113,10 +113,12 @@ class HtmlRawScreenshotOutputFormat(BaseOutputFormat):
         html.add_styles_to_context(context)
         styles = self.render_template("styles.template.css", context)
 
-        context.update({
-            "slide": slide_html,
-            "styles": styles,
-        })
+        context.update(
+            {
+                "slide": slide_html,
+                "styles": styles,
+            }
+        )
 
         single_slide_html = self.render_template("single_slide.template.html", context)
 

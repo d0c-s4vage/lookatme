@@ -3,7 +3,6 @@ Test the output of converting a slide deck to html
 """
 
 
-from functools import wraps
 import inspect
 from pathlib import Path
 from six.moves import StringIO  # type: ignore
@@ -16,6 +15,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 
+import lookatme.output
 from lookatme.pres import Presentation
 
 
@@ -49,7 +49,7 @@ def selenium_for_slide(markdown: str, style: Dict, complete: bool = False):
             setup_lookatme(tmpdir, mocker, style=full_style)
             input_stream = StringIO(embedded_style_markdown)
             pres = Presentation(input_stream)
-            pres.to_html(str(tmpdir))
+            lookatme.output.output_pres(pres, str(tmpdir), "html", {})
 
             cache_key = str((markdown, style, complete))
             if cache_key not in DRIVER_CACHE:
@@ -118,6 +118,10 @@ DEFAULT_STYLES = {
         },
     },
 }
+
+
+def test_html_output_defined():
+    assert "html" in lookatme.output.get_all_formats()
 
 
 @selenium_for_slide(BASIC_MARKDOWN, DEFAULT_STYLES)

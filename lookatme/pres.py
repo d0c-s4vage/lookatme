@@ -171,8 +171,11 @@ class Presentation(object):
             print("Bailing due to unacceptance of source-required extensions")
             exit(1)
 
-    def get_slide_scroll_lines(self, width: int, height: int) -> List[int]:
+    def get_slide_scroll_lines(self, width: int, height: int) -> int:
         """Return the number of lines that need to be scrolled for each slide"""
+        if self.tui is None:
+            raise RuntimeError("Tui was none")
+
         # make the slide_body.last_size get cached via the scrollbar
         # this ensures that we're using the correct width/height for the slide
         # body

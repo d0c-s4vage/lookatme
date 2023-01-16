@@ -5,7 +5,7 @@ Output an entire slide deck into an interactive html file
 
 from collections import OrderedDict
 import os
-from typing import Any, Tuple, List, Dict, Optional
+from typing import Any, Tuple, List, Optional
 
 
 import urwid
@@ -15,24 +15,24 @@ from lookatme.output.base import BaseOutputFormat
 from lookatme.pres import Presentation
 import lookatme.render.html as html
 import lookatme.utils.fs as fs_utils
+from lookatme.tutorial import tutor
 
 
 class HtmlSlideDeckOutputFormat(BaseOutputFormat):
     NAME = "html"
     DEFAULT_OPTIONS = {
-        "render_cols": 100,
-        "render_rows": 30,
+        "cols": 100,
+        "rows": 30,
         "title_delim": ":",
-        "images_to_html": True,
+        "render_images": True,
     }
 
     def do_format_pres(self, pres: Presentation, output_path: str):
         """ """
         slides_html, slides_titles = self._create_html(
             pres=pres,
-            output_path=output_path,
-            width=self.opt("render_cols"),
-            render_images=self.opt("images_to_html"),
+            width=self.opt("cols"),
+            render_images=self.opt("render_images"),
         )
 
         self._create_html_output(
@@ -43,7 +43,10 @@ class HtmlSlideDeckOutputFormat(BaseOutputFormat):
         )
 
     def _create_html(
-        self, pres: Presentation, output_path: str, width: int = 150, render_images: bool = True
+        self,
+        pres: Presentation,
+        width: int = 150,
+        render_images: bool = True,
     ) -> Tuple[List[Tuple[str, str, str]], List[Tuple[str, Optional[urwid.Canvas]]]]:
         pres.tui_init_sync()
         ctx = html.HtmlContext()
@@ -76,7 +79,6 @@ class HtmlSlideDeckOutputFormat(BaseOutputFormat):
             raw_slides_html.append((header_html, body_html, footer_html))
 
         return raw_slides_html, titles
-
 
     def _create_slide_nav(
         self,
@@ -119,7 +121,6 @@ class HtmlSlideDeckOutputFormat(BaseOutputFormat):
         self._render_nav_tree(ctx, nav)
         return ctx.get_html()
 
-
     def _create_slide_deck(self, slides_html: List[Tuple[str, str, str]]) -> str:
         ctx = html.HtmlContext()
         for slide_idx, (header_html, body_html, footer_html) in enumerate(slides_html):
@@ -134,7 +135,6 @@ class HtmlSlideDeckOutputFormat(BaseOutputFormat):
                     ctx.write(footer_html)
 
         return ctx.get_html()
-
 
     def _create_html_output(
         self,
@@ -151,12 +151,14 @@ class HtmlSlideDeckOutputFormat(BaseOutputFormat):
         script = self.render_template("script.template.js", context)
         styles = self.render_template("styles.template.css", context)
 
-        context.update({
-            "styles": styles,
-            "script": script,
-            "nav": slide_nav,
-            "slide_deck": slide_deck,
-        })
+        context.update(
+            {
+                "styles": styles,
+                "script": script,
+                "nav": slide_nav,
+                "slide_deck": slide_deck,
+            }
+        )
         single_page_html = self.render_template("single_page.template.html", context)
 
         static_dir = os.path.join(os.path.dirname(__file__), "html_static")
@@ -166,7 +168,6 @@ class HtmlSlideDeckOutputFormat(BaseOutputFormat):
         index_html_path = os.path.join(output_dir, "index.html")
         with open(index_html_path, "w") as f:
             f.write(single_page_html)
-
 
     def _render_nav_tree(self, ctx: html.HtmlContext, tree: OrderedDict):
         with ctx.use_tag("ul"):

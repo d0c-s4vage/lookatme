@@ -3,11 +3,11 @@ Defines utilities for testing lookatme
 """
 
 
-from functools import wraps
 import inspect
 from six.moves import StringIO  # type: ignore
 from typing import cast, Any, Dict, List, Optional, Tuple, Union
 import urwid
+
 
 from lookatme.render.context import Context
 import lookatme.config

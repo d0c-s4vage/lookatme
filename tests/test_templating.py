@@ -11,10 +11,10 @@ import json
 import pytest
 
 
-import lookatme.render.html.templating as templating
+import lookatme.templating as templating
 
 
-def test_basic_templating(mocker):
+def test_basic_templating(tmpdir):
     template_data = inspect.cleandoc(
         r"""
     This is a test {{variable}} {{variable}}
@@ -23,18 +23,17 @@ def test_basic_templating(mocker):
     """
     )
 
-    mocker.patch(
-        "lookatme.render.html.templating.get_template_data",
-        return_value=template_data,
-    )
+    md_path = tmpdir / "test.md"
+    with open(md_path, "w") as f:
+        f.write(template_data)
 
     context = {"variable": "A"}
-    res = templating.render("some_template.template.html", context)
+    res = templating.render(md_path, context)
 
     assert res == template_data.replace("{{variable}}", "A")
 
 
-def test_basic_templating_errors(mocker):
+def test_basic_templating_errors(tmpdir):
     template_data = inspect.cleandoc(
         r"""
     This is a test {{variable}} {{dne1}}
@@ -43,33 +42,31 @@ def test_basic_templating_errors(mocker):
     """
     )
 
-    mocker.patch(
-        "lookatme.render.html.templating.get_template_data",
-        return_value=template_data,
-    )
+    md_path = tmpdir / "test.md"
+    with open(md_path, "w") as f:
+        f.write(template_data)
 
     context = {"variable": "A"}
     with pytest.raises(ValueError) as e_info:
-        templating.render("some_template.template.html", context)
+        templating.render(md_path, context)
 
     assert "dne1" in str(e_info.value)
     assert "dne2" in str(e_info.value)
 
 
-def test_json_filter(mocker):
+def test_json_filter(tmpdir):
     template_data = inspect.cleandoc(
         r"""
     This is a test {{variable|json}} {{variable}}
     """
     )
 
-    mocker.patch(
-        "lookatme.render.html.templating.get_template_data",
-        return_value=template_data,
-    )
+    md_path = tmpdir / "test.md"
+    with open(md_path, "w") as f:
+        f.write(template_data)
 
     context = {"variable": "A"}
-    res = templating.render("some_template.template.html", context)
+    res = templating.render(md_path, context)
     assert res == (
         template_data.replace(
             "{{variable|json}}", json.dumps(context["variable"])

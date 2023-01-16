@@ -6,7 +6,6 @@ import urwid
 from urwid.signals import connect_signal
 
 
-import lookatme.config as config
 from lookatme.widgets.smart_attr_spec import SmartAttrSpec
 
 
@@ -54,9 +53,10 @@ class Scrollbar(urwid.Widget):
         self._invalidate()
         return res
 
-    def update_scroll_percent(self, size: Tuple[int, int], focus: bool = False) -> Tuple[int, int, int, int]:
-        """Update the scroll percent of the monitored ListBox
-        """
+    def update_scroll_percent(
+        self, size: Tuple[int, int], focus: bool = False
+    ) -> Tuple[int, int, int, int]:
+        """Update the scroll percent of the monitored ListBox"""
         before, visible, after, total = self._get_listbox_visible_scroll_range()
         scroll_percent = before / float(before + after)
         self.scroll_percent = max(0.0, scroll_percent)

@@ -10,27 +10,29 @@ from typing import List, Optional, Tuple
 import urwid
 
 
-import lookatme.render.html as html
-
-
 class KeypressEmulatorBase:
     def get_next(self) -> Optional[Tuple[int, int, List[str]]]:
         raise NotImplementedError("get_next is not implemented")
-    
+
     def get_default_delay(self) -> int:
         raise NotImplementedError("get_default_delay is not implemented")
 
 
 class HtmlScreenshotScreen(urwid.BaseScreen):
-    """
-    """
+    """ """
 
-    def __init__(self, draw_screen_callback, keys: Optional[KeypressEmulatorBase] = None, width: int = 150, height: int = 100):
+    def __init__(
+        self,
+        draw_screen_callback,
+        keys: Optional[KeypressEmulatorBase] = None,
+        cols: int = 150,
+        rows: int = 100,
+    ):
         super().__init__()
 
         self.keys = keys
-        self.width = width
-        self.height = height
+        self.cols = cols
+        self.rows = rows
         self._draw_screen_callback = draw_screen_callback
 
         self.last_info = {
@@ -42,7 +44,7 @@ class HtmlScreenshotScreen(urwid.BaseScreen):
 
     def set_terminal_properties(self, *args, **kwargs):
         pass
-    
+
     def set_mouse_tracking(self, enable=True):
         pass
 
@@ -56,8 +58,8 @@ class HtmlScreenshotScreen(urwid.BaseScreen):
         pass
 
     def get_cols_rows(self):
-        return (self.width, self.height)
-    
+        return (self.cols, self.rows)
+
     def get_input(self, raw_keys=False):
         if not self.keys:
             raise urwid.ExitMainLoop()
@@ -67,11 +69,13 @@ class HtmlScreenshotScreen(urwid.BaseScreen):
             raise urwid.ExitMainLoop()
 
         last_key_idx, last_delay, last_key = next_key_info
-        self.last_info.update({
-            "key_idx": last_key_idx,
-            "delay": last_delay,
-            "key": last_key,
-        })
+        self.last_info.update(
+            {
+                "key_idx": last_key_idx,
+                "delay": last_delay,
+                "key": last_key,
+            }
+        )
         if raw_keys:
             return (last_key, [])
 

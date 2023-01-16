@@ -4,6 +4,7 @@ Base module for lookatme output formats
 
 
 import os
+import shutil
 from typing import Any, Dict, Optional, Type
 
 
@@ -19,7 +20,11 @@ DEFINED_TYPES: Dict[str, Type["BaseOutputFormat"]] = {}
 
 class OutputOptionError(ValueError):
     pass
-    
+
+
+class MissingExtraDependencyError(Exception):
+    pass
+
 
 class BaseOutputFormatMeta(type):
     def __new__(cls, subclass_name, bases, attrs):
@@ -27,7 +32,7 @@ class BaseOutputFormatMeta(type):
 
         res_name = getattr(res, "NAME", None)
         if res_name is not None:
-            DEFINED_TYPES[res_name] = res # type: ignore
+            DEFINED_TYPES[res_name] = res  # type: ignore
 
         return res
 
@@ -35,6 +40,7 @@ class BaseOutputFormatMeta(type):
 class BaseOutputFormat(metaclass=BaseOutputFormatMeta):
     NAME = None
     DEFAULT_OPTIONS = {}
+    REQUIRED_BINARIES = []
 
     def __init__(self):
         self._curr_options = None
@@ -44,6 +50,15 @@ class BaseOutputFormat(metaclass=BaseOutputFormatMeta):
         """Perform the action of outputting the presentation to this specific
         output format.
         """
+        for required_bin in self.REQUIRED_BINARIES:
+            if not shutil.which(required_bin):
+                raise RuntimeError(
+                    (
+                        f"Could not convert to {self.NAME} format, "
+                        f"required binary {required_bin!r} not found"
+                    )
+                )
+
         self.log.info(f"Converting presentation to {self.NAME} format")
         self._curr_options = options
         self.do_format_pres(pres, output_path)
@@ -58,7 +73,7 @@ class BaseOutputFormat(metaclass=BaseOutputFormatMeta):
         output format.
         """
         raise NotImplementedError("do_format_pres is not implemented")
-    
+
     def opt(self, option_name: str, category: Optional[str] = None):
         """Fetch the oiption named ``option_name``. If the category isn't
         specified, the current formatter's options are used.
@@ -76,4 +91,6 @@ class BaseOutputFormat(metaclass=BaseOutputFormatMeta):
                     return self.DEFAULT_OPTIONS[option_name]
             return opts[full_option]
         except KeyError:
-            raise OutputOptionError(f"Option {option_name} ({full_option!r}) does not exist")
+            raise OutputOptionError(
+                f"Option {option_name} ({full_option!r}) does not exist"
+            )

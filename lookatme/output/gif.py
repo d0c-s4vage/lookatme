@@ -13,8 +13,14 @@ import tempfile
 from typing import Dict, List, Tuple
 
 
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+from lookatme.output.base import BaseOutputFormat, MissingExtraDependencyError
+
+
+try:
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+except:
+    raise MissingExtraDependencyError
 
 
 import lookatme.config as config
@@ -26,10 +32,10 @@ from lookatme.pres import Presentation
 class GifOutputFormat(BaseOutputFormat):
     NAME = "gif"
     DEFAULT_OPTIONS = copy.deepcopy(HtmlRawScreenshotOutputFormat.DEFAULT_OPTIONS)
-    
+    REQUIRED_BINARIES = ["convert"]
+
     def do_format_pres(self, pres: Presentation, output_path: str):
-        """
-        """
+        """ """
         fwd_options = {}
         fwd_options.update(self._curr_options or {})
 
@@ -51,7 +57,11 @@ class GifOutputFormat(BaseOutputFormat):
         for screen_file in screen_files:
             screen_file_noext, _ = os.path.splitext(os.path.basename(screen_file))
 
-            info = dict(re.findall(r'(?:^|_)(?P<attr>[a-zA-Z]+):(?P<val>[^_\.]*)', screen_file_noext))
+            info = dict(
+                re.findall(
+                    r"(?:^|_)(?P<attr>[a-zA-Z]+):(?P<val>[^_\.]*)", screen_file_noext
+                )
+            )
             screen_infos.append((info, screen_file))
 
         screen_infos.sort(key=lambda x: int(x[0]["screen"]))
@@ -75,11 +85,14 @@ class GifOutputFormat(BaseOutputFormat):
             pngs.append(screenshot_path)
 
         return pngs
-    
+
     def _pngs_to_gif(self, output_path, tmpd: str, screen_infos, pngs):
         convert_cmd = [
             "convert",
-            "-font", os.path.join(tmpd, "static", "fonts", "DejaVu", "DejaVu Sans Mono for Powerline.ttf"),
+            "-font",
+            os.path.join(
+                tmpd, "static", "fonts", "DejaVu", "DejaVu Sans Mono for Powerline.ttf"
+            ),
         ]
 
         for idx, screenshot in enumerate(pngs):
@@ -90,13 +103,12 @@ class GifOutputFormat(BaseOutputFormat):
 
             convert_cmd += ["-delay", str(delay), screenshot]
 
-        convert_cmd += [
-            "-loop", "0",
-            output_path
-        ]
+        convert_cmd += ["-loop", "0", output_path]
 
         self.log.info("Converting png files to final gif")
-        proc = subprocess.Popen(convert_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        proc = subprocess.Popen(
+            convert_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
         stdout, _ = proc.communicate()
 
         if proc.returncode != 0:

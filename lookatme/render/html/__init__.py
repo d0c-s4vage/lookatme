@@ -3,13 +3,9 @@ This module renders lookatme slides to HTML
 """
 
 
-from collections import deque, OrderedDict
+from collections import deque
 from contextlib import contextmanager
-import glob
-import inspect
-import os
-import shutil
-from typing import Any, Dict, List, Optional, OrderedDict, Tuple
+from typing import Dict, Optional
 
 
 import urwid
@@ -139,7 +135,10 @@ def _keep_text(text_idx: int, text: str, keep_range: range) -> str:
 
 
 def canvas_to_html(
-    ctx: HtmlContext, canvas: urwid.Canvas, only_keep: Optional[str] = None, render_images: bool = True
+    ctx: HtmlContext,
+    canvas: urwid.Canvas,
+    only_keep: Optional[str] = None,
+    render_images: bool = True,
 ):
     for idx, row in enumerate(canvas.content()):
         only_keep_range = None
@@ -174,28 +173,3 @@ def add_styles_to_context(context: Dict):
     flattened_styles = {}
     utils.flatten_dict(styles, flattened_styles, ["styles"])
     context.update(flattened_styles)
-
-
-def create_html_single_slide(output_dir: str, canvas: urwid.Canvas, output_name: str, render_images: bool = True):
-    ctx = HtmlContext()
-    canvas_to_html(ctx, canvas, render_images=render_images)
-    slide_html = ctx.get_html()
-
-    context = {}
-    _add_styles_to_context(context)
-    styles = templating.render("styles.template.css", context)
-
-    context.update({
-        "slide": slide_html,
-        "styles": styles,
-    })
-
-    single_slide_html = templating.render("single_slide.template.html", context)
-
-    static_dir = os.path.join(os.path.dirname(__file__), "static")
-    dst_static_dir = os.path.join(output_dir, "static")
-    utils.fs.copy_tree_update(static_dir, dst_static_dir)
-
-    output_path = os.path.join(output_dir, output_name)
-    with open(output_path, "w") as f:
-        f.write(single_slide_html)
