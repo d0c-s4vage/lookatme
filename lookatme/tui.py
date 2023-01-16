@@ -307,8 +307,13 @@ class MarkdownTui(urwid.Frame):
         )
 
     def set_slide_idx(self, slide_idx: int) -> Slide:
+        if slide_idx == self.curr_slide.number:
+            return self.curr_slide
+
+        self._cache_slide_scroll_state()
         self.curr_slide = self.pres.slides[slide_idx]
         self.update()
+
         return self.curr_slide
 
     def prep_pres(self, pres, start_idx=0):
@@ -542,9 +547,7 @@ class MarkdownTui(urwid.Frame):
         if new_slide_num == self.curr_slide.number:
             return
 
-        self._cache_slide_scroll_state()
-        self.curr_slide = self.pres.slides[new_slide_num]
-        self.update()
+        self.set_slide_idx(new_slide_num)
 
     def _cache_slide_scroll_state(self):
         self._slide_focus_cache[self.curr_slide.number] = (
@@ -587,6 +590,20 @@ class MarkdownTui(urwid.Frame):
         footer_canvas = self.get_footer().render((width,), False)
 
         return header_canvas, body_canvas, footer_canvas
+
+    def get_num_slide_body_lines(self, size: Tuple[int, int]) -> int:
+        width, height = size
+
+        if not self.slide_body.body.ends_visible((width, height), True):
+            # for the scrollbar
+            width -= 1
+
+        total = 0
+        for widget in self.slide_body.body:
+            w_rows = widget.rows((width,))
+            total += w_rows
+
+        return total
 
 
 def create_tui(pres, start_slide=0, no_threads=False):

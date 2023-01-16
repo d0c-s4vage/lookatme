@@ -7,7 +7,7 @@ from __future__ import annotations
 import contextlib
 import copy
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import urwid
 
@@ -166,7 +166,7 @@ class Context:
 
         res = []
 
-        idx = 0
+        idx = from_idx
         curr_inlines = []
         while idx < len(self._unwind_tokens):
             is_inline, token = self._unwind_tokens[idx]

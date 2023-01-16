@@ -5,9 +5,14 @@ Functions and sources for the markdown tutorial slides!
 import inspect
 import re
 from collections import OrderedDict
+import shlex
+import sys
 from typing import Callable, List, Optional, Union
 
+
+from six.moves import StringIO  # type: ignore
 import yaml
+
 
 import lookatme
 import lookatme.config as config
@@ -56,6 +61,7 @@ class Tutor:
                 contents, attrs, rendered_example
             ),
             "STYLE": self._handle_style_yaml,
+            "CLI": self._handle_cli_output,
         }
 
         res_md = []
@@ -114,6 +120,38 @@ class Tutor:
                 path=relpath,
                 lineno=lineno,
             ),
+        )
+
+    def _handle_cli_output(self, contents, attrs: str) -> str:
+        from lookatme.__main__ import main
+
+        contents = contents.strip()
+        args = shlex.split(contents)
+        if args[0] == "lookatme":
+            args = args[1:]
+
+        orig_stdout = sys.stdout
+        tmp_stdout = StringIO("")
+        sys.stdout = tmp_stdout
+
+        main(["--opt", "help"], standalone_mode=False)
+        sys.stdout = orig_stdout
+
+        output = tmp_stdout.getvalue()
+
+        return inspect.cleandoc(
+            r"""
+            ```bash
+            {command}
+
+            ##### Output
+
+            {output}
+            ```
+        """
+        ).format(
+            command=contents,
+            output=output,
         )
 
     def _handle_show_and_render(

@@ -6,7 +6,6 @@ import urwid
 from urwid.signals import connect_signal
 
 
-import lookatme.config as config
 from lookatme.widgets.smart_attr_spec import SmartAttrSpec
 
 
@@ -23,6 +22,8 @@ class Scrollbar(urwid.Widget):
 
     def __init__(self, listbox: urwid.ListBox):
         super().__init__()
+
+        self.scroll_percent = 1.0
 
         self.slider_top_chars = ["⡀", "⣀", "⣠", "⣤", "⣦", "⣶", "⣾", "⣿"]
         self.slider_bottom_chars = ["⠈", "⠉", "⠋", "⠛", "⠻", "⠿", "⡿", "⣿"]
@@ -52,6 +53,16 @@ class Scrollbar(urwid.Widget):
         self._invalidate()
         return res
 
+    def update_scroll_percent(
+        self, size: Tuple[int, int], focus: bool = False
+    ) -> Tuple[int, int, int, int]:
+        """Update the scroll percent of the monitored ListBox"""
+        before, visible, after, total = self._get_listbox_visible_scroll_range()
+        scroll_percent = before / float(before + after)
+        self.scroll_percent = max(0.0, scroll_percent)
+
+        return before, visible, after, total
+
     def render(self, size: Tuple[int, int], focus: bool = False):
         """Please use `needs_scrollbar()` if manually deciding to render the
         Scrollbar (e.g. if you're overlaying the rendered results onto a canvas)
@@ -61,9 +72,7 @@ class Scrollbar(urwid.Widget):
         if not self.slider_bottom_chars:
             self.slider_bottom_chars.append(self.slider_fill_char)
 
-        before, visible, after, total = self._get_listbox_visible_scroll_range()
-        scroll_percent = before / float(before + after)
-        scroll_percent = max(0.0, scroll_percent)
+        before, visible, after, total = self.update_scroll_percent(size, focus)
 
         _, height = size
         total_chars = height
@@ -72,7 +81,7 @@ class Scrollbar(urwid.Widget):
         fill_count = slider_height
 
         slider_end_idx_f = (
-            slider_height + (total_chars - slider_height) * scroll_percent
+            slider_height + (total_chars - slider_height) * self.scroll_percent
         )
         slider_end_val = slider_end_idx_f - math.floor(slider_end_idx_f)
 

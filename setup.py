@@ -3,8 +3,39 @@ Setup for lookatme
 """
 
 
-from setuptools import setup, find_namespace_packages
+import glob
 import os
+from setuptools import setup, find_namespace_packages
+from typing import Dict, List
+
+
+def load_requirements(file: str) -> List[str]:
+    req_path = os.path.join(os.path.dirname(__file__), file)
+    with open(req_path, "r") as f:
+        required = f.read().splitlines()
+    return required
+
+
+def extra_requirements() -> Dict:
+    res = {
+        # user-facing "all" (excluding test deps)
+        "all": [],
+        # dev-facing "all" (including test deps)
+        "dev": [],
+    }
+    reqs = glob.glob(os.path.join(os.path.dirname(__file__), "requirements", "*.txt"))
+
+    for req_file in reqs:
+        extra_name = os.path.basename(req_file).replace(".txt", "")
+        with open(req_file, "r") as f:
+            reqs = f.read().splitlines()
+        res[extra_name] = reqs
+
+        if extra_name != "test":
+            res["all"] += reqs
+        res["dev"] += reqs
+
+    return res
 
 
 req_path = os.path.join(os.path.dirname(__file__), "requirements.txt")
@@ -28,7 +59,7 @@ setup(
     long_description_content_type="text/markdown",
     python_requires=">=3.6",
     packages=find_namespace_packages(exclude=["docs", ".gitignore", "README.md", "tests"]),
-    install_requires=required,
+    install_requires=load_requirements("requirements.txt"),
     include_package_data=True,
     classifiers=[
         "Environment :: Console",
@@ -44,8 +75,7 @@ setup(
     entry_points={
         "console_scripts": [
             "lookatme = lookatme.__main__:main",
-            "lam = lookatme.__main__:main",
-            "witnessme = lookatme.__main__:main",
         ]
     },
+    extras_require=extra_requirements(),
 )

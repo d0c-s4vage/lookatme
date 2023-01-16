@@ -16,8 +16,11 @@ STYLE: Dict[str, Any] = {}
 
 
 def get_log() -> logging.Logger:
+    global LOG
     if LOG is None:
-        raise Exception("LOG was None")
+        import lookatme.log
+
+        LOG = lookatme.log.create_log()
     return LOG
 
 

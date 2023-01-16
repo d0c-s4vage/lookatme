@@ -4,5 +4,6 @@ include LICENSE
 include LICENSE*
 include setup.*
 include requirements.txt
-recursive-include lookatme/render/html/static/ *
-recursive-include lookatme/render/html/templates/ *
+recursive-include requirements/*.txt
+recursive-include lookatme/output/templates/ *
+recursive-include lookatme/output/html_static/ *
