@@ -5,7 +5,7 @@ representations
 
 
 import copy
-import pygments
+import dataclasses as dc
 import pygments.styles
 import pygments.lexers
 import re
@@ -410,6 +410,47 @@ def render_blockquote_close(token: Dict, ctx: Context):
     ctx.container_pop()
 
 
+@dc.dataclass
+class FenceInfo:
+    lang: str = "text"
+    line_numbers: bool = False
+    start_line_number: int = 1
+    hl_lines: List = dc.field(default_factory=list)
+    raw_attrs: Dict[str, str] = dc.field(default_factory=dict)
+    raw_curly: str = ""
+
+
+def parse_fence_info(info: str) -> FenceInfo:
+    lang = "text"
+    line_numbers = False
+    start_line_number = 1
+    hl_lines = []
+    raw_attrs = {}
+    raw_curly = ""
+
+    match = re.match(r"^(?P<lang>[^{\s]+)?\s*(\{(?P<curly_extra>[^{]+)\})?", info)
+    if match is not None:
+        full_info = match.groupdict()
+        if full_info["lang"] is not None:
+            lang = full_info["lang"]
+        if full_info["curly_extra"] is not None:
+            raw_curly = full_info["curly_extra"]
+            raw_attrs = _parse_curly_extra(full_info["curly_extra"])
+            lang = raw_attrs.get("lang", lang)
+            line_numbers = raw_attrs.get("line_numbers", line_numbers)
+            start_line_number = raw_attrs.get("start_line_number", start_line_number)
+            hl_lines = raw_attrs.get("hl_lines", [])
+
+    return FenceInfo(
+        lang=lang,
+        line_numbers=line_numbers,
+        start_line_number=start_line_number,
+        hl_lines=hl_lines,
+        raw_attrs=raw_attrs,
+        raw_curly=raw_curly,
+    )
+
+
 def _parse_hl_lines(values) -> List:
     """Parse comma-separated lists of line ranges to highlight"""
     res = []
@@ -450,7 +491,7 @@ def _parse_curly_extra(data: str) -> Dict[str, Any]:
     matches = re.finditer(
         r"""\s*
         (
-            (?P<attr>[a-zA-Z-_]+)
+            (?P<attr>[a-zA-Z-_\.]+)
                 \s*=\s*
                 (
                     "(?P<doubleQuoteVal>[^"]*)"
@@ -486,6 +527,8 @@ def _parse_curly_extra(data: str) -> Dict[str, Any]:
                 "line_numbers",
             ):
                 res["line_numbers"] = True
+            else:
+                res["." + val] = True
         elif info["attr"]:
             attr = info["attr"].lower()
             val = info["plainVal"] or info["doubleQuoteVal"] or info["singleQuoteVal"]
@@ -493,6 +536,8 @@ def _parse_curly_extra(data: str) -> Dict[str, Any]:
                 res["start_line_number"] = int(val)
             elif attr in ("hl_lines", "hllines", "highlight", "highlight_lines"):
                 res["hl_lines"] = _parse_hl_lines(val)
+            else:
+                res[attr] = val
 
     return res
 
@@ -569,23 +614,7 @@ def render_fence(token: Dict, ctx: Context):
     ctx.ensure_new_block()
 
     info = token.get("info", None) or "text"
-
-    match = re.match(r"^(?P<lang>[^{\s]+)?\s*(\{(?P<curly_extra>[^{]+)\})?", info)
-    lang = "text"
-    line_numbers = False
-    start_line_number = 1
-    hl_lines = []
-
-    if match is not None:
-        full_info = match.groupdict()
-        if full_info["lang"] is not None:
-            lang = full_info["lang"]
-        if full_info["curly_extra"] is not None:
-            curly_extra = _parse_curly_extra(full_info["curly_extra"])
-            lang = curly_extra.get("lang", lang)
-            line_numbers = curly_extra.get("line_numbers", line_numbers)
-            start_line_number = curly_extra.get("start_line_number", start_line_number)
-            hl_lines = curly_extra.get("hl_lines", [])
+    fence_info = parse_fence_info(info)
 
     curr_spec = ctx.spec_text
     default_fg = "default"
@@ -600,29 +629,16 @@ def render_fence(token: Dict, ctx: Context):
 
     code = codeblock.CodeBlock(
         source=token["content"],
-        lang=lang,
+        lang=fence_info.lang,
         style_name=config.get_style()["code"]["style"],
-        line_numbers=line_numbers,
-        start_line_number=start_line_number,
-        hl_lines=hl_lines,
+        line_numbers=fence_info.line_numbers,
+        start_line_number=fence_info.start_line_number,
+        hl_lines=fence_info.hl_lines,
         default_fg=default_fg,
         bg_override=bg_override,
     )
 
     ctx.widget_add(code)
-
-
-#
-#    text = token["content"]
-#    res = pygments_render.render_text(
-#        text,
-#        lang=lang,
-#        line_numbers=line_numbers,
-#        start_line_number=start_line_number,
-#        hl_lines=hl_lines,
-#    )
-#
-#    ctx.widget_add(res)
 
 
 class TableTokenExtractor:

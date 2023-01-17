@@ -6,7 +6,10 @@ Defines Presentation specific objects
 import os
 import threading
 import time
-from typing import List
+from typing import IO, Optional
+
+
+from six.moves import StringIO  # type: ignore
 
 
 import lookatme.ascii_art
@@ -50,7 +53,8 @@ class Presentation(object):
 
     def __init__(
         self,
-        input_stream,
+        input_stream: Optional[IO] = None,
+        input_str: Optional[str] = None,
         theme: str = "dark",
         live_reload=False,
         single_slide=False,
@@ -65,6 +69,14 @@ class Presentation(object):
         :param stream input_stream: An input stream from which to read the
             slide data
         """
+        if input_stream is None and input_str is None:
+            raise ValueError(
+                "Cannot create presentation without input_stream or input_str"
+            )
+
+        if input_stream is None:
+            input_stream = StringIO(input_str)
+
         self.preload_extensions = preload_extensions or []
         self.input_filename = None
         if hasattr(input_stream, "name"):
