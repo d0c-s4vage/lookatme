@@ -109,7 +109,7 @@ class Tutor:
         _, lineno = inspect.getsourcelines(self.impl_fn)
 
         version = "v" + lookatme.VERSION
-        if version == "v{{VERSION}}":
+        if version == "vfeature-208-render_pr_issue_markdown":
             version = "main"
 
         return "[{module}.{fn_name}]({link})".format(

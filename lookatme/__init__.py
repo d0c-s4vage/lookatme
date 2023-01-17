@@ -1,1 +1,1 @@
-VERSION = __version__ = "{{VERSION}}"
+VERSION = __version__ = "feature-208-render_pr_issue_markdown"

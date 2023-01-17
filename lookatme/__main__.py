@@ -160,7 +160,7 @@ def main(
 ):
     """lookatme - An interactive, terminal-based markdown presentation tool.
 
-    See https://lookatme.readthedocs.io/en/v{{VERSION}} for documentation
+    See https://lookatme.readthedocs.io/en/vfeature-208-render_pr_issue_markdown for documentation
     """
     lookatme.config.LOG = lookatme.log.create_log(log_path)
     if debug:
