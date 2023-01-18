@@ -1,0 +1,103 @@
+name: Create new Release
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: false
+        default: "${{ github.ref }}"
+      ref_name:
+        type: string
+        required: false
+        default: "${{ github.ref_name }}"
+  push:
+    tags:
+      - 'v*.*.*'
+      - '!*-grape'
+
+jobs:
+  publish_to_pypi:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "${{ inputs.ref_name }}"
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Install pypa/build
+        run: python -m pip install build --user
+      - name: Build binary wheel + tarball
+        run: python -m build --sdist --wheel --outdir dist/
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+  create_github_release:
+    name: Create new Release on GitHub
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            function semVerSort(a, b) {
+              const aParts = a.split(/\.|rc/).map(x => x.replace(/^[^\d]*/, ''));
+              const bParts = b.split(/\.|rc/).map(x => x.replace(/^[^\d]*/, ''));
+
+              let max = Math.max(aParts.length, bParts.length);
+              let aPart = 0;
+              let bPart = 0;
+              for (let idx = 0; idx < max; idx++) {
+                aPart = parseInt(aParts[idx]) || Number.MIN_VALUE;
+                bPart = parseInt(bParts[idx]) || Number.MIN_VALUE;
+
+                if (aPart != bPart) {
+                  break;
+                }
+              }
+
+              return aPart - bPart;
+            }
+
+            let currTag = "${{ inputs.ref_name }}";
+            let currIsRc = (currTag.indexOf("rc") != -1);
+
+            const {data: allTags} = await github.rest.repos.listTags({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const allTagNames = allTags.map(x => x.name);
+
+            const sortedTags = allTagNames.sort(semVerSort).reverse();
+            const relevantTags = sortedTags.filter(x => (currIsRc ? true : x.indexOf("rc") == -1));
+
+            let releaseNoteOptions = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: "${{ inputs.ref_name }}",
+            };
+
+            let currTagIdx = relevantTags.indexOf(currTag);
+            if (currTagIdx != -1 && currTagIdx + 1 < relevantTags.length) {
+              releaseNoteOptions.previous_tag_name = relevantTags[currTagIdx + 1];
+            }
+            core.info(`releaseNoteOptions: ${JSON.stringify(releaseNoteOptions)}`);
+
+            const {data: releaseNotes} = await github.rest.repos.generateReleaseNotes(
+              releaseNoteOptions
+            );
+
+            const {data: response} = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: "${{ inputs.ref_name }}",
+              body: releaseNotes.body,
+              prerelease: currIsRc,
+            });

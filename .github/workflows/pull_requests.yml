@@ -1,0 +1,39 @@
+name: New Pull Request Automation
+on:
+  pull_request:
+    types: [ opened, reopened ]
+
+jobs:
+  add_labels:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    if: startsWith(github.head_ref, 'feature-') || startsWith(github.head_ref, 'hotfix-')
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            let refName = "${{ github.head_ref }}";
+            core.info("Ref name: " + refName);
+            let labels = [];
+            if (refName.startsWith("feature-")) {
+              core.info("Is enhancement (feature)");
+              labels.push("enhancement");
+            } else if (refName.startsWith("hotfix-")) {
+              core.info("Is bug (hotfix)");
+              labels.push("bug");
+            }
+
+            core.info("labels: >> " + labels.join(",") + " <<");
+            if (labels.length == 0) {
+              return;
+            }
+
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: labels,
+            })
