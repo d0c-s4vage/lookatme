@@ -1,0 +1,48 @@
+name: Lookatme Preview
+on:
+  issue_comment:
+    types:
+      - created
+
+
+jobs:
+  generate_preview:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    if: ((github.event.issue && contains(github.event.issue.title, "3.0")) || ( github.event.pull_request && contains(github.event.pull_request.title, "3.0"))) && contains(github.event.comment.body, "gif=true")
+
+    services:
+      selenium:
+        image: selenium/standalone-chrome
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -yq imagemagick # needed for the convert command
+          python -m pip install --upgrade pip
+          pip install .[dev]
+      - name: Generate Preview
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require("fs");
+
+            let comment = github.rest.issues.getComment({
+              comment_id: payload.comment.id,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            fs.writeFile("input.md", comment.body, err => {
+              if (err) {
+                core.error("Could not write comment markdown to file");
+              }
+            });
+
+            await exec.exec("bin/md_gif_extractor.py", ["-i", "input.md", "-o", "output.gif"])
