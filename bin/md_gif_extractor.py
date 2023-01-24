@@ -2,6 +2,7 @@
 
 import click
 import inspect
+import os
 import tempfile
 
 
@@ -47,12 +48,16 @@ def main(input_stream, output_stream):
 
         gif_options = lookatme.output.parse_options(fence_info.raw_curly.split())
 
-        with tempfile.NamedTemporaryFile(prefix="lookatme-") as f:
-            lookatme.output.output_pres(pres, f.name, "gif", gif_options)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_output = os.path.join(tmpdir, "extracted.gif")
+            lookatme.output.output_pres(pres, tmp_output, "gif", gif_options)
 
-            gif_data = f.read()
+            with open(tmp_output, "rb") as f:
+                gif_data = f.read()
 
         output_stream.write(gif_data)
+
+    click.echo(f"Extracted gif at: {output_stream.name}")
 
 
 if __name__ == "__main__":
