@@ -34,7 +34,7 @@ jobs:
 
 
       - name: Upload pages artifacts
-        uses: actions/upload-github-pages-artifact@1.0.7
+        uses: actions/upload-pages-artifact@1.0.7
         with:
           name: github-pages
           path: tutorial_files
@@ -54,4 +54,4 @@ jobs:
     steps:
     - name: Deploy pages
       id: deployment
-      uses: actions/deploy-github-pages-site@v1.2.3
+      uses: actions/deploy-pages@v1.2.3
