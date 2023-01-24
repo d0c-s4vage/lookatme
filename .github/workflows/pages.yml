@@ -1,0 +1,57 @@
+name: Pages
+
+on:
+  push:
+    # branches: [ "3.0-dev" ]
+    branches: [ "feature-196-new_documentation" ]
+  pull_request:
+    # branches: [ "3.0-dev" ]
+    branches: [ "feature-196-new_documentation" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      selenium:
+        image: selenium/standalone-chrome
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Python dependencies
+        run: |
+          pip install .[dev]
+
+      - name: Build the pages
+        run: |
+          lookatme --tutorial --output tutorial_files --format html
+
+
+      - name: Upload pages artifacts
+        uses: actions/upload-github-pages-artifact@1.0.7
+        with:
+          name: github-pages
+          path: tutorial_files
+
+  deploy:
+    needs: build
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy pages
+      id: deployment
+      uses: actions/deploy-github-pages-site@v1.2.3
