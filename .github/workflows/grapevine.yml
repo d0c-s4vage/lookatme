@@ -64,10 +64,6 @@ jobs:
         run: |
           git push --delete origin "$VERSION_RAW"
 
-      - name: run other workflow
-        run: |
-          ls -la .github/workflows/
-
 
   run_main_version_workflow:
     needs: create-grape

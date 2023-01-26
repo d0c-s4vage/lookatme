@@ -51,6 +51,11 @@ jobs:
               await checkout30dev();
             }
 
+      - name: Configure ImageMagick
+        run: |
+          # get rid of the very strict defaults - let it do its thing
+          sudo rm /etc/ImageMagick*/policy.xml
+
       - name: Setup Python 3.10
         uses: actions/setup-python@v4
         with:

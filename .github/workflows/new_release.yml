@@ -16,6 +16,50 @@ on:
       - '!*-grape'
 
 jobs:
+  generate_versioned_assets:
+    name: Generated Versioned Assets
+    runs-on: ubuntu-latest
+
+    services:
+      selenium:
+        image: selenium/standalone-chrome
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "${{ inputs.ref_name }}"
+
+      - name: Configure ImageMagick
+        run: |
+          # get rid of the very strict defaults - let convert do its thing
+          sudo rm /etc/ImageMagick*/policy.xml
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Python dependencies
+        run: |
+          pip install .[dev]
+
+      - name: Generate tutorial gif
+        run: |
+          lookatme --tutorial --output tutorial.gif --format gif
+
+      - name: Upload tutorial gif artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: tutorial.gif
+          path: tutorial.gif
+
+  publish_new_pages:
+    if: startsWith(github.ref_name, 'v3.0')
+    uses: ./.github/workflows/pages.yml
+    secrets: inherit
+    with:
+      ref_name: "${{ inputs.ref_name }}"
+
   publish_to_pypi:
     name: Build and publish to PyPI
     runs-on: ubuntu-latest
@@ -41,12 +85,20 @@ jobs:
           password: ${{ secrets.PYPI_API_TOKEN }}
 
   create_github_release:
+    needs: generate_versioned_assets
     name: Create new Release on GitHub
     runs-on: ubuntu-latest
     steps:
+      - name: Download tutorial.gif
+        uses: actions/download-artifact@v3
+        with:
+          name: tutorial.gif
+
       - uses: actions/github-script@v6
         with:
           script: |
+            const fs = require("fs/promises");
+
             function semVerSort(a, b) {
               const aParts = a.split(/\.|rc/).map(x => x.replace(/^[^\d]*/, ''));
               const bParts = b.split(/\.|rc/).map(x => x.replace(/^[^\d]*/, ''));
@@ -100,4 +152,12 @@ jobs:
               tag_name: "${{ inputs.ref_name }}",
               body: releaseNotes.body,
               prerelease: currIsRc,
+            });
+
+            const {data: assetResponse} = await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: response.id,
+              name: "tutorial.gif",
+              data: await fs.readFile("tutorial.gif"),
             });
