@@ -2,11 +2,9 @@ name: Pages
 
 on:
   push:
-    # branches: [ "3.0-dev" ]
-    branches: [ "feature-196-new_documentation" ]
+    branches: [ "3.0-dev" ]
   pull_request:
-    # branches: [ "3.0-dev" ]
-    branches: [ "feature-196-new_documentation" ]
+    branches: [ "3.0-dev" ]
   workflow_call:
     inputs:
       ref_name:
