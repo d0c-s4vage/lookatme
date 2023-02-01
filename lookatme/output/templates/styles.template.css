@@ -228,6 +228,7 @@ body {
     top: 0;
     color: #2c2c2c;
     background-color: {{styles.scrollbar.gutter.bg}};
+    user-select: none;
 }
 
 .scrollbar-slider {
@@ -235,6 +236,7 @@ body {
     top: 0;
     z-index: 200;
     color: #4c4c4c;
+    user-select: none;
 }
 
 @keyframes blinker {

@@ -307,6 +307,7 @@ def render_code_inline(token, ctx: Context):
 
     for spec, text in markups:
         spec = ctx.spec_text_with(spec)
+        spec.preserve_spaces = True
         ctx.inline_push((spec, text))
 
 

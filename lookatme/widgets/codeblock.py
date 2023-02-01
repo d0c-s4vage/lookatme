@@ -140,6 +140,7 @@ class SyntaxHlStyle:
             )["fg"]
 
         colors.ensure_contrast(spec)
+        spec.preserve_spaces = True
 
         return spec
 

@@ -5,6 +5,7 @@ This module renders lookatme slides to HTML
 
 from collections import deque
 from contextlib import contextmanager
+import re
 from typing import Dict, Optional
 
 
@@ -111,12 +112,7 @@ class HtmlContext:
 
 
 def _sanitize(text: str) -> str:
-    return (
-        text.replace("&", "&amp;")
-        .replace(" ", "&nbsp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-    )
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def _keep_text(text_idx: int, text: str, keep_range: range) -> str:
@@ -132,6 +128,11 @@ def _keep_text(text_idx: int, text: str, keep_range: range) -> str:
     stop = min(text_stop, keep_range.stop)
 
     return text[start - text_idx : stop - text_idx]
+
+
+def _space_span_replace(match: re.Match) -> str:
+    spaces = match.group(0)
+    return f"<span style='padding-left: {len(spaces)}ch'></span>"
 
 
 def canvas_to_html(
@@ -157,6 +158,10 @@ def canvas_to_html(
                 text = new_text
 
             text = _sanitize(text)
+            if getattr(spec, "preserve_spaces", False):
+                text = text.replace(" ", "&nbsp;")
+            else:
+                text = re.sub(r"( {2,})", _space_span_replace, text)
 
             if text == "":
                 continue
