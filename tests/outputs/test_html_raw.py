@@ -13,10 +13,6 @@ import lookatme.output
 from lookatme.pres import Presentation
 
 
-def htmld(val: str) -> str:
-    return str.replace(val, " ", "&nbsp;")
-
-
 def test_html_raw_output_defined():
     assert "html_raw" in lookatme.output.get_all_formats()
 
@@ -78,9 +74,14 @@ def test_basic_raw_slide_generation(tmpdir):
         with open(file, "r") as f:
             data = f.read()
 
-        assert htmld(f"Slide {idx + 1}") in data
-        assert htmld(f"slide {idx + 1} / {len(html_files)}") in data
+        assert f"Slide {idx + 1}" in data
+        assert f"slide {idx + 1} / {len(html_files)}" in data
 
         assert data.count("<br/>") == rows - 1
         lines = data.split("<br/>")
-        assert lines[1].count("&nbsp;") == cols
+
+        total_spaces = 0
+        for match in re.finditer(r"style='padding-left: (\d+)ch'", lines[1]):
+            total_spaces += int(match.group(1))
+
+        assert total_spaces == cols
