@@ -15,6 +15,7 @@ import pygments.styles
 from pygments.style import StyleMeta
 import pygments.util
 import pygments.token
+import re
 import urwid
 
 
@@ -25,6 +26,31 @@ import lookatme.utils.colors as colors
 
 
 AVAILABLE_LEXERS = set()
+
+
+def guess_lang(content: str) -> str:
+    if content.startswith("#!"):
+        lexer = pygments.lexers.guess_lexer(content)
+        if "text" not in lexer.aliases:
+            return lexer.aliases[0]
+    
+    lang = "text"
+
+    curly_braces = re.search(r'[\{\}]', content) is not None
+    variable_assign = re.search(r'[a-zA-Z_0-9]+\s*=\s*[^=$]', content) is not None
+    pointers = re.search(r'[a-zA-Z_0-9]->[a-zA-Z0-9_]', content) is not None
+    def_functions = re.search(r'\s*def [a-zA-Z0-9_]+', content) is not None
+    function_calls = re.search(r'[a-zA-Z0-9_]+\s*([^)]+)', content, re.MULTILINE|re.DOTALL) is not None
+
+    if curly_braces or variable_assign or function_calls:
+        lang = "javascript"
+
+    if pointers:
+        lang = "c++"
+    elif def_functions:
+        lang = "ruby"
+
+    return lang
 
 
 def supported_langs() -> Set[str]:
