@@ -140,27 +140,20 @@ def test_lheading_levels(style):
     utils.validate_render(
         md_text=r"""
             H1
-            --
-
-            H2
             ==
 
-            H3
-            ##
+            H2
+            --
         """,
         text=[
-            "|H1|    ",
-            "        ",
-            ">>H2<<  ",
-            "        ",
-            "[[[H3]]]",
+            "|H1|  ",
+            "      ",
+            ">>H2<<",
         ],
         style_mask=[
-            "HHHH////",
-            "////////",
-            "hhhhhh//",
-            "////////",
-            "aaaaaaaa",
+            "HHHH//",
+            "//////",
+            "hhhhhh",
         ],
         styles={
             "H": style["headings"]["1"],

@@ -15,7 +15,7 @@ USAGE: $THIS_PROG VERSION_NUMBER
 This script will fill all placeholder values in the lookatme me project.
 Specifically:
 
-* {{VERSION}} will be replaced with the version number (no 'v' prefix!)
+* 0.0.0-rc-dev will be replaced with the version number (no 'v' prefix!)
 * {{LOOKATME_HELP_OUTPUT}} will be replaced with output from  "lookatme --help"
 * {{LOOKATME_HELP_OUTPUT_INDENTED}} will be replaced with the indented
   output of "lookatme --help"
@@ -52,7 +52,7 @@ EOF
 }
 
 function set_version {
-    replace_in_files "{{VERSION}}" "$VERSION"
+    replace_in_files "0.0.0-rc-dev" "$VERSION"
 }
 
 function set_help_output {
@@ -83,6 +83,6 @@ function parse_args {
 }
 
 parse_args "$@"
-# needs to come first, can contain {{VERSION}} placeholders
+# needs to come first, can contain 0.0.0-rc-dev placeholders
 set_help_output
 set_version
