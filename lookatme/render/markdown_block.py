@@ -643,8 +643,7 @@ def render_fence(token: Dict, ctx: Context):
 
 @contrib_first
 def render_code_block(token: Dict, ctx: Context):
-    """Render a code_block - text that is indented four spaces.
-    """
+    """Render a code_block - text that is indented four spaces."""
     lang = codeblock.guess_lang(token["content"])
     token["info"] = lang
     render_fence(token, ctx)

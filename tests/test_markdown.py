@@ -679,7 +679,7 @@ def test_code_block(styles):
             "NNNNNNNNNNNNNNNNNNNN",
             "NNNNNNNNNNNNNNNNNNNN",
             "KKKrFFFFFFFFrrrBBBBB",
-            'rrrrrrrrrrSSSSSSSSSr',
+            "rrrrrrrrrrSSSSSSSSSr",
         ],
         styles={
             "N": {},
