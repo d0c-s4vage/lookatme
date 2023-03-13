@@ -239,6 +239,15 @@ class SlideRenderer(threading.Thread):
     def _render_tokens(self, tokens):
         tmp_listbox = urwid.ListBox([])
 
+        if len(tokens) == 0:
+            tokens = [
+                {
+                    "type": "inline",
+                    "map": [0, 0],
+                    "children": [{"type": "text", "content": " ", "map": [0, 0]}],
+                }
+            ]
+
         self.ctx.clean_state_snapshot()
 
         with self.ctx.use_tokens(tokens):
