@@ -131,7 +131,7 @@ with open(os.path.join(DOCS_SOURCE_DIR, "contrib_extensions_auto.rst"), "w") as 
 
 
 def run_apidoc(_):
-	from sphinx.ext.apidoc import main
+	from sphinx.ext.apidoc import main  # type: ignore
 	import os
 	import sys
 
