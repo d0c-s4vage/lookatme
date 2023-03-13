@@ -50,7 +50,7 @@ with open(readme_path, "r") as f:
 
 setup(
     name="lookatme",
-    version="{{VERSION}}",
+    version="0.0.0-rc-dev",
     description="An interactive, command-line presentation tool",
     author="James Johnson",
     author_email="d0c.s4vage@gmail.com",

@@ -107,6 +107,65 @@ def test_heading_levels(style):
 
 @override_style(
     {
+        "headings": {
+            "default": {
+                "fg": "bold",
+                "bg": "",
+                "prefix": ".",
+                "suffix": ".",
+            },
+            "1": {
+                "fg": "bold",
+                "bg": "",
+                "prefix": "|",
+                "suffix": "|",
+            },
+            "2": {
+                "fg": "italics",
+                "bg": "",
+                "prefix": ">>",
+                "suffix": "<<",
+            },
+            "3": {
+                "fg": "underline",
+                "bg": "",
+                "prefix": "[[[",
+                "suffix": "]]]",
+            },
+        },
+    }
+)
+def test_lheading_levels(style):
+    """Test basic header rendering"""
+    utils.validate_render(
+        md_text=r"""
+            H1
+            ==
+
+            H2
+            --
+        """,
+        text=[
+            "|H1|  ",
+            "      ",
+            ">>H2<<",
+        ],
+        style_mask=[
+            "HHHH//",
+            "//////",
+            "hhhhhh",
+        ],
+        styles={
+            "H": style["headings"]["1"],
+            "h": style["headings"]["2"],
+            "a": style["headings"]["3"],
+            "/": {},
+        },
+    )
+
+
+@override_style(
+    {
         "table": {
             "column_spacing": 1,
             "header_divider": {"text": "-"},
@@ -589,6 +648,46 @@ def test_code(styles):
         ],
         styles={
             "R": {"fg": "#e6db74", "bg": "#272822"},
+            " ": {},
+        },
+    )
+
+
+@override_style(
+    {
+        "code": {
+            "style": "monokai",
+        }
+    }
+)
+def test_code_block(styles):
+    """Test code block (indented text) rendering"""
+    utils.validate_render(
+        md_text="""
+        test
+
+            def function():
+                print("testing")
+        """,
+        text=[
+            "test                ",
+            "                    ",
+            "def function():     ",
+            '    print("testing")',
+        ],
+        style_mask=[
+            "NNNNNNNNNNNNNNNNNNNN",
+            "NNNNNNNNNNNNNNNNNNNN",
+            "KKKrFFFFFFFFrrrBBBBB",
+            "rrrrrrrrrrSSSSSSSSSr",
+        ],
+        styles={
+            "N": {},
+            "K": {"fg": "#66d9ef", "bg": "#272822"},
+            "r": {"fg": "#f8f8f2", "bg": "#272822"},
+            "F": {"fg": "#a6e22e", "bg": "#272822"},
+            "B": {"bg": "#272822"},
+            "S": {"fg": "#e6db74", "bg": "#272822"},
             " ": {},
         },
     )

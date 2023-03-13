@@ -635,11 +635,13 @@ class MetaSchema(Schema):
 
         return res
 
-    def loads_partial_styles(self, *args, **kwargs):
+    def loads_partial_styles(self, *args, **kwargs) -> Dict:
         kwargs["partial"] = True
         res = super(self.__class__, self).loads(*args, **kwargs)
         if res is None:
             raise ValueError("Could not loads")
+        if not isinstance(res, dict):
+            raise ValueError("Expected a dict")
 
         res = self._ensure_top_level_defaults(res)
         return res
@@ -648,6 +650,8 @@ class MetaSchema(Schema):
         res = super(self.__class__, self).loads(*args, **kwargs)
         if res is None:
             raise ValueError("Could not loads")
+        if not isinstance(res, dict):
+            raise ValueError("Expected a dict")
 
         return res
 
@@ -656,6 +660,8 @@ class MetaSchema(Schema):
         res = super(self.__class__, self).load(*args, **kwargs)
         if res is None:
             raise ValueError("Could not loads")
+        if not isinstance(res, dict):
+            raise ValueError("Expected a dict")
 
         res = self._ensure_top_level_defaults(res)
         return res
@@ -664,6 +670,8 @@ class MetaSchema(Schema):
         res = super(self.__class__, self).load(*args, **kwargs)
         if res is None:
             raise ValueError("Could not load")
+        if not isinstance(res, dict):
+            raise ValueError("Expected a dict")
 
         return res
 
@@ -671,4 +679,7 @@ class MetaSchema(Schema):
         res = super(self.__class__, self).dump(*args, **kwargs)
         if res is None:
             raise ValueError("Could not dump")
+        if not isinstance(res, dict):
+            raise ValueError("Expected a dict")
+
         return res

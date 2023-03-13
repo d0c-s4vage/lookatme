@@ -47,7 +47,7 @@ author = "James 'd0c-s4vage' Johnson"
 
 
 # The full version, including alpha/beta/rc tags
-release = os.environ.get("READTHEDOCS_VERSION", '{{VERSION}}')
+release = os.environ.get("READTHEDOCS_VERSION", '0.0.0-rc-dev')
 
 
 # -- General configuration ---------------------------------------------------
@@ -131,7 +131,7 @@ with open(os.path.join(DOCS_SOURCE_DIR, "contrib_extensions_auto.rst"), "w") as 
 
 
 def run_apidoc(_):
-	from sphinx.ext.apidoc import main
+	from sphinx.ext.apidoc import main  # type: ignore
 	import os
 	import sys
 

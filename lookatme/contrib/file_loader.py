@@ -64,12 +64,16 @@ class FileSchema(Schema):
         res = super(self.__class__, self).loads(*args, **kwargs)
         if res is None:
             raise ValueError("Could not loads")
+        if not isinstance(res, dict):
+            raise ValueError("Expected a dict")
         return res
 
     def load(self, *args, **kwargs) -> Dict:
         res = super(self.__class__, self).load(*args, **kwargs)
         if res is None:
             raise ValueError("Could not load")
+        if not isinstance(res, dict):
+            raise ValueError("Expected a dict")
         return res
 
 
