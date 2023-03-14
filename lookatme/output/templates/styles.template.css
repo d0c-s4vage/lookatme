@@ -70,46 +70,46 @@ p, h1, h2, h3, h4, h5, h6 {
  */
 
 @font-face {
-    font-family: "DejaVu Sans Mono for Powerline";
-    src: url("./static/fonts/DejaVu/DejaVu Sans Mono for Powerline.ttf") format("truetype");
+    font-family: "DejaVuSansMono-lookatme";
+    src: url("./static/fonts/DejaVu/DejaVuSansMono-lookatme.ttf") format("truetype");
     font-style: normal;
     unicode-range: U+00-FFFF;
 }
 @font-face {
-    font-family: "DejaVu Sans Mono for Powerline";
-    src: url("./static/fonts/DejaVu/DejaVu Sans Mono for Powerline.ttf") format("truetype");
+    font-family: "DejaVuSansMono-lookatme";
+    src: url("./static/fonts/DejaVu/DejaVuSansMono-lookatme.ttf") format("truetype");
     font-style: italic;
     unicode-range: U+00-FFFF;
 }
 @font-face {
-    font-family: "DejaVu Sans Mono for Powerline";
-    src: url("./static/fonts/DejaVu/DejaVu Sans Mono Bold for Powerline.ttf") format("truetype");
+    font-family: "DejaVuSansMono-lookatme";
+    src: url("./static/fonts/DejaVu/DejaVuSansMonoBold-lookatme.ttf") format("truetype");
     font-weight: bold;
     unicode-range: U+00-FFFF;
 }
 @font-face {
-    font-family: "DejaVu Sans Mono for Powerline";
-    src: url("./static/fonts/DejaVu/DejaVu Sans Mono Bold for Powerline.ttf") format("truetype");
+    font-family: "DejaVuSansMono-lookatme";
+    src: url("./static/fonts/DejaVu/DejaVuSansMonoBold-lookatme.ttf") format("truetype");
     font-weight: bold;
     font-style: italic;
     unicode-range: U+00-FFFF;
 }
 @font-face {
-    font-family: "DejaVu Sans Mono for Powerline";
-    src: url("./static/fonts/DejaVu/DejaVu Sans Mono Oblique for Powerline.ttf") format("truetype");
+    font-family: "DejaVuSansMono-lookatme";
+    src: url("./static/fonts/DejaVu/DejaVuSansMonoOblique-lookatme.ttf") format("truetype");
     font-style: oblique;
     unicode-range: U+00-FFFF;
 }
 @font-face {
-    font-family: "DejaVu Sans Mono for Powerline";
-    src: url("./static/fonts/DejaVu/DejaVu Sans Mono Bold Oblique for Powerline.ttf") format("truetype");
+    font-family: "DejaVuSansMono-lookatme";
+    src: url("./static/fonts/DejaVu/DejaVuSansMonoBoldOblique-lookatme.ttf") format("truetype");
     font-style: oblique;
     font-weight: bold;
     unicode-range: U+00-FFFF;
 }
 
 * {
-    font-family: "DejaVu Sans Mono for Powerline", monospace;
+    font-family: "DejaVuSansMono-lookatme", monospace;
 }
 
 body {
