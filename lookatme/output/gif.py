@@ -91,7 +91,7 @@ class GifOutputFormat(BaseOutputFormat):
             "convert",
             "-font",
             os.path.join(
-                tmpd, "static", "fonts", "DejaVu", "DejaVu Sans Mono for Powerline.ttf"
+                tmpd, "static", "fonts", "DejaVu", "DejaVuSansMono-lookatme.ttf"
             ),
         ]
 
