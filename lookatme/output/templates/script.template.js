@@ -4,35 +4,46 @@
  * REMOVE ME: \{\{VARIABLE\}\}
    REMOVE ME: */
 
-var SLIDES = {};
+var SLIDES = [];
 var NAV_BY_SLIDE = {};
 var CURR_SLIDE = 0;
+var USE_FRAGMENTS = {{use_fragments}};
 
-function onload() {
-  let navSlideItems = document.getElementsByClassName("navitem-slide");
-  Array.prototype.forEach.call(navSlideItems, function(elem) {
-    elem.addEventListener("click", onNavClick, false);
-    let slideIdx = parseInt(elem.dataset.slideIdx);
-    NAV_BY_SLIDE[slideIdx] = elem;
-  });
+document.addEventListener("readystatechange", (event) => {
+  if (document.readyState == "complete") {
+    onready();
+  }
+});
 
+window.addEventListener("resize", () => {
+  for (let slideIdx of Object.keys(SLIDES)) {
+    let slide = SLIDES[slideIdx];
+    slide.scrollbar.update();
+  }
+});
+
+document.addEventListener("keydown", onKeypress);
+
+function onready() {
   let slideItems = document.getElementsByClassName("slide");
   Array.prototype.forEach.call(slideItems, function(elem) {
     let slideIdx = parseInt(elem.dataset.slideIdx);
     SLIDES[slideIdx] = elem;
-    elem.classList.add("hidden");
     injectScrollbar(elem);
   });
 
-  window.addEventListener("resize", () => {
-    for (let slideIdx of Object.keys(SLIDES)) {
-      let slide = SLIDES[slideIdx];
-      slide.scrollbar.update();
-    }
+  let navSlideItems = document.getElementsByClassName("navitem-slide");
+  Array.prototype.forEach.call(navSlideItems, function(elem) {
+    elem.addEventListener("click", onNavClick, false);
+    elem.dataset.slug = slugify(elem.innerText);
+    let slideIdx = parseInt(elem.dataset.slideIdx);
+    NAV_BY_SLIDE[slideIdx] = elem;
   });
 
-  document.addEventListener("keydown", onKeypress);
-  setSlideIdx(CURR_SLIDE);
+  routeToSlide();
+}
+
+function routeToSlide() {
 }
 
 function enterFullScreen(element) {
@@ -81,6 +92,31 @@ function setSlideIdx(idx) {
   navElem = getNav();
   if (navElem) {
     navElem.classList.add("nav-active");
+  }
+
+  updateUrl();
+}
+
+function slugify(text) {
+  return (text
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9]/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-/, "")
+    .replace(/-$/, "")
+  );
+}
+
+function updateUrl() {
+  let nav = getNav();
+  if (!nav) { return; }
+
+  if (USE_FRAGMENTS) {
+    window.location.hash = nav.dataset.slug;
+  } else {
+    const url = new URL(window.location);
+    url.searchParams.set("page", nav.dataset.slug);
+    window.history.pushState({}, "", url);
   }
 }
 

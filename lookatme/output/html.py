@@ -124,7 +124,7 @@ class HtmlSlideDeckOutputFormat(BaseOutputFormat):
     def _create_slide_deck(self, slides_html: List[Tuple[str, str, str]]) -> str:
         ctx = html.HtmlContext()
         for slide_idx, (header_html, body_html, footer_html) in enumerate(slides_html):
-            with ctx.use_tag("div", classname="slide", **{"data-slide-idx": slide_idx}):
+            with ctx.use_tag("div", classname="slide hidden", **{"data-slide-idx": slide_idx}):
                 with ctx.use_tag("div", classname="slide-header"):
                     ctx.write(header_html)
                 with ctx.use_tag("div", classname="slide-body"):
@@ -148,6 +148,7 @@ class HtmlSlideDeckOutputFormat(BaseOutputFormat):
 
         context = {}
         html.add_styles_to_context(context)
+        context["use_fragments"] = "true";
         script = self.render_template("script.template.js", context)
         styles = self.render_template("styles.template.css", context)
 

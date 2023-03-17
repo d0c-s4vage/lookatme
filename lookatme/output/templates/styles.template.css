@@ -83,26 +83,26 @@ p, h1, h2, h3, h4, h5, h6 {
 }
 @font-face {
     font-family: "DejaVuSansMono-lookatme";
-    src: url("./static/fonts/DejaVu/DejaVuSansMonoBold-lookatme.ttf") format("truetype");
+    src: url("./static/fonts/DejaVu/DejaVuSansMono-Bold-lookatme.ttf") format("truetype");
     font-weight: bold;
     unicode-range: U+00-FFFF;
 }
 @font-face {
     font-family: "DejaVuSansMono-lookatme";
-    src: url("./static/fonts/DejaVu/DejaVuSansMonoBold-lookatme.ttf") format("truetype");
+    src: url("./static/fonts/DejaVu/DejaVuSansMono-Bold-lookatme.ttf") format("truetype");
     font-weight: bold;
     font-style: italic;
     unicode-range: U+00-FFFF;
 }
 @font-face {
     font-family: "DejaVuSansMono-lookatme";
-    src: url("./static/fonts/DejaVu/DejaVuSansMonoOblique-lookatme.ttf") format("truetype");
+    src: url("./static/fonts/DejaVu/DejaVuSansMono-Oblique-lookatme.ttf") format("truetype");
     font-style: oblique;
     unicode-range: U+00-FFFF;
 }
 @font-face {
     font-family: "DejaVuSansMono-lookatme";
-    src: url("./static/fonts/DejaVu/DejaVuSansMonoBoldOblique-lookatme.ttf") format("truetype");
+    src: url("./static/fonts/DejaVu/DejaVuSansMono-BoldOblique-lookatme.ttf") format("truetype");
     font-style: oblique;
     font-weight: bold;
     unicode-range: U+00-FFFF;
